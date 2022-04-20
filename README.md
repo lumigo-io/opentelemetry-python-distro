@@ -1,5 +1,7 @@
 # lumigo-python-wrapper :stars:
-![Version](https://img.shields.io/badge/version-1.0.1012-green.svg) [![CircleCI](https://circleci.com/gh/lumigo-io/lumigo-python-wrapper/tree/master.svg?style=svg&circle-token=d98d1b95f34b49be2caa58c49d8a70d6a7587b88)](https://circleci.com/gh/lumigo-io/lumigo-python-wrapper/tree/master)
+[![CircleCI](https://circleci.com/gh/lumigo-io/lumigo-python-wrapper/tree/master.svg?style=svg&circle-token=d98d1b95f34b49be2caa58c49d8a70d6a7587b88)](https://circleci.com/gh/lumigo-io/lumigo-python-wrapper/tree/master)
+![Version](https://badge.fury.io/py/lumigo-tracer.svg)
+[![codecov](https://codecov.io/gh/lumigo-io/lumigo-python-wrapper/branch/master/graph/badge.svg?token=d8CvqyKTnq)](https://codecov.io/gh/lumigo-io/lumigo-python-wrapper)
 
 This is [`lumigo-python-wrapper`](https://), Lumigo's Python tracer for distributed tracing and performance monitoring.
 
