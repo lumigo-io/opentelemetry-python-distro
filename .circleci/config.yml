@@ -1,0 +1,67 @@
+version: 2.1
+defaults: &defaults
+  working_directory: ~/lumigo-python-wrapper
+  docker:
+  - image: lumigo/ci:latest
+    auth:
+      username: lumigo
+      password: $DOCKERHUB_PASSWORD
+
+orbs:
+  lumigo-orb: lumigo/lumigo-orb@volatile
+
+
+workflows:
+  test-deploy:
+    jobs:
+    - lumigo-orb/test:
+        filters:
+          branches:
+            ignore: master
+    - lumigo-orb/be-deploy:
+        filters:
+          branches:
+            ignore: master
+        requires:
+          - test
+    - lumigo-orb/integration-test:
+        deploy_spec: python
+        tests_spec: testPython
+        filters:
+          branches:
+            ignore: master
+        requires:
+          - lumigo-orb/be-deploy
+    - lumigo-orb/e2e-test:
+        requires:
+          - lumigo-orb/integration-test
+        filters:
+          branches:
+            ignore: master
+    - deploy:
+        filters:
+          branches:
+            only: master
+
+jobs:
+  test:
+    <<: *defaults
+    steps:
+      - lumigo-orb/checkout_code
+      - lumigo-orb/checkout_utils
+      # run tests!
+      - run: echo "export AWS_DEFAULT_REGION=us-west-2" >> $BASH_ENV
+      - run: mkdir -p ~/.aws
+      - run: echo ${KEY} | gpg --batch -d --passphrase-fd 0 ../common-resources/encrypted_files/credentials_integration.enc > ~/.aws/credentials
+      - run: . venv/bin/activate && pip uninstall lumigo-python-wrapper -y && python setup.py develop
+      - run: . venv/bin/activate && ./scripts/checks.sh
+      - run: ../utils/common_bash/defaults/code_cov.sh
+
+
+  deploy:
+    <<: *defaults
+    steps:
+      - lumigo-orb/checkout_code
+      - lumigo-orb/checkout_utils
+      - run: cd .. && git clone git@github.com:lumigo-io/larn.git
+      - run: ./scripts/bd_to_prod.sh
