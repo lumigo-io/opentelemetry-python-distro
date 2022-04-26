@@ -14,7 +14,7 @@ orbs:
 workflows:
   test-deploy:
     jobs:
-    - lumigo-orb/test:
+    - test:
         filters:
           branches:
             ignore: master
