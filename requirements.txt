@@ -7,3 +7,4 @@ capturer==3.0
 attrs==21.4.0
 requests==2.27.1
 moto==3.1.5
+click==8.0.3
