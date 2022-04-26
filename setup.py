@@ -18,6 +18,8 @@ setuptools.setup(
     packages=setuptools.find_packages("src", exclude=["test"]),
     install_requires=[
         "opentelemetry-api==1.9.1",
+        "opentelemetry-exporter-otlp==1.9.1",
+        "opentelemetry-proto==1.9.1",
         "opentelemetry-exporter-zipkin==1.10.0",
         "opentelemetry-exporter-zipkin-json==1.10.0",
         "opentelemetry-exporter-zipkin-proto-http==1.10.0",
@@ -37,6 +39,14 @@ setuptools.setup(
         "fastapi==0.70.1",
         "requests==2.27.1",
         "arnparse==0.0.2",
+        "click==8.0.3",
+        "importlib-metadata==4.8.2",
+        "itsdangerous==2.0.1",
+        "Jinja2==3.0.3",
+        "MarkupSafe==2.0.1",
+        "typing_extensions==4.0.1",
+        "Werkzeug==2.0.2",
+        "zipp==3.8.0",
     ],
     license="Apache License 2.0",
     classifiers=[
