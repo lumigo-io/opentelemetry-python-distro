@@ -23,7 +23,7 @@ workflows:
           branches:
             ignore: master
         requires:
-          - lumigo-orb/test
+          - test
     - lumigo-orb/integration-test:
         deploy_spec: python
         tests_spec: testPython
