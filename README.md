@@ -12,6 +12,12 @@ Supported Python Runtimes: 3.6, 3.7, 3.8
 
 # Manually
 
+## Configuration
+`@lumigo/lumigo_python_wrapper` offers several different configuration options. Pass modify the environment variables:
+
+* `LUMIGO_DEBUG=TRUE` - Enables debug logging
+* `LUMIGO_SECRET_MASKING_REGEX=["regex1", "regex2"]` - Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`. 
+
 # Contributing
 
 Contributions to this project are welcome from all! Below are a couple pointers on how to prepare your machine, as well as some information on testing.
