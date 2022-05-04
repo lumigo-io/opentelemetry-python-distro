@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import uuid
 from enum import Enum
@@ -81,7 +80,7 @@ def safe_get_metadata() -> str:
 
 def safe_get_envs() -> str:
     try:
-        return json.dumps(dict(os.environ))
+        return dump(dict(os.environ))
     except Exception as e:
         get_logger().exception("failed getting envs", exc_info=e)
         return ""

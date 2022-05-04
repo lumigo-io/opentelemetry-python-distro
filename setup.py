@@ -46,7 +46,7 @@ setuptools.setup(
         "MarkupSafe==2.0.1",
         "typing_extensions==4.0.1",
         "Werkzeug==2.0.2",
-        "zipp==3.6.0",
+        "zipp==3.8.0",
     ],
     license="Apache License 2.0",
     classifiers=[

@@ -14,7 +14,7 @@ orbs:
 workflows:
   test-deploy:
     jobs:
-    - lumigo-orb/test:
+    - test:
         filters:
           branches:
             ignore: master
@@ -23,7 +23,7 @@ workflows:
           branches:
             ignore: master
         requires:
-          - lumigo-orb/test
+          - test
     - lumigo-orb/integration-test:
         deploy_spec: python
         tests_spec: testPython
@@ -32,12 +32,6 @@ workflows:
             ignore: master
         requires:
           - lumigo-orb/be-deploy
-    - lumigo-orb/e2e-test:
-        requires:
-          - lumigo-orb/integration-test
-        filters:
-          branches:
-            ignore: master
     - deploy:
         filters:
           branches:
@@ -51,7 +45,7 @@ jobs:
       - lumigo-orb/checkout_utils
       # run tests!
       - run: . venv/bin/activate && pip uninstall lumigo-python-wrapper -y && python setup.py develop
-      - run: . venv/bin/activate && ./scripts/checks.sh
+      - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/checks.sh
       - run: ../utils/common_bash/defaults/code_cov.sh
 
 
