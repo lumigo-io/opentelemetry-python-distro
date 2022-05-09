@@ -147,6 +147,18 @@ def lumigo_wrapper(
             return retval
 
         to_return = wrapped
+    elif not resource:
+        def decorator(func):
+            def wrapped(*args, **kwargs):
+                # tracer = tracer_provider.get_tracer(CONTEXT_NAME)
+                # with tracer.start_as_current_span(PARENT_IDENTICATOR) as span:
+                #     span.set_attribute("input_args", dump(args))
+                #     span.set_attribute("input_kwargs", dump(kwargs))
+                return_value = func(*args, **kwargs)
+                # span.set_attribute("return_value", dump(return_value))
+                return return_value
+            return wrapped
+        return decorator
 
     RequestsInstrumentor().instrument(span_callback=HttpParser.request_callback)
     BotocoreInstrumentor().instrument(
