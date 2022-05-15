@@ -12,6 +12,18 @@ orbs:
 
 
 workflows:
+  test-versions:
+    jobs:
+    - test-fast-api:
+        matrix:
+          parameters:
+            # TODO Put python version here as param and pass it to tox
+            fastapi-version:
+              - 0.5.0
+              - 0.6.0
+        filters:
+          branches:
+            ignore: master
   test-deploy:
     jobs:
     - test:
@@ -50,12 +62,6 @@ jobs:
 
   test-fast-api:
     <<: *defaults
-    matrix:
-      parameters:
-        # TODO Put python version here as param and pass it to tox
-        fastapi-version:
-        - 0.5.0
-        - 0.6.0
     steps:
       - lumigo-orb/checkout_code
       - lumigo-orb/checkout_utils
