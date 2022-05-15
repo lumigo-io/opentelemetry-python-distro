@@ -48,6 +48,20 @@ jobs:
       - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/checks.sh
       - run: ../utils/common_bash/defaults/code_cov.sh
 
+  test-fast-api:
+    <<: *defaults
+    matrix:
+      parameters:
+        # TODO Put python version here as param and pass it to tox
+        fastapi-version:
+        - 0.5.0
+        - 0.6.0
+    steps:
+      - lumigo-orb/checkout_code
+      - lumigo-orb/checkout_utils
+      # run tests!
+      - run: apt-get update && apt-get install -y tox
+      - run: cd src/test/integration/fastapi && FASTAPI_VERSION=<< parameters.fastapi-version >> tox
 
   deploy:
     <<: *defaults
