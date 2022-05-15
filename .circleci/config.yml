@@ -62,6 +62,9 @@ jobs:
 
   test-fast-api:
     <<: *defaults
+    parameters:
+      fastapi-version:
+        type: string
     steps:
       - lumigo-orb/checkout_code
       - lumigo-orb/checkout_utils
