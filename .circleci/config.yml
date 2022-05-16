@@ -19,8 +19,8 @@ workflows:
           parameters:
             # TODO Put python version here as param and pass it to tox
             fastapi-version:
-              - 0.5.0
-              - 0.6.0
+              - 0.70.1
+              - 0.78.0
         filters:
           branches:
             ignore: master
