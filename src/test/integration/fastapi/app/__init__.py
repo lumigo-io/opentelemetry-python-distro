@@ -1,7 +1,7 @@
 from lumigo_wrapper import lumigo_wrapper
 
 from opentelemetry import trace
-from opentelemetry.sdk.trace.export import (SimpleSpanProcessor, ConsoleSpanExporter)
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
 from fastapi import FastAPI, HTTPException
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -21,9 +21,11 @@ trace.get_tracer_provider().add_span_processor(
     )
 )
 
+
 @app.get("/")
 async def root():
     return {"message": "Hello FastAPI!"}
+
 
 @app.get("/accounts/{account_id}")
 async def account(account_id):

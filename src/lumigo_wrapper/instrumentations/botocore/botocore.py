@@ -2,13 +2,29 @@ from __future__ import annotations
 
 from typing import Optional, Type, Dict
 
+from opentelemetry.trace import Span
+
 from lumigo_wrapper.libs.general_utils import lumigo_safe_execute
 from lumigo_wrapper.libs.json_utils import dump
 from lumigo_wrapper.utils.aws_utils import (
     extract_region_from_arn,
     get_resource_fullname,
 )
-from opentelemetry.trace import Span
+
+
+class Botocore:
+    @staticmethod
+    def instrument():
+        try:
+            from opentelemetry.instrumentation.boto import BotoInstrumentor
+            from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+
+            BotocoreInstrumentor().instrument(
+                request_hook=AwsParser.request_hook, response_hook=AwsParser.response_hook
+            )
+            BotoInstrumentor().instrument()
+        except ImportError:
+            pass
 
 
 class AwsParser:
