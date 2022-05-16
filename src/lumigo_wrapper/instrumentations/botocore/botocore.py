@@ -20,7 +20,8 @@ class Botocore:
             from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 
             BotocoreInstrumentor().instrument(
-                request_hook=AwsParser.request_hook, response_hook=AwsParser.response_hook
+                request_hook=AwsParser.request_hook,
+                response_hook=AwsParser.response_hook,
             )
             BotoInstrumentor().instrument()
         except ImportError:
