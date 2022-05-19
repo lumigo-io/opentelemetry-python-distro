@@ -1,13 +1,10 @@
 from lumigo_wrapper import lumigo_wrapper
-
 from opentelemetry import trace
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
 from fastapi import FastAPI, HTTPException
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI()
-
-lumigo_wrapper(lumigo_token="NOPE", service_name="FlaskTestApp", resource=app)
 
 trace.get_tracer_provider().add_span_processor(
     SimpleSpanProcessor(
