@@ -12,22 +12,6 @@ from lumigo_wrapper.utils.aws_utils import (
 )
 
 
-class Botocore:
-    @staticmethod
-    def instrument():
-        try:
-            from opentelemetry.instrumentation.boto import BotoInstrumentor
-            from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
-
-            BotocoreInstrumentor().instrument(
-                request_hook=AwsParser.request_hook,
-                response_hook=AwsParser.response_hook,
-            )
-            BotoInstrumentor().instrument()
-        except ImportError:
-            pass
-
-
 class AwsParser:
     @staticmethod
     def get_parser(

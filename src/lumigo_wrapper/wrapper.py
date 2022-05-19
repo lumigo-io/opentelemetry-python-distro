@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import os
-import uuid
 from platform import python_version
-from typing import Optional, Callable, Any, Dict
+from typing import Dict
 
 import requests
 
@@ -13,12 +12,11 @@ from opentelemetry.exporter.zipkin.json import ZipkinExporter
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import Resource
 
-from lumigo_wrapper.instrumentations.instrumentations import (
-    enforce_instrumentations,
-    Framework,
-)
+from lumigo_wrapper.instrumentations.instrumentations import Framework, frameworks
 from lumigo_wrapper.libs.json_utils import dump
 from lumigo_wrapper.lumigo_utils import get_logger
+
+import lumigo_wrapper.instrumentations  # noqa
 
 
 LUMIGO_ENDPOINT = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/"
@@ -59,43 +57,35 @@ def safe_get_envs() -> str:
         return ""
 
 
-def lumigo_wrapper(
-    lumigo_token: str,
-    service_name: str,
-    resource: Optional[Any] = None,
-    endpoint: str = None,
-    global_thread_safe: bool = False,
-) -> Optional[Callable]:
-    """
-    This is the wrapper line that should be called when tracing a distributed system.
+attributes = {
+    "lumigoToken": os.environ["LUMIGO_TRACER_TOKEN"],
+    "runtime": f"python{safe_get_version()}",
+    "framework": frameworks[0].value if frameworks else Framework.Unknown.value,
+    "envs": safe_get_envs(),
+    "metadata": safe_get_metadata(),
+    "exporter": ZIPKIN,
+}
+tracer_resource = Resource(attributes=attributes)
 
-    :param lumigo_token: The token to use when sending data to Lumigo.
-    :param service_name: The logical name of this unit.
-    :param resource: A framework-specific resource that we should wrap. See Lumigo's docs for more details.
-    :param endpoint: Optional custom endpoint to alter the default collector.
-    :param global_thread_safe: Optional flag to indicates that calls may be executed in threads. This flag
-        creates a single parent to all the span in the current interpreter.
-    """
-    zipkin_processor = BatchSpanProcessor(
-        ZipkinExporter(
-            endpoint=endpoint or f"{LUMIGO_ENDPOINT}{LUMIGO_ENDPOINT_SUFFIX}"
-        )
-    )
-    attributes = {
-        "lumigoToken": lumigo_token,
-        "service.name": service_name,
-        "runtime": f"python{safe_get_version()}",
-        "framework": Framework.safe_from_resource(resource=resource).value,
-        "envs": safe_get_envs(),
-        "metadata": safe_get_metadata(),
-        "exporter": ZIPKIN,
-    }
-    if global_thread_safe:
-        attributes["globalTransactionId"] = f"c_{uuid.uuid4().hex}"
-        attributes["globalParentId"] = uuid.uuid4().hex
-    tracer_resource = Resource(attributes=attributes)
-    tracer_provider = TracerProvider(resource=tracer_resource)
-    tracer_provider.add_span_processor(zipkin_processor)
-    trace.set_tracer_provider(tracer_provider)
+span_processor = BatchSpanProcessor(
+    ZipkinExporter(endpoint="http://localhost:9411/api/v2/spans"),
+)
+tracer_provider = TracerProvider(resource=tracer_resource)
+tracer_provider.add_span_processor(span_processor)
+trace.set_tracer_provider(tracer_provider)
 
-    return enforce_instrumentations(tracer_provider=tracer_provider, resource=resource)
+CONTEXT_NAME = "lumigo_wrapper"
+PARENT_IDENTICATOR = "LumigoParentSpan"
+
+
+def lumigo_wrapped(func):
+    def wrapper(*args, **kwargs):
+        tracer = tracer_provider.get_tracer(CONTEXT_NAME)
+        with tracer.start_as_current_span(PARENT_IDENTICATOR) as span:
+            span.set_attribute("input_args", dump(args))
+            span.set_attribute("input_kwargs", dump(kwargs))
+            return_value = func(*args, **kwargs)
+            span.set_attribute("return_value", dump(return_value))
+            return return_value
+
+    return wrapper

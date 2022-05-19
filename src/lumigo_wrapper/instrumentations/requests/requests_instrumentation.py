@@ -10,17 +10,6 @@ from lumigo_wrapper.libs.general_utils import lumigo_safe_execute
 from lumigo_wrapper.libs.json_utils import dump
 
 
-class Requests:
-    @staticmethod
-    def instrument():
-        try:
-            from opentelemetry.instrumentation.requests import RequestsInstrumentor
-
-            RequestsInstrumentor().instrument(span_callback=HttpParser.request_callback)
-        except ImportError:
-            pass
-
-
 @dataclass(frozen=True)
 class HttpParser:
     response: Response
