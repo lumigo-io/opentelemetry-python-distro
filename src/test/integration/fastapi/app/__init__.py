@@ -1,4 +1,4 @@
-from lumigo_wrapper import lumigo_wrapper
+from lumigo_wrapper import lumigo_wrapper  # noqa
 from opentelemetry import trace
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
 from fastapi import FastAPI, HTTPException
