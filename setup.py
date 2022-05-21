@@ -1,30 +1,26 @@
 import os
 
-import setuptools
-
+from setuptools import setup
 
 VERSION_PATH = os.path.join(
-    os.path.dirname(__file__), "src", "lumigo_wrapper", "VERSION"
+    os.path.dirname(__file__), "src", "lumigo_opentelemetry", "VERSION"
 )
 
-setuptools.setup(
-    name="lumigo-python-wrapper",
+setup(
     version=open(VERSION_PATH).read(),
-    author="Lumigo LTD (https://lumigo.io)",
-    author_email="support@lumigo.io",
-    description="Lumigo wrapper to trace distributed architecture",
-    url="https://github.com/lumigo-io/lumigo-python-wrapper.git",
-    package_dir={"": "src"},
-    packages=setuptools.find_packages("src", exclude=["test"]),
+    package_data={"lumigo_opentelemetry": ["VERSION"]},
+    entry_points={
+        "console_scripts": ["autowrapt = autowrapt.main:main"],
+        "lumigo_opentelemetry": ["string = lumigo_opentelemetry:auto_load"]
+    },
     install_requires=[
         "asgiref==3.5.2",
-        "packaging==21.3",
-        "wrapt==1.14.1",
+        "packaging>=21.3",
+        "autowrapt>=1.0",
+        "wrapt>=1.11.0",
         "opentelemetry-sdk==1.9.1",
         "opentelemetry-api==1.9.1",
-        "opentelemetry-exporter-zipkin==1.10.0",
-        "opentelemetry-exporter-zipkin-json==1.10.0",
-        "opentelemetry-exporter-zipkin-proto-http==1.10.0",
+        "opentelemetry-exporter-otlp-proto-http==1.9.1",
         "opentelemetry-semantic-conventions==0.28b1",
         "opentelemetry-instrumentation==0.28b1",
         "opentelemetry-instrumentation-aiohttp-client==0.28b1",
@@ -59,11 +55,4 @@ setuptools.setup(
         "opentelemetry-instrumentation-urllib3==0.28b1",
         "opentelemetry-instrumentation-wsgi==0.28b1",
     ],
-    license="Apache License 2.0",
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "Operating System :: OS Independent",
-    ],
-    long_description=open("README.md").read(),
-    package_data={"lumigo-python-wrapper": ["VERSION"]},
 )
