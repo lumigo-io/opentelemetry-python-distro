@@ -1,4 +1,4 @@
-from .. import AbstractInstrumentor
+from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
 
 class PikaInstrumentorWrapper(AbstractInstrumentor):
