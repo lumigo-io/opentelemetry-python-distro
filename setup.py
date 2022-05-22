@@ -17,6 +17,7 @@ setup(
         "autowrapt>=1.0",
         "packaging>=21.3",
         "wrapt>=1.11.0",
+        "opentelemetry-api==1.9.1",
         "opentelemetry-sdk==1.9.1",
         "opentelemetry-exporter-otlp-proto-http==1.9.1",
         "opentelemetry-semantic-conventions==0.28b1",
