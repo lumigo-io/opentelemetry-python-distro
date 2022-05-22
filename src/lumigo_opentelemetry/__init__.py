@@ -166,7 +166,7 @@ def init():
     trace.set_tracer_provider(tracer_provider)
 
     if activate_instrumentation:
-        import lumigo_opentelemetry.instrumentations  # noqa
+        from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     else:
         logger.info(
             "Tracing data will neither be sent to Lumigo, nor dumped on the filesystem; "
