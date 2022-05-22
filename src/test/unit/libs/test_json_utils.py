@@ -3,11 +3,11 @@ from collections import OrderedDict
 from decimal import Decimal
 
 import pytest
-from lumigo_wrapper.libs.json_utils import (
-    dump,
-    LUMIGO_SECRET_MASKING_REGEX,
+from lumigo_opentelemetry.libs.json_utils import (
     SKIP_SCRUBBING_KEYS,
     TRUNCATE_SUFFIX,
+    dump,
+    LUMIGO_SECRET_MASKING_REGEX,
 )
 
 
