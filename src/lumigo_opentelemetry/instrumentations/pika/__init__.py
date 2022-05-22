@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class PikaInstrumentorWrapper(AbstractInstrumentor):
 
+class PikaInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("pika")
 
@@ -13,4 +13,5 @@ class PikaInstrumentorWrapper(AbstractInstrumentor):
 
         PikaInstrumentor().instrument()
 
-instrumentor = PikaInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = PikaInstrumentorWrapper()

@@ -6,6 +6,7 @@ from lumigo_opentelemetry.libs.json_utils import dump, safe_convert_bytes_to_str
 
 from opentelemetry.trace import Span
 
+
 class FastAPIParser:
     @staticmethod
     def safe_extract_headers_bytes(headers: Any) -> Dict[str, str]:

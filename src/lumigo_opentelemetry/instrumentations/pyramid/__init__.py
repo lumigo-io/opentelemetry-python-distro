@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class PyramidInstrumentor(AbstractInstrumentor):
 
+class PyramidInstrumentor(AbstractInstrumentor):
     def __init__(self):
         super().__init__("pyramid")
 
@@ -9,8 +9,9 @@ class PyramidInstrumentor(AbstractInstrumentor):
         import pyramid.config  # noqa
 
     def install_instrumentation(self):
-        from opentelemetry.instrumentation.pymysql import PyMySQLInstrumentor
+        from opentelemetry.instrumentation.pyramid import PyramidInstrumentor
 
         PyramidInstrumentor().instrument()
 
-instrumentor = PyramidInstrumentor()
+
+instrumentor: AbstractInstrumentor = PyramidInstrumentor()

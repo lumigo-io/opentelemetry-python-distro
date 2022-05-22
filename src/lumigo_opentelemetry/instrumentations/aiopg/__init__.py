@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class AioPgInstrumentorWrapper(AbstractInstrumentor):
 
+class AioPgInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("aiopg")
 
@@ -13,4 +13,5 @@ class AioPgInstrumentorWrapper(AbstractInstrumentor):
 
         AiopgInstrumentor().instrument()
 
-instrumentor = AioPgInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = AioPgInstrumentorWrapper()

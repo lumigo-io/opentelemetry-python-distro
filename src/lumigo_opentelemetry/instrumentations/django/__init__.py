@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class DjangoInstrumentorWrapper(AbstractInstrumentor):
 
+class DjangoInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("django")
 
@@ -13,4 +13,5 @@ class DjangoInstrumentorWrapper(AbstractInstrumentor):
 
         DjangoInstrumentor().instrument()
 
-instrumentor = DjangoInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = DjangoInstrumentorWrapper()

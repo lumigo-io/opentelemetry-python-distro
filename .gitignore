@@ -131,3 +131,5 @@ dmypy.json
 # pycharm
 .idea/
 
+# spans created by tox testing
+src/test/integration/*/spans.txt

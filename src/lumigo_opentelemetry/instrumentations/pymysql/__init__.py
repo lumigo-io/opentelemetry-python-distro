@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class PyMySqlInstrumentor(AbstractInstrumentor):
 
+class PyMySqlInstrumentor(AbstractInstrumentor):
     def __init__(self):
         super().__init__("pymysql")
 
@@ -13,4 +13,5 @@ class PyMySqlInstrumentor(AbstractInstrumentor):
 
         PyMySQLInstrumentor().instrument()
 
-instrumentor = PyMySqlInstrumentor()
+
+instrumentor: AbstractInstrumentor = PyMySqlInstrumentor()

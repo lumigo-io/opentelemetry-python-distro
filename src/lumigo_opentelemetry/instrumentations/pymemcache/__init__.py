@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class PymemcacheInstrumentor(AbstractInstrumentor):
 
+class PymemcacheInstrumentor(AbstractInstrumentor):
     def __init__(self):
         super().__init__("pymemcache")
 
@@ -13,4 +13,5 @@ class PymemcacheInstrumentor(AbstractInstrumentor):
 
         PymemcacheInstrumentor().instrument()
 
-instrumentor = PymemcacheInstrumentor()
+
+instrumentor: AbstractInstrumentor = PymemcacheInstrumentor()

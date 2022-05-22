@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class ElasticsearchInstrumentorWrapper(AbstractInstrumentor):
 
+class ElasticsearchInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("elasticsearch")
 
@@ -9,8 +9,11 @@ class ElasticsearchInstrumentorWrapper(AbstractInstrumentor):
         import elasticsearch  # noqa
 
     def install_instrumentation(self):
-        from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
+        from opentelemetry.instrumentation.elasticsearch import (
+            ElasticsearchInstrumentor,
+        )
 
         ElasticsearchInstrumentor().instrument()
 
-instrumentor = ElasticsearchInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = ElasticsearchInstrumentorWrapper()

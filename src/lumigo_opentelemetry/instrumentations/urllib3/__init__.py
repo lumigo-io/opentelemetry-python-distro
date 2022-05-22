@@ -1,16 +1,17 @@
 from .. import AbstractInstrumentor
 
-class URLLib3Instrumentor(AbstractInstrumentor):
 
+class URLLib3Instrumentor(AbstractInstrumentor):
     def __init__(self):
         super().__init__("urllib3")
 
     def check_if_applicable(self):
-        import urllib3  #noqa
+        import urllib3  # noqa
 
     def install_instrumentation(self):
         from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
 
         URLLib3Instrumentor().instrument()
 
-instrumentor = URLLib3Instrumentor()
+
+instrumentor: AbstractInstrumentor = URLLib3Instrumentor()

@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class Psycopg2InstrumentorWrapper(AbstractInstrumentor):
 
+class Psycopg2InstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("psycopg2")
 
@@ -13,4 +13,5 @@ class Psycopg2InstrumentorWrapper(AbstractInstrumentor):
 
         Psycopg2Instrumentor().instrument()
 
-instrumentor = Psycopg2InstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = Psycopg2InstrumentorWrapper()

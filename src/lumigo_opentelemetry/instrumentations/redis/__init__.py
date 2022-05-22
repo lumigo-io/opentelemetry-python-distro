@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class RedisInstrumentor(AbstractInstrumentor):
 
+class RedisInstrumentor(AbstractInstrumentor):
     def __init__(self):
         super().__init__("redis")
 
@@ -9,8 +9,9 @@ class RedisInstrumentor(AbstractInstrumentor):
         import redis  # noqa
 
     def install_instrumentation(self):
-        from opentelemetry.instrumentation.pymysql import PyMySQLInstrumentor
+        from opentelemetry.instrumentation.redis import RedisInstrumentor
 
         RedisInstrumentor().instrument()
 
-instrumentor = RedisInstrumentor()
+
+instrumentor: AbstractInstrumentor = RedisInstrumentor()

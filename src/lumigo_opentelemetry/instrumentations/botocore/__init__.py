@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class BotoInstrumentorWrapper(AbstractInstrumentor):
 
+class BotoInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("boto")
 
@@ -24,4 +24,5 @@ class BotoInstrumentorWrapper(AbstractInstrumentor):
         )
         BotoInstrumentor().instrument()
 
-instrumentor = BotoInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = BotoInstrumentorWrapper()

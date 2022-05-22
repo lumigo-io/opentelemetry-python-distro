@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class KafkaInstrumentorWrapper(AbstractInstrumentor):
 
+class KafkaInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("kafka")
 
@@ -13,4 +13,5 @@ class KafkaInstrumentorWrapper(AbstractInstrumentor):
 
         KafkaInstrumentor().instrument()
 
-instrumentor = KafkaInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = KafkaInstrumentorWrapper()

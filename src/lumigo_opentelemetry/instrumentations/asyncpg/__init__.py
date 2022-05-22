@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class AsyncPGInstrumentorWrapper(AbstractInstrumentor):
 
+class AsyncPGInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("asyncpg")
 
@@ -13,4 +13,5 @@ class AsyncPGInstrumentorWrapper(AbstractInstrumentor):
 
         AsyncPGInstrumentor().instrument()
 
-instrumentor = AsyncPGInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = AsyncPGInstrumentorWrapper()

@@ -1,29 +1,8 @@
+from typing import List
+
 from lumigo_opentelemetry import logger
 
 from abc import ABC, abstractmethod
-
-
-class AbstractInstrumentor(ABC):
-    """This class wraps around the facilities of opentelemetry.instrumentation.BaseInstrumentor
-       to provide a safer baseline in terms of dependency checks than what is available upstream.
-    """
-    # TODO Implement lookup of package versions based on the file-based versdion ranges we validate
-
-    @abstractmethod
-    def __init__(self, instrumentation_id: str):
-        self._instrumentation_id = instrumentation_id
-
-    @abstractmethod
-    def check_if_applicable(self):
-        raise Exception("'check_if_applicable' method not implemented!")
-
-    @abstractmethod
-    def install_instrumentation(self):
-        raise Exception("'apply_instrumentation' method not implemented!")
-
-    @property
-    def instrumentation_id(self) -> str:
-        return self._instrumentation_id
 
 # Instrumentations
 from .aiohttp_client import instrumentor as aiohttp_client_instrumentor
@@ -54,8 +33,33 @@ from .tornado import instrumentor as tornado_instrumentor
 from .urllib import instrumentor as urllib_instrumentor
 from .urllib3 import instrumentor as urllib3_instrumentor
 
-installed_instrumentations = []
-for instrumentor in [
+
+class AbstractInstrumentor(ABC):
+    """This class wraps around the facilities of opentelemetry.instrumentation.BaseInstrumentor
+    to provide a safer baseline in terms of dependency checks than what is available upstream.
+    """
+
+    # TODO Implement lookup of package versions based on the file-based version ranges we validate
+
+    @abstractmethod
+    def __init__(self, instrumentation_id: str):
+        self._instrumentation_id = instrumentation_id
+
+    @abstractmethod
+    def check_if_applicable(self):
+        raise Exception("'check_if_applicable' method not implemented!")
+
+    @abstractmethod
+    def install_instrumentation(self):
+        raise Exception("'apply_instrumentation' method not implemented!")
+
+    @property
+    def instrumentation_id(self) -> str:
+        return self._instrumentation_id
+
+
+installed_instrumentations: List[str] = []
+instrumentors: List[AbstractInstrumentor] = [
     aiohttp_client_instrumentor,
     aiopg_instrumentor,
     asyncpg_instrumentor,
@@ -83,7 +87,8 @@ for instrumentor in [
     tornado_instrumentor,
     urllib_instrumentor,
     urllib3_instrumentor,
-]:
+]
+for instrumentor in instrumentors:
     try:
         instrumentor.check_if_applicable()
     except ImportError:
@@ -100,4 +105,6 @@ for instrumentor in [
             str(e),
         )
 
-logger.debug("Installed instrumentations: %s", ", ".join(list(installed_instrumentations)))    
+logger.debug(
+    "Installed instrumentations: %s", ", ".join(list(installed_instrumentations))
+)

@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class AioHttpInstrumentorWrapper(AbstractInstrumentor):
 
+class AioHttpInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("aiohttp_client")
 
@@ -9,8 +9,11 @@ class AioHttpInstrumentorWrapper(AbstractInstrumentor):
         import aiohttp  # noqa
 
     def install_instrumentation(self):
-        from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
+        from opentelemetry.instrumentation.aiohttp_client import (
+            AioHttpClientInstrumentor,
+        )
 
         AioHttpClientInstrumentor().instrument()
 
-instrumentor = AioHttpInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = AioHttpInstrumentorWrapper()

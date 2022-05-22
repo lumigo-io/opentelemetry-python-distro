@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class PymongoInstrumentor(AbstractInstrumentor):
 
+class PymongoInstrumentor(AbstractInstrumentor):
     def __init__(self):
         super().__init__("pymongo")
 
@@ -13,4 +13,5 @@ class PymongoInstrumentor(AbstractInstrumentor):
 
         PymongoInstrumentor().instrument()
 
-instrumentor = PymongoInstrumentor()
+
+instrumentor: AbstractInstrumentor = PymongoInstrumentor()

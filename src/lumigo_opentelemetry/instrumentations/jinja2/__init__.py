@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class Jinja2InstrumentorWrapper(AbstractInstrumentor):
 
+class Jinja2InstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("jinja2")
 
@@ -13,4 +13,5 @@ class Jinja2InstrumentorWrapper(AbstractInstrumentor):
 
         Jinja2Instrumentor().instrument()
 
-instrumentor = Jinja2InstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = Jinja2InstrumentorWrapper()

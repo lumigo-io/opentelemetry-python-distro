@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Dict
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
@@ -35,8 +34,9 @@ def auto_load(_):
     # Some versions of Python have issues with the 'argv' attribute when
     # auto-loading the tracer. See https://bugs.python.org/issue32573
     import sys
+
     if not hasattr(sys, "argv"):
-        sys.argv = ['']
+        sys.argv = [""]
 
     # We do not need to init the package, it will happen automatically due
     # to the init() call at the end of this file.
@@ -44,7 +44,9 @@ def auto_load(_):
 
 def init():
     if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
-        logger.info("Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable")
+        logger.info(
+            "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
+        )
         return
 
     # Multiple packages are passed to autowrapt in comma-separated form
@@ -53,7 +55,10 @@ def init():
     else:
         activation_mode = "import"
 
-    logger.info("Loading the Lumigo OpenTelemetry distribution (injection mode: %s)", activation_mode)
+    logger.info(
+        "Loading the Lumigo OpenTelemetry distribution (injection mode: %s)",
+        activation_mode,
+    )
 
     from platform import python_version
     from typing import Dict
@@ -81,7 +86,6 @@ def init():
             logger.exception("failed getting python version", exc_info=e)
             return ""
 
-
     def safe_get_metadata() -> str:
         try:
             metadata_uri = os.environ.get("ECS_CONTAINER_METADATA_URI")
@@ -94,7 +98,6 @@ def init():
         except Exception as e:
             logger.exception("failed to fetch ecs metadata", exc_info=e)
             return ""
-
 
     def safe_get_envs() -> str:
         try:
@@ -124,7 +127,9 @@ def init():
             BatchSpanProcessor(
                 OTLPSpanExporter(
                     endpoint=lumigo_endpoint,
-                    headers={"LUMIGO_TOKEN": lumigo_token}  # TODO Ensure this is the right header
+                    headers={
+                        "LUMIGO_TOKEN": lumigo_token
+                    },  # TODO Ensure this is the right header
                 ),
             )
         )
@@ -137,7 +142,10 @@ def init():
 
     spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
     if spandump_file:
-        from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
+        from opentelemetry.sdk.trace.export import (
+            SimpleSpanProcessor,
+            ConsoleSpanExporter,
+        )
 
         tracer_provider.add_span_processor(
             SimpleSpanProcessor(
@@ -151,9 +159,7 @@ def init():
             )
         )
 
-        logger.debug(
-            "Storing a copy of the trace data under: %s", spandump_file
-        )
+        logger.debug("Storing a copy of the trace data under: %s", spandump_file)
 
         activate_instrumentation = True
 
@@ -187,12 +193,7 @@ def lumigo_wrapped(func):
     return wrapper
 
 
-__all__ = [
-    'auto_load',
-    'init',
-    'lumigo_wrapped',
-    'logger'
-]
+__all__ = ["auto_load", "init", "lumigo_wrapped", "logger"]
 
 # Load the package on import
 init()

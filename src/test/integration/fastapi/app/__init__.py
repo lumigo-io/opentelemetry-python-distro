@@ -3,9 +3,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI()
 
+
 @app.get("/")
 async def root():
     return {"message": "Hello FastAPI!"}
+
 
 @app.get("/accounts/{account_id}")
 async def account(account_id):

@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class GrpcInstrumentorWrapper(AbstractInstrumentor):
 
+class GrpcInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("grpc")
 
@@ -13,4 +13,5 @@ class GrpcInstrumentorWrapper(AbstractInstrumentor):
 
         GrpcInstrumentorClient().instrument()
 
-instrumentor = GrpcInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = GrpcInstrumentorWrapper()

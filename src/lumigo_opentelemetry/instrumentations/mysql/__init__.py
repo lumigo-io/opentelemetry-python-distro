@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class MySqlInstrumentorWrapper(AbstractInstrumentor):
 
+class MySqlInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("mysql")
 
@@ -13,4 +13,5 @@ class MySqlInstrumentorWrapper(AbstractInstrumentor):
 
         MySQLInstrumentor().instrument()
 
-instrumentor = MySqlInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = MySqlInstrumentorWrapper()

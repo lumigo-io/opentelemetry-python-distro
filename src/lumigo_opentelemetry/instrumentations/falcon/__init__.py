@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class FalconInstrumentorWrapper(AbstractInstrumentor):
 
+class FalconInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("falcon")
 
@@ -13,4 +13,5 @@ class FalconInstrumentorWrapper(AbstractInstrumentor):
 
         FalconInstrumentor().instrument()
 
-instrumentor = FalconInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = FalconInstrumentorWrapper()

@@ -1,6 +1,6 @@
 import pytest
 
-from lumigo_wrapper.libs.json_utils import (
+from lumigo_opentelemetry.libs.json_utils import (
     get_omitting_regex,
 )
 

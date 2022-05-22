@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class FlaskInstrumentorWrapper(AbstractInstrumentor):
 
+class FlaskInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("flask")
 
@@ -23,4 +23,5 @@ class FlaskInstrumentorWrapper(AbstractInstrumentor):
             except Exception as e:
                 logger.exception("failed instrumenting Flask", exc_info=e)
 
-instrumentor = FlaskInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = FlaskInstrumentorWrapper()

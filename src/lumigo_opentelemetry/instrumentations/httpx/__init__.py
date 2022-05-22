@@ -1,7 +1,7 @@
 from .. import AbstractInstrumentor
 
-class HttpxInstrumentorWrapper(AbstractInstrumentor):
 
+class HttpxInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("httpx")
 
@@ -13,4 +13,5 @@ class HttpxInstrumentorWrapper(AbstractInstrumentor):
 
         HTTPXClientInstrumentor().instrument()
 
-instrumentor = HttpxInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = HttpxInstrumentorWrapper()

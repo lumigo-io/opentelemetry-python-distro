@@ -10,16 +10,14 @@ setup(
     version=open(VERSION_PATH).read(),
     package_data={"lumigo_opentelemetry": ["VERSION"]},
     entry_points={
-        "console_scripts": ["autowrapt = autowrapt.main:main"],
-        "lumigo_opentelemetry": ["string = lumigo_opentelemetry:auto_load"]
+        "lumigo_opentelemetry": ["string = lumigo_opentelemetry:auto_load"],
     },
     install_requires=[
         "asgiref==3.5.2",
-        "packaging>=21.3",
         "autowrapt>=1.0",
+        "packaging>=21.3",
         "wrapt>=1.11.0",
         "opentelemetry-sdk==1.9.1",
-        "opentelemetry-api==1.9.1",
         "opentelemetry-exporter-otlp-proto-http==1.9.1",
         "opentelemetry-semantic-conventions==0.28b1",
         "opentelemetry-instrumentation==0.28b1",

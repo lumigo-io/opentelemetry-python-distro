@@ -1,8 +1,8 @@
 from .. import AbstractInstrumentor
 from .parsers import FastAPIParser
 
-class FastApiInstrumentorWrapper(AbstractInstrumentor):
 
+class FastApiInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
         super().__init__("fastapi")
 
@@ -32,4 +32,5 @@ class FastApiInstrumentorWrapper(AbstractInstrumentor):
             except Exception as e:
                 logger.exception("failed instrumenting FastAPI", exc_info=e)
 
-instrumentor = FastApiInstrumentorWrapper()
+
+instrumentor: AbstractInstrumentor = FastApiInstrumentorWrapper()
