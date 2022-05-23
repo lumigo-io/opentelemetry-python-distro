@@ -159,6 +159,9 @@ def init():
 
     trace.set_tracer_provider(tracer_provider)
 
+    # Activate instrumentations
+    from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
+
 
 def lumigo_wrapped(func):
     CONTEXT_NAME = "lumigo"
