@@ -1,9 +1,10 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
+from lumigo_opentelemetry.instrumentations.botocore.parsers import AwsParser
 
 
-class BotoInstrumentorWrapper(AbstractInstrumentor):
+class BotoCoreInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
-        super().__init__("boto")
+        super().__init__("botocore")
 
     def check_if_applicable(self):
         from botocore.client import BaseClient  # noqa
@@ -11,18 +12,12 @@ class BotoInstrumentorWrapper(AbstractInstrumentor):
         from botocore.exceptions import ClientError  # noqa
 
     def install_instrumentation(self):
-        from opentelemetry.instrumentation.boto import BotoInstrumentor
         from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
-
-        from . import (
-            AwsParser,
-        )
 
         BotocoreInstrumentor().instrument(
             request_hook=AwsParser.request_hook,
             response_hook=AwsParser.response_hook,
         )
-        BotoInstrumentor().instrument()
 
 
-instrumentor: AbstractInstrumentor = BotoInstrumentorWrapper()
+instrumentor: AbstractInstrumentor = BotoCoreInstrumentorWrapper()

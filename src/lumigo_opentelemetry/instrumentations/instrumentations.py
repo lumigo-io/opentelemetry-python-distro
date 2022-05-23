@@ -9,7 +9,8 @@ from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from .aiohttp_client import instrumentor as aiohttp_client_instrumentor
 from .aiopg import instrumentor as aiopg_instrumentor
 from .asyncpg import instrumentor as asyncpg_instrumentor
-from .botocore import instrumentor as boto_instrumentor
+from .boto import instrumentor as boto_instrumentor
+from .botocore import instrumentor as botocore_instrumentor
 from .django import instrumentor as django_instrumentor
 from .elasticsearch import instrumentor as elasticsearch_instrumentor
 from .falcon import instrumentor as falcon_instrumentor
@@ -41,6 +42,7 @@ instrumentors: List[AbstractInstrumentor] = [
     aiopg_instrumentor,
     asyncpg_instrumentor,
     boto_instrumentor,
+    botocore_instrumentor,
     django_instrumentor,
     elasticsearch_instrumentor,
     falcon_instrumentor,

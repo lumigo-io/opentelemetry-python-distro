@@ -1,3 +1,5 @@
+import sys
+
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
 
@@ -6,6 +8,8 @@ class URLLib3Instrumentor(AbstractInstrumentor):
         super().__init__("urllib3")
 
     def check_if_applicable(self):
+        if 'requests' in sys.modules:
+            raise ImportError
         import urllib3  # noqa
 
     def install_instrumentation(self):
