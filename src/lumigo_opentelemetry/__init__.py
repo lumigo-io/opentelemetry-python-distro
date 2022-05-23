@@ -118,9 +118,6 @@ def init():
     tracer_resource = Resource(attributes=attributes)
     tracer_provider = TracerProvider(resource=tracer_resource)
 
-    # Activate the instrumentation only of at least one SpanProcessor is specified
-    activate_instrumentation = False
-
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN", "")
     if lumigo_token:
         tracer_provider.add_span_processor(
@@ -133,7 +130,6 @@ def init():
                 ),
             )
         )
-        activate_instrumentation = True
     else:
         logger.warning(
             "Lumigo token not provided (env var 'LUMIGO_TRACER_TOKEN' not set); "
@@ -161,17 +157,10 @@ def init():
 
         logger.debug("Storing a copy of the trace data under: %s", spandump_file)
 
-        activate_instrumentation = True
-
     trace.set_tracer_provider(tracer_provider)
 
-    if activate_instrumentation:
-        from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
-    else:
-        logger.info(
-            "Tracing data will neither be sent to Lumigo, nor dumped on the filesystem; "
-            "the instrumentation will not be activated"
-        )
+    # Activate instrumentations
+    from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
 
 
 def lumigo_wrapped(func):
