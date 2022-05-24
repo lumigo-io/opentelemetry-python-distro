@@ -61,7 +61,8 @@ jobs:
       - run: ../utils/common_bash/defaults/code_cov.sh
 
   test-fast-api:
-    <<: *defaults
+    docker:
+      - image: cimg/python:3.7.4
     parameters:
       fastapi-version:
         type: string
