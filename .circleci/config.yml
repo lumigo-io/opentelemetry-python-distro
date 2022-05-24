@@ -61,46 +61,14 @@ jobs:
       - run: ../utils/common_bash/defaults/code_cov.sh
 
   test-fast-api:
-    docker:
-      - image: cimg/python:3.7.4
+    <<: *defaults
     parameters:
       fastapi-version:
         type: string
     steps:
-      - checkout
-      - run:
-          command: |
-            mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-            cd ..
-            git clone git@github.com:lumigo-io/common-resources.git
-      - run:
-          command: |
-            cd ..
-            git clone git@github.com:lumigo-io/utils.git
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install pip==20.1.1
-            if [ -f requirements.txt ]
-            then
-              pip install -r requirements.txt --upgrade
-              pip install lumigo_tracer --upgrade
-            else
-              echo "requirements.txt doesn't exist, skipping python requirements installation becuase this isn't a python project"
-            fi
-      - run: echo "source venv/bin/activate" >> $BASH_ENV
-      - run:
-          name: install package
-          command: |
-            if [ -f setup.py ]
-            then
-              python setup.py develop
-            else
-              echo "setup.py doesn't exist, skipping this step"
-            fi
+      - lumigo-orb/checkout_code
+      - lumigo-orb/checkout_utils
+      # run tests!
       - run: apt-get update && apt-get install -y tox
       - run: cd src/test/integration/fastapi && FASTAPI_VERSION=<< parameters.fastapi-version >> tox
 
