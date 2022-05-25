@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 PID="$(pgrep -f uvicorn)"
-if [[ -n "$PID" ]]
+if [ -n "$PID" ]
 then
     for ID in ${PID}
     do

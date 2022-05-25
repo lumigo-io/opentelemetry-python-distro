@@ -12,9 +12,9 @@ orbs:
 
 workflows:
 
-  test-integration:
+  test-integration-python:
     jobs:
-    - test-integration:
+    - test-integration-python:
         matrix:  
           parameters:
             # These must be valid tag values for the cimg/python container image
@@ -60,7 +60,7 @@ jobs:
       - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/checks.sh
       - run: ../utils/common_bash/defaults/code_cov.sh
 
-  test-integration:
+  test-integration-python:
     parameters:
       python_cimg_tag:
         type: string
