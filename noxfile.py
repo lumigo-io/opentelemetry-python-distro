@@ -1,5 +1,7 @@
+from distutils.log import info
 import nox
 
+import logging
 import os
 import time
 from typing import List
@@ -26,8 +28,17 @@ def dependency_versions(dependency_name: str) -> List[str]:
 def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
     session.run('python3', '--version', external=True)
 
-    session.install(f'uvicorn=={uvicorn_version}')
-    session.install(f'fastapi=={fastapi_version}')
+    try:
+        session.install(f'uvicorn=={uvicorn_version}')
+    except:
+        logging.info("Cannot install 'uvicorn' version '%s'", uvicorn_version)
+        return
+
+    try:
+        session.install(f'fastapi=={fastapi_version}')
+    except:
+        logging.info("Cannot install 'uvicorn' version '%s'", uvicorn_version)
+        return
 
     session.install('.')
 
@@ -43,5 +54,12 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                 'OTEL_SERVICE_NAME': 'app',
             })
         finally:
-            session.run('pkill', '-9', 'uvicorn', external=True)
+            import psutil
+            # Kill all uvicorn processes
+            for proc in psutil.process_iter():
+                if proc.name().lower() == 'python':
+                    cmdline = proc.cmdline()
+                    if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                        proc.kill()
+
             session.run('rm', './spans.txt', external=True)
