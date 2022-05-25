@@ -6,66 +6,24 @@ from lumigo_opentelemetry import logger
 # Instrumentations
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-from .aiohttp_client import instrumentor as aiohttp_client_instrumentor
-from .aiopg import instrumentor as aiopg_instrumentor
-from .asyncpg import instrumentor as asyncpg_instrumentor
 from .boto import instrumentor as boto_instrumentor
 from .botocore import instrumentor as botocore_instrumentor
-from .django import instrumentor as django_instrumentor
-from .elasticsearch import instrumentor as elasticsearch_instrumentor
-from .falcon import instrumentor as falcon_instrumentor
 from .fastapi import instrumentor as fastapi_instrumentor
 from .flask import instrumentor as flask_instrumentor
-from .grpc import instrumentor as grpc_instrumentor
-from .httpx import instrumentor as httpx_instrumentor
-from .jinja2 import instrumentor as jinja2_instrumentor
-from .kafka import instrumentor as kafka_instrumentor
-from .mysql import instrumentor as mysql_instrumentor
-from .pika import instrumentor as pika_instrumentor
-from .psycopg2 import instrumentor as psycopg2_instrumentor
-from .pymemcache import instrumentor as pymemcache_instrumentor
 from .pymongo import instrumentor as pymongo_instrumentor
 from .pymysql import instrumentor as pymysql_instrumentor
-from .pyramid import instrumentor as pyramid_instrumentor
-from .redis import instrumentor as redis_instrumentor
 from .requests import instrumentor as requests_instrumentor
-from .sklearn import instrumentor as sklearn_instrumentor
-from .sqlite3 import instrumentor as sqlite3_instrumentor
-from .tornado import instrumentor as tornado_instrumentor
-from .urllib import instrumentor as urllib_instrumentor
-from .urllib3 import instrumentor as urllib3_instrumentor
 
 
 installed_instrumentations: List[str] = []
 instrumentors: List[AbstractInstrumentor] = [
-    aiohttp_client_instrumentor,
-    aiopg_instrumentor,
-    asyncpg_instrumentor,
     boto_instrumentor,
     botocore_instrumentor,
-    django_instrumentor,
-    elasticsearch_instrumentor,
-    falcon_instrumentor,
     fastapi_instrumentor,
     flask_instrumentor,
-    grpc_instrumentor,
-    httpx_instrumentor,
-    jinja2_instrumentor,
-    kafka_instrumentor,
-    mysql_instrumentor,
-    pika_instrumentor,
-    psycopg2_instrumentor,
-    pymemcache_instrumentor,
     pymongo_instrumentor,
     pymysql_instrumentor,
-    pyramid_instrumentor,
-    redis_instrumentor,
     requests_instrumentor,
-    sklearn_instrumentor,
-    sqlite3_instrumentor,
-    tornado_instrumentor,
-    urllib_instrumentor,
-    urllib3_instrumentor,
 ]
 for instrumentor in instrumentors:
     try:
