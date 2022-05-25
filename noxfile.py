@@ -33,7 +33,7 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
         session.install('-r', 'requirements_others.txt')
 
         try:
-            session.run('sh', './scripts/start_uvicorn.sh', external=True)  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+            session.run('sh', './scripts/start_uvicorn', external=True)  # One happy day we will have https://github.com/wntrblm/nox/issues/198
             # Wait 1s to give time for app to start
             time.sleep(1)
             session.run('pytest', '--tb', 'native', '--log-cli-level=INFO', '--color=yes', '-v', './tests/test_fastapi.py', env={
@@ -41,5 +41,5 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                 'OTEL_SERVICE_NAME': 'app',
             })
         finally:
-            session.run('sh', './scripts/kill_all_uvicorns.sh', external=True)
+            session.run('pkill', '-9', 'uvicorn', external=True)
             session.run('rm', './spans.txt', external=True)
