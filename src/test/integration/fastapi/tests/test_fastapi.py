@@ -19,4 +19,4 @@ class TestFastApiSpans(unittest.TestCase):
         with open("spans.txt") as file:
             spans = [json.loads(line) for line in file.readlines()]
 
-        self.assertEqual(2, len(spans))
+        self.assertEqual(1, len(spans))
