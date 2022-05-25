@@ -56,7 +56,10 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
             import psutil
             # Kill all uvicorn processes
             for proc in psutil.process_iter():
-                if proc.name().lower() == 'python':
+                # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+                if proc.name() == 'uvicorn':
+                    proc.kill()
+                elif proc.name().lower() == 'python':
                     cmdline = proc.cmdline()
                     if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
                         proc.kill()
