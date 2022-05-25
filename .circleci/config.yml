@@ -1,6 +1,6 @@
 version: 2.1
 defaults: &defaults
-  working_directory: ~/lumigo-python-wrapper
+  working_directory: ~/opentelemetry-python-distro
   docker:
   - image: lumigo/ci:latest
     auth:
@@ -10,11 +10,12 @@ defaults: &defaults
 orbs:
   lumigo-orb: lumigo/lumigo-orb@volatile
 
-
 workflows:
   test-versions:
     jobs:
     - test-fast-api:
+        docker:
+          - image: cimg/python:3.10
         matrix:
           parameters:
             # TODO Put python version here as param and pass it to tox
@@ -61,7 +62,9 @@ jobs:
       - run: ../utils/common_bash/defaults/code_cov.sh
 
   test-fast-api:
-    <<: *defaults
+    working_directory: ~/opentelemetry-python-distro
+    docker:
+    - image: cimg/python:3.10
     parameters:
       fastapi-version:
         type: string
