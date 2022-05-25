@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 PID="$(pgrep -f uvicorn)"
 if [[ -n "$PID" ]]
