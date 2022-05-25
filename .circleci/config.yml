@@ -1,6 +1,6 @@
 version: 2.1
 defaults: &defaults
-  working_directory: ~/lumigo-python-wrapper
+  working_directory: ~/opentelemetry-python-distro
   docker:
   - image: lumigo/ci:latest
     auth:
@@ -10,20 +10,20 @@ defaults: &defaults
 orbs:
   lumigo-orb: lumigo/lumigo-orb@volatile
 
-
 workflows:
-  test-versions:
+
+  test-integration-python:
     jobs:
-    - test-fast-api:
-        matrix:
+    - test-integration-python:
+        matrix:  
           parameters:
-            # TODO Put python version here as param and pass it to tox
-            fastapi-version:
-              - 0.70.1
-              - 0.78.0
+            # These must be valid tag values for the cimg/python container image
+            # on Docker Hub, see https://hub.docker.com/r/cimg/python/tags
+            python_cimg_tag: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         filters:
           branches:
             ignore: master
+
   test-deploy:
     jobs:
     - test:
@@ -60,17 +60,17 @@ jobs:
       - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/checks.sh
       - run: ../utils/common_bash/defaults/code_cov.sh
 
-  test-fast-api:
-    <<: *defaults
+  test-integration-python:
     parameters:
-      fastapi-version:
+      python_cimg_tag:
         type: string
+    docker:
+      - image: cimg/python:<< parameters.python_cimg_tag >>
+    working_directory: ~/opentelemetry-python-distro
     steps:
-      - lumigo-orb/checkout_code
-      - lumigo-orb/checkout_utils
-      # run tests!
-      - run: apt-get update && apt-get install -y tox
-      - run: cd src/test/integration/fastapi && FASTAPI_VERSION=<< parameters.fastapi-version >> tox
+      - checkout
+      - run: pip3 install nox
+      - run: python3 -m nox
 
   deploy:
     <<: *defaults
