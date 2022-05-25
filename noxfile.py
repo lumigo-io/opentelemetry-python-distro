@@ -1,7 +1,6 @@
 from distutils.log import info
 import nox
 
-import logging
 import os
 import time
 from typing import List
@@ -31,13 +30,13 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
     try:
         session.install(f'uvicorn=={uvicorn_version}')
     except:
-        logging.info("Cannot install 'uvicorn' version '%s'", uvicorn_version)
+        session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
         return
 
     try:
         session.install(f'fastapi=={fastapi_version}')
     except:
-        logging.info("Cannot install 'uvicorn' version '%s'", uvicorn_version)
+        session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
         return
 
     session.install('.')
