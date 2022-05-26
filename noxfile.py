@@ -60,6 +60,7 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                 "-v",
                 "./tests/test_fastapi.py",
                 env={
+                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
                     "LUMIGO_DEBUG_SPANDUMP": "./spans.txt",
                     "OTEL_SERVICE_NAME": "app",
                 },
