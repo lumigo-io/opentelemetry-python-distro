@@ -3,7 +3,7 @@ from collections import OrderedDict
 from decimal import Decimal
 
 import pytest
-from src.lumigo_opentelemetry.libs.json_utils import (
+from lumigo_opentelemetry.libs.json_utils import (
     SKIP_SCRUBBING_KEYS,
     TRUNCATE_SUFFIX,
     dump,

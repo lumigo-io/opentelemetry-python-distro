@@ -1,12 +1,11 @@
-from distutils.log import info
 import nox
 
 import os
 import time
-from typing import List
+from typing import List, Union
 
 
-def python_versions() -> List[str]:
+def python_versions() -> Union[List[str], bool]:
     # On CircleCI, just run the current Python version without
     # creating a venv.
     # In local, try all supported python versions building venvs.
@@ -31,13 +30,13 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
 
     try:
         session.install(f"uvicorn=={uvicorn_version}")
-    except:
+    except:  # noqa
         session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
         return
 
     try:
         session.install(f"fastapi=={fastapi_version}")
-    except:
+    except:  # noqa
         session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
         return
 
