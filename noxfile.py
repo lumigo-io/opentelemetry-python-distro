@@ -45,10 +45,19 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
 
         try:
             session.run(
-                "sh", "./scripts/start_uvicorn", external=True
+                "sh", "./scripts/start_uvicorn",
+                env={
+                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                    "LUMIGO_DEBUG_SPANDUMP": "./spans.txt",
+                    "OTEL_SERVICE_NAME": "app",
+                },
+                external=True,
             )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+            # TODO Make this deterministic
             # Wait 1s to give time for app to start
-            time.sleep(1)
+            time.sleep(3)
+
             session.run(
                 "pytest",
                 "--tb",
@@ -57,11 +66,6 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                 "--color=yes",
                 "-v",
                 "./tests/test_fastapi.py",
-                env={
-                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": "./spans.txt",
-                    "OTEL_SERVICE_NAME": "app",
-                },
             )
         finally:
             import psutil
@@ -76,4 +80,4 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                     if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
                         proc.kill()
 
-            session.run("rm", "./spans.txt", external=True)
+            session.run("rm", "-f", "./spans.txt", external=True)

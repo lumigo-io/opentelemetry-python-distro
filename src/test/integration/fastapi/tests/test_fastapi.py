@@ -14,9 +14,10 @@ class TestFastApiSpans(unittest.TestCase):
 
         self.assertEqual(body, {"message": "Hello FastAPI!"})
 
+        # TODO Do something deterministic
         time.sleep(2)  # Sleep for two seconds to allow the exporter to catch up
 
         with open("spans.txt") as file:
             spans = [json.loads(line) for line in file.readlines()]
 
-        self.assertEqual(1, len(spans))
+        self.assertEqual(3, len(spans))
