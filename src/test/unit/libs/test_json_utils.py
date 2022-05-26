@@ -3,12 +3,18 @@ from collections import OrderedDict
 from decimal import Decimal
 
 import pytest
-from lumigo_opentelemetry.libs.json_utils import (
+from src.lumigo_opentelemetry.libs.json_utils import (
     SKIP_SCRUBBING_KEYS,
     TRUNCATE_SUFFIX,
     dump,
     LUMIGO_SECRET_MASKING_REGEX,
+    get_omitting_regex,
 )
+
+
+@pytest.fixture(autouse=True)
+def remove_caches(monkeypatch):
+    get_omitting_regex.cache_clear()
 
 
 @pytest.mark.parametrize(
