@@ -26,8 +26,6 @@ def dependency_versions(dependency_name: str) -> List[str]:
 @nox.parametrize("uvicorn_version", dependency_versions("uvicorn"))
 @nox.parametrize("fastapi_version", dependency_versions("fastapi"))
 def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
-    session.run("python3", "--version", external=True)
-
     try:
         session.install(f"uvicorn=={uvicorn_version}")
     except:  # noqa
