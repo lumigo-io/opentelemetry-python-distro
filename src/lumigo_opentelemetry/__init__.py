@@ -50,7 +50,7 @@ def init():
         return
 
     # Multiple packages are passed to autowrapt in comma-separated form
-    if "lumigo" in os.getenv("AUTOWRAPT_BOOTSTRAP", "").split(","):
+    if "lumigo_opentelemetry" in os.getenv("AUTOWRAPT_BOOTSTRAP", "").split(","):
         activation_mode = "automatic injection"
     else:
         activation_mode = "import"
