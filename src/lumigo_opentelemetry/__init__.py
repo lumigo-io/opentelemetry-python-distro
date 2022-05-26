@@ -106,6 +106,8 @@ def init():
             logger.exception("failed getting envs", exc_info=e)
             return ""
 
+    lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
+
     # TODO Clean up needed
     attributes = {
         # TODO Use a (built-in?) Resource Detector instead
@@ -115,18 +117,23 @@ def init():
         # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
         "metadata": safe_get_metadata(),
     }
-    tracer_resource = Resource(attributes=attributes)
+
+    if lumigo_token:
+        # TODO Remove from resource attributes as soon as the edge endpoint supports token in HTTP headers
+        attributes["lumigoToken"] = lumigo_token.strip()
+
+    tracer_resource = Resource.create(attributes=attributes)
     tracer_provider = TracerProvider(resource=tracer_resource)
 
-    lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN", "")
     if lumigo_token:
         tracer_provider.add_span_processor(
             BatchSpanProcessor(
                 OTLPSpanExporter(
                     endpoint=lumigo_endpoint,
-                    headers={
-                        "LUMIGO_TOKEN": lumigo_token
-                    },  # TODO Ensure this is the right header
+                    # TODO Send lumigo token in HTTP headers as soon as the edge endpoint supports it
+                    # headers={
+                    #     "LUMIGO_TOKEN": lumigo_token
+                    # },  # TODO Ensure this is the right header
                 ),
             )
         )
