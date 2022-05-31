@@ -45,7 +45,8 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
 
         try:
             session.run(
-                "sh", "./scripts/start_uvicorn",
+                "sh",
+                "./scripts/start_uvicorn",
                 env={
                     "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
                     "LUMIGO_DEBUG_SPANDUMP": "./spans.txt",

@@ -45,3 +45,15 @@ for instrumentor in instrumentors:
 logger.debug(
     "Installed instrumentations: %s", ", ".join(list(installed_instrumentations))
 )
+
+frameworks = list(
+    filter(
+        lambda instrumentor_id: instrumentor_id
+        in [
+            fastapi_instrumentor.instrumentation_id,
+            flask_instrumentor.instrumentation_id,
+        ],
+        installed_instrumentations,
+    )
+)
+framework = frameworks[0] if frameworks else "Unknown"

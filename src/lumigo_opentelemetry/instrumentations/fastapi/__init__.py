@@ -4,7 +4,7 @@ from .parsers import FastAPIParser
 
 class FastApiInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self):
-        super().__init__("fastapi")
+        super().__init__("fast-api")
 
     def check_if_applicable(self):
         import fastapi  # noqa

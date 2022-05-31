@@ -108,6 +108,10 @@ def init():
 
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
 
+    # Activate instrumentations
+    from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
+    from lumigo_opentelemetry.instrumentations.instrumentations import framework
+
     # TODO Clean up needed
     attributes = {
         # TODO Use a (built-in?) Resource Detector instead
@@ -116,6 +120,7 @@ def init():
         "envs": safe_get_envs(),
         # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
         "metadata": safe_get_metadata(),
+        "framework": framework,
     }
 
     if lumigo_token:
@@ -165,9 +170,6 @@ def init():
         logger.debug("Storing a copy of the trace data under: %s", spandump_file)
 
     trace.set_tracer_provider(tracer_provider)
-
-    # Activate instrumentations
-    from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
 
 
 def lumigo_wrapped(func):
