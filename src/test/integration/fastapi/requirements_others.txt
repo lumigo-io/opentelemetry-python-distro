@@ -1,0 +1,4 @@
+pytest
+json-stream
+requests
+psutil
