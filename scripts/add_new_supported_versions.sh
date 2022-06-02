@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # This script crawls the content of the repository looking for the
 # <instrumentation_folder>/supported_versions/<package_name> files,
 # when checks on Pypi if there are new versions parsing the RSS with
