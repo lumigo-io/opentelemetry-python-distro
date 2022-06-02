@@ -22,18 +22,18 @@ workflows:
             python_cimg_tag: ["3.6", "3.7", "3.8", "3.9", "3.10"]
         filters:
           branches:
-            ignore: master
+            ignore: main
 
   test-deploy:
     jobs:
     - test:
         filters:
           branches:
-            ignore: master
+            ignore: main
     - lumigo-orb/be-deploy:
         filters:
           branches:
-            ignore: master
+            ignore: main
         requires:
           - test
     - lumigo-orb/integration-test:
@@ -41,13 +41,13 @@ workflows:
         tests_spec: testPython
         filters:
           branches:
-            ignore: master
+            ignore: main
         requires:
           - lumigo-orb/be-deploy
     - deploy:
         filters:
           branches:
-            only: master
+            only: main
 
 jobs:
   test:
