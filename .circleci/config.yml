@@ -1,6 +1,6 @@
 version: 2.1
 defaults: &defaults
-  working_directory: ~/lumigo-python-wrapper
+  working_directory: ~/opentelemetry-python-distro
   docker:
   - image: lumigo/ci:latest
     auth:
@@ -10,8 +10,20 @@ defaults: &defaults
 orbs:
   lumigo-orb: lumigo/lumigo-orb@volatile
 
-
 workflows:
+
+  test-integration-python:
+    jobs:
+    - test-integration-python:
+        matrix:  
+          parameters:
+            # These must be valid tag values for the cimg/python container image
+            # on Docker Hub, see https://hub.docker.com/r/cimg/python/tags
+            python_cimg_tag: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        filters:
+          branches:
+            ignore: master
+
   test-deploy:
     jobs:
     - test:
@@ -44,10 +56,21 @@ jobs:
       - lumigo-orb/checkout_code
       - lumigo-orb/checkout_utils
       # run tests!
-      - run: . venv/bin/activate && pip uninstall lumigo-python-wrapper -y && python setup.py develop
+      - run: . venv/bin/activate && pip uninstall lumigo_opentelemetry -y && python setup.py develop
       - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/checks.sh
       - run: ../utils/common_bash/defaults/code_cov.sh
 
+  test-integration-python:
+    parameters:
+      python_cimg_tag:
+        type: string
+    docker:
+      - image: cimg/python:<< parameters.python_cimg_tag >>
+    working_directory: ~/opentelemetry-python-distro
+    steps:
+      - checkout
+      - run: pip3 install nox
+      - run: python3 -m nox
 
   deploy:
     <<: *defaults
