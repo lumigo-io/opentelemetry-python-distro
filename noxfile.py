@@ -17,7 +17,7 @@ def python_versions() -> Union[List[str], bool]:
 
 def dependency_versions(dependency_name: str) -> List[str]:
     with open(
-        f"src/test/integration/fastapi/supported_versions/{dependency_name}", "r"
+        f"src/test/integration/fastapi/tested_versions/{dependency_name}", "r"
     ) as f:
         return [line.strip() for line in f.readlines()]
 
