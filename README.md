@@ -1,8 +1,8 @@
 # lumigo_opentelemetry :stars:
 
-![CircleCI](https://circleci.com/gh/lumigo-io/lumigo_opentelemetry/tree/master.svg?style=svg&circle-token=d98d1b95f34b49be2caa58c49d8a70d6a7587b88)
+![CircleCI](https://circleci.com/gh/lumigo-io/lumigo_opentelemetry/tree/main.svg?style=svg&circle-token=d98d1b95f34b49be2caa58c49d8a70d6a7587b88)
 ![Version](https://badge.fury.io/py/lumigo_opentelemetry.svg)
-![codecov](https://codecov.io/gh/lumigo-io/lumigo_opentelemetry/branch/master/graph/badge.svg?token=d8CvqyKTnq)
+![codecov](https://codecov.io/gh/lumigo-io/lumigo_opentelemetry/branch/main/graph/badge.svg?token=d8CvqyKTnq)
 
 This is [`lumigo_opentelemetry`](https://pypi.org/project/lumigo_opentelemetry/) package, Lumigo's OpenTelemetry distribution for Python.
 

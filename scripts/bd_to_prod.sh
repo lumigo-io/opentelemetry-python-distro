@@ -5,14 +5,14 @@ set -Eeo pipefail
 setup_git() {
     git config --global user.email "no-reply@build.com"
     git config --global user.name "CircleCI"
-    git checkout master
+    git checkout main
     # Avoid version failure
     git stash
 }
 
 
 push_tags() {
-    git push origin master --tags
+    git push origin main --tags
 }
 
 
