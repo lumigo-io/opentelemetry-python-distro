@@ -34,7 +34,7 @@ def invoke_boto3():
 
 @app.get("/invoke-mongo")
 def invoke_mongo():
-    with MongoDbContainer() as mongo:
+    with MongoDbContainer("mongo:5.0.9") as mongo:
         db = mongo.get_connection_client().test
         doc = {
             "address": {
@@ -48,7 +48,7 @@ def invoke_mongo():
 
 @app.get("/invoke-pymysql")
 def invoke_mysql():
-    with MySqlContainer():
+    with MySqlContainer("mysql:8.0.29"):
         return {"status": "ok"}
 
 
