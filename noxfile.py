@@ -5,6 +5,10 @@ import time
 from typing import List, Union
 
 
+SPANS_FILE = "spans.txt"
+SPANS_FILE_FULL_PATH = os.path.abspath(f"src/test/{SPANS_FILE}")
+
+
 def python_versions() -> Union[List[str], bool]:
     # On CircleCI, just run the current Python version without
     # creating a venv.
@@ -25,7 +29,17 @@ def dependency_versions(dependency_name: str) -> List[str]:
 @nox.session(python=python_versions())
 @nox.parametrize("uvicorn_version", dependency_versions("uvicorn"))
 @nox.parametrize("fastapi_version", dependency_versions("fastapi"))
-def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
+@nox.parametrize("boto3_version", dependency_versions("boto3"))
+@nox.parametrize("pymongo_version", dependency_versions("pymongo"))
+@nox.parametrize("pymysql_version", dependency_versions("pymsql"))
+def integration_tests_fastapi(
+    session,
+    fastapi_version,
+    uvicorn_version,
+    boto3_verison,
+    pymongo_version,
+    pymysql_version,
+):
     try:
         session.install(f"uvicorn=={uvicorn_version}")
     except:  # noqa
@@ -36,6 +50,21 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
         session.install(f"fastapi=={fastapi_version}")
     except:  # noqa
         session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
+        return
+    try:
+        session.install(f"boto3=={boto3_verison}")
+    except:  # noqa
+        session.log("Cannot install 'boto3' version '%s'", boto3_verison)
+        return
+    try:
+        session.install(f"pymongo=={pymongo_version}")
+    except:  # noqa
+        session.log("Cannot install 'pymongo' version '%s'", pymongo_version)
+        return
+    try:
+        session.install(f"PyMySQL=={pymysql_version}")
+    except:  # noqa
+        session.log("Cannot install 'PyMySQL' version '%s'", pymysql_version)
         return
 
     session.install(".")
@@ -49,7 +78,7 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                 "./scripts/start_uvicorn",
                 env={
                     "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": "./spans.txt",
+                    "LUMIGO_DEBUG_SPANDUMP": SPANS_FILE_FULL_PATH,
                     "OTEL_SERVICE_NAME": "app",
                 },
                 external=True,
@@ -67,6 +96,9 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                 "--color=yes",
                 "-v",
                 "./tests/test_fastapi.py",
+                env={
+                    "LUMIGO_DEBUG_SPANDUMP": SPANS_FILE_FULL_PATH,
+                },
             )
         finally:
             import psutil
@@ -81,4 +113,4 @@ def integration_tests_fastapi(session, fastapi_version, uvicorn_version):
                     if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
                         proc.kill()
 
-            session.run("rm", "-f", "./spans.txt", external=True)
+            session.run("rm", "-f", SPANS_FILE_FULL_PATH, external=True)
