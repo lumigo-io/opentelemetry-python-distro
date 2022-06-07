@@ -69,6 +69,8 @@ jobs:
     working_directory: ~/opentelemetry-python-distro
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 19.03.13
       - run: pip3 install nox
       - run: python3 -m nox
 
