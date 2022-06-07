@@ -31,7 +31,7 @@ def dependency_versions(dependency_name: str) -> List[str]:
 @nox.parametrize("fastapi_version", dependency_versions("fastapi"))
 @nox.parametrize("boto3_version", dependency_versions("boto3"))
 @nox.parametrize("pymongo_version", dependency_versions("pymongo"))
-@nox.parametrize("pymysql_version", dependency_versions("pymsql"))
+@nox.parametrize("pymysql_version", dependency_versions("pymysql"))
 def integration_tests_fastapi(
     session,
     fastapi_version,
