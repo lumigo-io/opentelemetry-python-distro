@@ -6,7 +6,7 @@ from typing import List, Union
 
 
 SPANS_FILE = "spans.txt"
-SPANS_FILE_FULL_PATH = os.path.abspath(f"src/test/{SPANS_FILE}")
+SPANS_FILE_FULL_PATH = os.path.abspath(f"src/test/integration/fastapi/{SPANS_FILE}")
 
 
 def python_versions() -> Union[List[str], bool]:
@@ -86,7 +86,7 @@ def integration_tests_fastapi(
 
             # TODO Make this deterministic
             # Wait 1s to give time for app to start
-            time.sleep(3)
+            time.sleep(8)
 
             session.run(
                 "pytest",
