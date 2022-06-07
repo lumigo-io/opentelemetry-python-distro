@@ -36,7 +36,7 @@ def integration_tests_fastapi(
     session,
     fastapi_version,
     uvicorn_version,
-    boto3_verison,
+    boto3_version,
     pymongo_version,
     pymysql_version,
 ):
@@ -52,9 +52,9 @@ def integration_tests_fastapi(
         session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
         return
     try:
-        session.install(f"boto3=={boto3_verison}")
+        session.install(f"boto3=={boto3_version}")
     except:  # noqa
-        session.log("Cannot install 'boto3' version '%s'", boto3_verison)
+        session.log("Cannot install 'boto3' version '%s'", boto3_version)
         return
     try:
         session.install(f"pymongo=={pymongo_version}")
