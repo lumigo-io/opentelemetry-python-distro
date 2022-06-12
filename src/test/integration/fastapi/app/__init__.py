@@ -1,3 +1,5 @@
+from time import sleep
+
 import requests
 from fastapi import FastAPI, HTTPException
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -35,7 +37,7 @@ def invoke_boto3():
 @app.get("/invoke-mongo")
 def invoke_mongo():
     with MongoDbContainer() as mongo:
-        print(5)
+        sleep(5)
         print(f"connection url: {mongo.get_connection_url()}")
         db = mongo.get_connection_client().test
         doc = {
@@ -51,7 +53,7 @@ def invoke_mongo():
 @app.get("/invoke-pymysql")
 def invoke_mysql():
     with MySqlContainer():
-        print(5)
+        sleep(5)
         return {"status": "ok"}
 
 
