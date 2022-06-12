@@ -4,6 +4,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
+from testcontainers.mongodb import MongoDbContainer
 
 
 app = FastAPI()
@@ -30,20 +31,20 @@ def invoke_boto3():
         return {"status": "ok"}
 
 
-# @app.get("/invoke-mongo")
-# def invoke_mongo():
-#     with MongoDbContainer() as mongo:
-#         db = mongo.get_connection_client().test
-#         doc = {
-#             "address": {
-#                 "street": "2 Avenue",
-#             },
-#             "restaurant_id": "41704620",
-#         }
-#         db.items.insert_one(doc)
-#     return {"status": "ok"}
-#
-#
+@app.get("/invoke-mongo")
+def invoke_mongo():
+    with MongoDbContainer() as mongo:
+        db = mongo.get_connection_client().test
+        doc = {
+            "address": {
+                "street": "2 Avenue",
+            },
+            "restaurant_id": "41704620",
+        }
+        db.items.insert_one(doc)
+    return {"status": "ok"}
+
+
 # @app.get("/invoke-pymysql")
 # def invoke_mysql():
 #     with MySqlContainer():
