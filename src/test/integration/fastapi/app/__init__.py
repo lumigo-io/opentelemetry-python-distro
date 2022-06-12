@@ -37,7 +37,7 @@ def invoke_boto3():
 @app.get("/invoke-mongo")
 def invoke_mongo():
     with MongoDbContainer() as mongo:
-        sleep(5)
+        sleep(60)
         print(f"connection url: {mongo.get_connection_url()}")
         db = mongo.get_connection_client().test
         doc = {
@@ -53,7 +53,7 @@ def invoke_mongo():
 @app.get("/invoke-pymysql")
 def invoke_mysql():
     with MySqlContainer():
-        sleep(5)
+        sleep(60)
         return {"status": "ok"}
 
 
