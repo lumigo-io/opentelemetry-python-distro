@@ -1,14 +1,9 @@
-import subprocess
-from time import sleep
-
 import requests
 from fastapi import FastAPI, HTTPException
 from starlette.exceptions import HTTPException as StarletteHTTPException
 import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
-from testcontainers.mongodb import MongoDbContainer
-from testcontainers.mysql import MySqlContainer
 
 
 app = FastAPI()
