@@ -4,6 +4,8 @@ jobs:
   Explore-GitHub-Actions:
     runs-on: cimg/python:3.7
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
       - run: pip3 install nox
       - run: python3 -m nox
       - run: echo "🍏 This job's status is ${{ job.status }}."
