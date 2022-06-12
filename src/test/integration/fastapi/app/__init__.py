@@ -38,17 +38,17 @@ def invoke_boto3():
 @app.get("/invoke-mongo")
 def invoke_mongo():
     with MongoDbContainer() as mongo:
-        print(f"connection url: {mongo.get_connection_url()}")
-        print(subprocess.call("docker ps", shell=True))
-        sleep(60)
-        db = mongo.get_connection_client().test
-        doc = {
-            "address": {
-                "street": "2 Avenue",
-            },
-            "restaurant_id": "41704620",
-        }
-        db.items.insert_one(doc)
+        try:
+            db = mongo.get_connection_client().test
+            doc = {
+                "address": {
+                    "street": "2 Avenue",
+                },
+                "restaurant_id": "41704620",
+            }
+            db.items.insert_one(doc)
+        except Exception:
+            pass
         return {"status": "ok"}
 
 
