@@ -1,7 +1,7 @@
-name: GitHub Actions Demo
+name: Tracer Testing
 on: [push]
 jobs:
-  build:
+  version-testing:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,4 +17,3 @@ jobs:
       - run: pip3 install nox
       - run: pip3 install psutil
       - run: python3 -m nox
-      - run: echo "🍏 This job's status is ${{ job.status }}."

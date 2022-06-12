@@ -5,6 +5,7 @@ import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
 from testcontainers.mongodb import MongoDbContainer
+from testcontainers.mysql import MySqlContainer
 
 
 app = FastAPI()
@@ -45,10 +46,10 @@ def invoke_mongo():
     return {"status": "ok"}
 
 
-# @app.get("/invoke-pymysql")
-# def invoke_mysql():
-#     with MySqlContainer():
-#         return {"status": "ok"}
+@app.get("/invoke-pymysql")
+def invoke_mysql():
+    with MySqlContainer():
+        return {"status": "ok"}
 
 
 @app.get("/accounts/{account_id}")

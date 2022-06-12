@@ -73,7 +73,9 @@ def init():
 
     from lumigo_opentelemetry.libs.json_utils import dump
 
-    DEFAULT_LUMIGO_ENDPOINT = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
+    DEFAULT_LUMIGO_ENDPOINT = (
+        "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
+    )
 
     lumigo_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
 
@@ -135,9 +137,7 @@ def init():
             BatchSpanProcessor(
                 OTLPSpanExporter(
                     endpoint=lumigo_endpoint,
-                    headers={
-                        "Authorization": f"LumigoToken {lumigo_token}"
-                    },
+                    headers={"Authorization": f"LumigoToken {lumigo_token}"},
                 ),
             )
         )
