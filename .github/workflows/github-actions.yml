@@ -15,4 +15,5 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: pip3 install nox
+      - run: python3 -m nox
       - run: echo "🍏 This job's status is ${{ job.status }}."
