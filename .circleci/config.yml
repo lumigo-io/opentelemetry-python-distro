@@ -16,11 +16,11 @@ workflows:
     - test:
         filters:
           branches:
-            ignore: master
+            ignore: main
     - lumigo-orb/be-deploy:
         filters:
           branches:
-            ignore: master
+            ignore: main
         requires:
           - test
     - lumigo-orb/integration-test:
@@ -28,13 +28,13 @@ workflows:
         tests_spec: testPython
         filters:
           branches:
-            ignore: master
+            ignore: main
         requires:
           - lumigo-orb/be-deploy
     - deploy:
         filters:
           branches:
-            only: master
+            only: main
 
 jobs:
   test:
