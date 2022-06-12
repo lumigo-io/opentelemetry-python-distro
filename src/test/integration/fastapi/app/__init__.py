@@ -1,3 +1,4 @@
+import subprocess
 from time import sleep
 
 import requests
@@ -37,8 +38,9 @@ def invoke_boto3():
 @app.get("/invoke-mongo")
 def invoke_mongo():
     with MongoDbContainer() as mongo:
-        sleep(60)
         print(f"connection url: {mongo.get_connection_url()}")
+        print(subprocess.call("docker ps", shell=True))
+        sleep(60)
         db = mongo.get_connection_client().test
         doc = {
             "address": {
@@ -53,7 +55,8 @@ def invoke_mongo():
 @app.get("/invoke-pymysql")
 def invoke_mysql():
     with MySqlContainer():
-        sleep(60)
+        print(subprocess.call("docker ps", shell=True))
+        sleep(5)
         return {"status": "ok"}
 
 
