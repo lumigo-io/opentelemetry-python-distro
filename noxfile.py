@@ -136,11 +136,19 @@ def integration_tests_fastapi(
 @nox.parametrize(
     "flask_version", dependency_versions(directory="flask", dependency_name="flask")
 )
-def integration_tests_flask(session, flask_version):
+@nox.parametrize(
+    "boto3_version", dependency_versions(directory="flask", dependency_name="boto3")
+)
+def integration_tests_flask(session, flask_version, boto3_version):
     try:
         session.install(f"flask=={flask_version}")
     except:  # noqa
         session.log("Cannot install 'flask' version '%s'", flask_version)
+        return
+    try:
+        session.install(f"boto3=={boto3_version}")
+    except:  # noqa
+        session.log("Cannot install 'boto3' version '%s'", boto3_version)
         return
 
     session.install(".")

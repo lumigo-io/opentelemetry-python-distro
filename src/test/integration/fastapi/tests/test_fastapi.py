@@ -8,7 +8,6 @@ from test.test_utils.spans_parser import SpansContainer
 class TestFastApiSpans(unittest.TestCase):
     def test_200_OK(self):
         response = requests.get("http://localhost:8000/")
-
         response.raise_for_status()
 
         body = response.json()
@@ -45,7 +44,6 @@ class TestFastApiSpans(unittest.TestCase):
 
     def test_requests_instrumentation(self):
         response = requests.get("http://localhost:8000/invoke-requests")
-
         response.raise_for_status()
 
         body = response.json()
