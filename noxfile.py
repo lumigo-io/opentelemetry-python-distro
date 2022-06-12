@@ -30,15 +30,15 @@ def dependency_versions(dependency_name: str) -> List[str]:
 @nox.parametrize("uvicorn_version", dependency_versions("uvicorn"))
 @nox.parametrize("fastapi_version", dependency_versions("fastapi"))
 @nox.parametrize("boto3_version", dependency_versions("boto3"))
-@nox.parametrize("pymongo_version", dependency_versions("pymongo"))
-@nox.parametrize("pymysql_version", dependency_versions("pymysql"))
+# @nox.parametrize("pymongo_version", dependency_versions("pymongo"))
+# @nox.parametrize("pymysql_version", dependency_versions("pymysql"))
 def integration_tests_fastapi(
     session,
     fastapi_version,
     uvicorn_version,
     boto3_version,
-    pymongo_version,
-    pymysql_version,
+    # pymongo_version,
+    # pymysql_version,
 ):
     try:
         session.install(f"uvicorn=={uvicorn_version}")
@@ -56,16 +56,16 @@ def integration_tests_fastapi(
     except:  # noqa
         session.log("Cannot install 'boto3' version '%s'", boto3_version)
         return
-    try:
-        session.install(f"pymongo=={pymongo_version}")
-    except:  # noqa
-        session.log("Cannot install 'pymongo' version '%s'", pymongo_version)
-        return
-    try:
-        session.install(f"PyMySQL=={pymysql_version}")
-    except:  # noqa
-        session.log("Cannot install 'PyMySQL' version '%s'", pymysql_version)
-        return
+    # try:
+    #     session.install(f"pymongo=={pymongo_version}")
+    # except:  # noqa
+    #     session.log("Cannot install 'pymongo' version '%s'", pymongo_version)
+    #     return
+    # try:
+    #     session.install(f"PyMySQL=={pymysql_version}")
+    # except:  # noqa
+    #     session.log("Cannot install 'PyMySQL' version '%s'", pymysql_version)
+    #     return
 
     session.install(".")
 
