@@ -31,7 +31,7 @@ echo "Getting latest changes from git"
 changes=$(git log $(git describe --tags --abbrev=0)..HEAD --oneline)
 
 sudo pip install --upgrade bumpversion
-bumpversion --new-version 0.1.1 --message "{current_version} → {new_version}. Changes: ${changes}"
+bumpversion --new-version 0.1.1 changes
 
 push_tags
 
