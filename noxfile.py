@@ -147,7 +147,9 @@ def integration_tests_fastapi(
     "pymysql_version",
     dependency_versions(directory="fastapi", dependency_name="pymysql"),
 )
-def integration_tests_flask(session, flask_version, boto3_version, pymongo_version, pymysql_version):
+def integration_tests_flask(
+    session, flask_version, boto3_version, pymongo_version, pymysql_version
+):
     try:
         session.install(f"flask=={flask_version}")
     except:  # noqa
