@@ -93,7 +93,7 @@ class TestFlaskSpans(unittest.TestCase):
         self.assertIsNotNone(children[0]["attributes"]["http.status_code"])
 
     def test_mongo_instrumentation(self):
-        response = requests.get("http://localhost:8000/invoke-mongo")
+        response = requests.get("http://localhost:5000/invoke-mongo")
 
         response.raise_for_status()
 
@@ -113,7 +113,7 @@ class TestFlaskSpans(unittest.TestCase):
         self.assertEqual(children[0]["attributes"]["db.statement"], "insert items")
 
     def test_pymysql_instrumentation(self):
-        response = requests.get("http://localhost:8000/invoke-pymysql")
+        response = requests.get("http://localhost:5000/invoke-pymysql")
 
         response.raise_for_status()
 
