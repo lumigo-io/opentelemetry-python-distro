@@ -139,7 +139,15 @@ def integration_tests_fastapi(
 @nox.parametrize(
     "boto3_version", dependency_versions(directory="flask", dependency_name="boto3")
 )
-def integration_tests_flask(session, flask_version, boto3_version):
+@nox.parametrize(
+    "pymongo_version",
+    dependency_versions(directory="fastapi", dependency_name="pymongo"),
+)
+@nox.parametrize(
+    "pymysql_version",
+    dependency_versions(directory="fastapi", dependency_name="pymysql"),
+)
+def integration_tests_flask(session, flask_version, boto3_version, pymongo_version, pymysql_version):
     try:
         session.install(f"flask=={flask_version}")
     except:  # noqa
@@ -149,6 +157,16 @@ def integration_tests_flask(session, flask_version, boto3_version):
         session.install(f"boto3=={boto3_version}")
     except:  # noqa
         session.log("Cannot install 'boto3' version '%s'", boto3_version)
+        return
+    try:
+        session.install(f"pymongo=={pymongo_version}")
+    except:  # noqa
+        session.log("Cannot install 'pymongo' version '%s'", pymongo_version)
+        return
+    try:
+        session.install(f"PyMySQL=={pymysql_version}")
+    except:  # noqa
+        session.log("Cannot install 'PyMySQL' version '%s'", pymysql_version)
         return
 
     session.install(".")
