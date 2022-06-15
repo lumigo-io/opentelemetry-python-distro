@@ -21,30 +21,18 @@ workflows:
                 - main
                 - beta
     jobs:
-    - check-new-versions-of-instrumented-packages
-
-  test-integration-python:
-    jobs:
-    - test-integration-python:
-        matrix:  
-          parameters:
-            # These must be valid tag values for the cimg/python container image
-            # on Docker Hub, see https://hub.docker.com/r/cimg/python/tags
-            python_cimg_tag: ["3.6", "3.7", "3.8", "3.9", "3.10"]
-        filters:
-          branches:
-            ignore: master
+      - check-new-versions-of-instrumented-packages
 
   test-deploy:
     jobs:
     - test:
         filters:
           branches:
-            ignore: master
+            ignore: main
     - lumigo-orb/be-deploy:
         filters:
           branches:
-            ignore: master
+            ignore: main
         requires:
           - test
     - lumigo-orb/integration-test:
@@ -52,13 +40,13 @@ workflows:
         tests_spec: testPython
         filters:
           branches:
-            ignore: master
+            ignore: main
         requires:
           - lumigo-orb/be-deploy
     - deploy:
         filters:
           branches:
-            only: master
+            only: main
 
 jobs:
   check-new-versions-of-instrumented-packages:
@@ -85,18 +73,6 @@ jobs:
       - run: . venv/bin/activate && pip uninstall lumigo_opentelemetry -y && python setup.py develop
       - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/checks.sh
       - run: ../utils/common_bash/defaults/code_cov.sh
-
-  test-integration-python:
-    parameters:
-      python_cimg_tag:
-        type: string
-    docker:
-      - image: cimg/python:<< parameters.python_cimg_tag >>
-    working_directory: ~/opentelemetry-python-distro
-    steps:
-      - checkout
-      - run: pip3 install nox
-      - run: python3 -m nox
 
   deploy:
     <<: *defaults
