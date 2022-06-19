@@ -13,7 +13,7 @@ setup(
         "lumigo_opentelemetry": ["string = lumigo_opentelemetry:auto_load"],
     },
     install_requires=[
-        "asgiref==3.5.2",
+        "asgiref~=3.0",
         "autowrapt>=1.0",
         "packaging>=21.3",
         "protobuf>=3.13.0, <4.0.0",
