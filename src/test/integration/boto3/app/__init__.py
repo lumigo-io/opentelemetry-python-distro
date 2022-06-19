@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
