@@ -26,7 +26,7 @@ def dependency_versions(directory: str, dependency_name: str) -> List[str]:
 
 @nox.session(python=python_versions())
 @nox.parametrize(
-    "boto3_version", dependency_versions(directory="fastapi", dependency_name="boto3")
+    "boto3_version", dependency_versions(directory="boto3", dependency_name="boto3")
 )
 def integration_tests_fastapi(
     session,
@@ -195,9 +195,6 @@ def integration_tests_fastapi(
     "flask_version", dependency_versions(directory="flask", dependency_name="flask")
 )
 @nox.parametrize(
-    "boto3_version", dependency_versions(directory="flask", dependency_name="boto3")
-)
-@nox.parametrize(
     "pymongo_version",
     dependency_versions(directory="fastapi", dependency_name="pymongo"),
 )
@@ -206,17 +203,12 @@ def integration_tests_fastapi(
     dependency_versions(directory="fastapi", dependency_name="pymysql"),
 )
 def integration_tests_flask(
-    session, flask_version, boto3_version, pymongo_version, pymysql_version
+    session, flask_version, pymongo_version, pymysql_version
 ):
     try:
         session.install(f"flask=={flask_version}")
     except:  # noqa
         session.log("Cannot install 'flask' version '%s'", flask_version)
-        return
-    try:
-        session.install(f"boto3=={boto3_version}")
-    except:  # noqa
-        session.log("Cannot install 'boto3' version '%s'", boto3_version)
         return
     try:
         session.install(f"pymongo=={pymongo_version}")
