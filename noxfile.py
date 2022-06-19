@@ -174,16 +174,11 @@ def integration_tests_fastapi(
 @nox.parametrize(
     "flask_version", dependency_versions(directory="flask", dependency_name="flask")
 )
-def integration_tests_flask(session, flask_version, pymysql_version):
+def integration_tests_flask(session, flask_version):
     try:
         session.install(f"flask=={flask_version}")
     except:  # noqa
         session.log("Cannot install 'flask' version '%s'", flask_version)
-        return
-    try:
-        session.install(f"PyMySQL=={pymysql_version}")
-    except:  # noqa
-        session.log("Cannot install 'PyMySQL' version '%s'", pymysql_version)
         return
 
     session.install(".")
