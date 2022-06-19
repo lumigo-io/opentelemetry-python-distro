@@ -236,7 +236,8 @@ def integration_tests_flask(session, flask_version):
 
 @nox.session(python=python_versions())
 @nox.parametrize(
-    "pymongo_version", dependency_versions(directory="pymongo", dependency_name="pymongo")
+    "pymongo_version",
+    dependency_versions(directory="pymongo", dependency_name="pymongo"),
 )
 def integration_tests_pymongo(
     session,
