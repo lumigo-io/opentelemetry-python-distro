@@ -14,6 +14,10 @@ AWS_ECS_TASK_ARN = ResourceAttributes.AWS_ECS_TASK_ARN
 AWS_ECS_TASK_FAMILY = ResourceAttributes.AWS_ECS_TASK_FAMILY
 AWS_ECS_TASK_REVISION = ResourceAttributes.AWS_ECS_TASK_REVISION
 
+
+_aws_ecs_detector_logger = getLogger('AwsEcsResourceDetector')
+
+
 class AwsEcsResourceDetector(ResourceDetector):
     """Implements the lookup of the `aws.ecs` resource attributes using the Metadata v4 endpoint."""
 
@@ -57,7 +61,7 @@ class AwsEcsResourceDetector(ResourceDetector):
                 }
             )
         except Exception as e:
-            getLogger(self.__class__.__name__).error("An error occurred while looking up the AWS ECS resource attributes", e)
+            _aws_ecs_detector_logger.error("An error occurred while looking up the AWS ECS resource attributes: %s", e)
 
             return Resource.get_empty()
 
