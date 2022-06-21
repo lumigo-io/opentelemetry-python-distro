@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 
 
-SPANS_FILE_FULL_PATH = os.environ["LUMIGO_DEBUG_SPANDUMP"]
+SPANS_FILE_FULL_PATH = os.environ.get("LUMIGO_DEBUG_SPANDUMP")
 
 
 class SpansCounter:

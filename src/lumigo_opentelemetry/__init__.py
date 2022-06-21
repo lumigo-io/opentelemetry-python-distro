@@ -67,11 +67,15 @@ def init():
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.resources import OTELResourceDetector, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     from lumigo_opentelemetry.libs.json_utils import dump
+    from lumigo_opentelemetry.resources.detectors import (
+        AwsEcsResourceDetector,
+        ProcessResourceDetector
+    )
 
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
@@ -116,12 +120,8 @@ def init():
 
     # TODO Clean up needed
     attributes = {
-        # TODO Use a (built-in?) Resource Detector instead
-        "runtime": f"python{safe_get_version()}",
         # TODO Use a Resource Detector instead
         "envs": safe_get_envs(),
-        # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
-        "metadata": safe_get_metadata(),
         "framework": framework,
     }
 
@@ -129,7 +129,11 @@ def init():
         # TODO Remove from resource attributes as soon as the edge endpoint supports token in HTTP headers
         attributes["lumigoToken"] = lumigo_token.strip()
 
-    tracer_resource = Resource.create(attributes=attributes)
+    tracer_resource = (Resource.create(attributes=attributes)
+        .merge(OTELResourceDetector().detect())
+        .merge(ProcessResourceDetector().detect())
+        .merge(AwsEcsResourceDetector().detect())
+    )
     tracer_provider = TracerProvider(resource=tracer_resource)
 
     if lumigo_token:
