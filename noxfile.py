@@ -8,10 +8,10 @@ from typing import List, Union
 
 
 def python_versions() -> Union[List[str], bool]:
-    # On CircleCI, just run the current Python version without
+    # On Github, just run the current Python version without
     # creating a venv.
     # In local, try all supported python versions building venvs.
-    if os.getenv("CIRCLECI", str(False)).lower() == "true":
+    if os.getenv("CI", str(False)).lower() == "true":
         return False
 
     return ["3.6", "3.7", "3.8", "3.9", "3.10"]
