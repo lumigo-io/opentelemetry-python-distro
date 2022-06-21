@@ -14,7 +14,7 @@ def python_versions() -> Union[List[str], bool]:
     if os.getenv("CI", str(False)).lower() == "true":
         return False
 
-    return ["3.6", "3.7", "3.8", "3.9", "3.10"]
+    return ["3.7", "3.8", "3.9", "3.10"]
 
 
 def dependency_versions(directory: str, dependency_name: str) -> List[str]:
