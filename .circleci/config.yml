@@ -11,18 +11,6 @@ orbs:
   lumigo-orb: lumigo/lumigo-orb@volatile
 
 workflows:
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - main
-                - beta
-    jobs:
-      - check-new-versions-of-instrumented-packages
-
   test-deploy:
     jobs:
     - test:
@@ -49,21 +37,6 @@ workflows:
             only: main
 
 jobs:
-  check-new-versions-of-instrumented-packages:
-    docker:
-      - image: cimg/python:3.10
-    steps:
-      - checkout
-      - run: |
-          apt update && apt install -y libxml-xpath-perl git
-          git config user.email "versionabot@lumigo.io" && git config user.name "Version Bot"
-          ./scripts/add_new_supported_versions.sh
-          new_versions=$(./scripts/describe_supported_versions_diff.sh)
-          git commit -am "Add new supported versions\n\n${new_versions}"
-          pip3 install nox
-          python3 -m nox
-          git push origin HEAD:${CIRCLE_BRANCH}
-
   test:
     <<: *defaults
     steps:

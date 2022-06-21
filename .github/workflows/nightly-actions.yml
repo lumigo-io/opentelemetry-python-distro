@@ -1,0 +1,24 @@
+name: Version Testing
+on:
+  schedule:
+    - cron: "0 0 * * *"
+jobs:
+  check-new-versions-of-instrumented-packages:
+    runs-on: ubuntu-latest
+    name: check-new-verisons-of-instrumented-packages
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+          architecture: x64
+      - run: apt update && apt install -y libxml-xpath-perl git
+      - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
+      - run: ./scripts/add_new_supported_versions.sh
+      - run: new_versions=$(./scripts/describe_supported_versions_diff.sh)
+      - run: git commit -am "Add new supported versions\n\n${new_versions}"
+      - run: pip3 install nox
+      - run: pip3 install psutil
+      - run: python3 -m nox
+      - run: git push origin HEAD:${GITHUB_REF_NAME}
