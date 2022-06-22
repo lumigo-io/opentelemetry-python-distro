@@ -14,6 +14,7 @@ class AbstractInstrumentor(ABC):
 
     @abstractmethod
     def check_if_applicable(self):
+        # TODO Implement version lookup per instrumented package, and check that the version is supported
         raise Exception("'check_if_applicable' method not implemented!")
 
     @abstractmethod

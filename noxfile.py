@@ -18,10 +18,17 @@ def python_versions() -> Union[List[str], bool]:
 
 
 def dependency_versions(directory: str, dependency_name: str) -> List[str]:
-    with open(
-        f"src/test/integration/{directory}/supported_versions/{dependency_name}", "r"
-    ) as f:
-        return [line.strip() for line in f.readlines()]
+    """Dependenciy versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
+       packages, and symlinked under the relevant integration tests."""
+    try:
+        with open(os.path.dirname(__file__) + f"/src/test/integration/{directory}/tested_versions/{dependency_name}", "r") as f:
+            return [
+                line.strip()
+                for line in f.readlines()
+                if line.strip()[0] != '!' # We mark incompatible versions with '1'
+            ]
+    except FileNotFoundError:
+        return []
 
 
 @nox.session(python=python_versions())
