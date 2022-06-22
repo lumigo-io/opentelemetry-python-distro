@@ -22,4 +22,4 @@ jobs:
       - run: pip3 install nox
       - run: pip3 install psutil
       - run: python3 -m nox
-      - run: git push origin HEAD:${GITHUB_REF_NAME}
+      - run: git push origin $(date +version-testing-%Y%m%d)
