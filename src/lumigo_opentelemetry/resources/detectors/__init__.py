@@ -14,6 +14,7 @@ AWS_ECS_TASK_ARN = ResourceAttributes.AWS_ECS_TASK_ARN
 AWS_ECS_TASK_FAMILY = ResourceAttributes.AWS_ECS_TASK_FAMILY
 AWS_ECS_TASK_REVISION = ResourceAttributes.AWS_ECS_TASK_REVISION
 
+LUMIGO_DISTRO_VERSION_ATTR_NAME = 'lumigo.distro.version'
 
 _aws_ecs_detector_logger = getLogger('AwsEcsResourceDetector')
 
@@ -87,5 +88,18 @@ class ProcessResourceDetector(ResourceDetector):
                 PROCESS_RUNTIME_DESCRIPTION: sys.version,
                 PROCESS_RUNTIME_NAME: sys.implementation.name,
                 PROCESS_RUNTIME_VERSION: _runtime_version,
+            }
+        )
+
+class LumigoDistroDetector(ResourceDetector):
+    """Implementation of the detector for `process.*` attributes.
+    """
+
+    # pylint: disable=no-self-use
+    def detect(self) -> "Resource":
+        import lumigo_opentelemetry
+        return Resource(
+            {
+                LUMIGO_DISTRO_VERSION_ATTR_NAME: lumigo_opentelemetry.__version__,
             }
         )

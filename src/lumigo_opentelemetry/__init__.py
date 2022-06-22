@@ -60,11 +60,6 @@ def init():
         activation_mode,
     )
 
-    from platform import python_version
-    from typing import Dict
-
-    import requests
-
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import OTELResourceDetector, Resource
@@ -74,7 +69,8 @@ def init():
     from lumigo_opentelemetry.libs.json_utils import dump
     from lumigo_opentelemetry.resources.detectors import (
         AwsEcsResourceDetector,
-        ProcessResourceDetector
+        LumigoDistroDetector,
+        ProcessResourceDetector,
     )
 
     DEFAULT_LUMIGO_ENDPOINT = (
@@ -82,28 +78,6 @@ def init():
     )
 
     lumigo_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
-
-    metadata_cache: Dict[str, str] = {}
-
-    def safe_get_version() -> str:
-        try:
-            return python_version()
-        except Exception as e:
-            logger.exception("failed getting python version", exc_info=e)
-            return ""
-
-    def safe_get_metadata() -> str:
-        try:
-            metadata_uri = os.environ.get("ECS_CONTAINER_METADATA_URI")
-            if not metadata_uri:
-                return ""
-            if metadata_cache.get(metadata_uri):
-                return metadata_cache[metadata_uri]
-            metadata_cache[metadata_uri] = requests.get(metadata_uri).text
-            return metadata_cache[metadata_uri]
-        except Exception as e:
-            logger.exception("failed to fetch ecs metadata", exc_info=e)
-            return ""
 
     def safe_get_envs() -> str:
         try:
@@ -132,6 +106,7 @@ def init():
     tracer_resource = (Resource.create(attributes=attributes)
         .merge(OTELResourceDetector().detect())
         .merge(ProcessResourceDetector().detect())
+        .merge(LumigoDistroDetector().detect())
         .merge(AwsEcsResourceDetector().detect())
     )
     tracer_provider = TracerProvider(resource=tracer_resource)
@@ -193,6 +168,8 @@ def lumigo_wrapped(func):
 
     return wrapper
 
+with open(os.path.join(os.path.dirname(__file__), 'Version')) as version_file:
+    __version__ = version_file.read().strip()
 
 __all__ = ["auto_load", "init", "lumigo_wrapped", "logger"]
 
