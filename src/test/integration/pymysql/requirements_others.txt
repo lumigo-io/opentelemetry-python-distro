@@ -1,0 +1,9 @@
+pytest
+uvicorn[standard]==0.16.0
+fastapi==0.70.1
+json-stream
+requests
+psutil
+testcontainers
+sqlalchemy
+cryptography
