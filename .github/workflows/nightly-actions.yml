@@ -1,7 +1,5 @@
 name: Version Testing
-on:
-  schedule:
-    - cron: "0 0 * * *"
+on: [push]
 jobs:
   check-new-versions-of-instrumented-packages:
     runs-on: ubuntu-latest
@@ -13,7 +11,7 @@ jobs:
         with:
           python-version: 3.7
           architecture: x64
-      - run: apt update && apt install -y libxml-xpath-perl git
+      - run: sudo apt update && apt install -y libxml-xpath-perl git
       - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
       - run: ./scripts/add_new_supported_versions.sh
       - run: new_versions=$(./scripts/describe_supported_versions_diff.sh)
