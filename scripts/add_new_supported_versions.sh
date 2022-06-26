@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # This script crawls the content of the repository looking for the
-# <instrumentation_folder>/supported_versions/<package_name> files,
+# <instrumentation_folder>/tested_versions/<package_name> files,
 # when checks on Pypi if there are new versions parsing the RSS with
 # some Perl-based XPath, and then checks for each version if it is
 # already in the file as a line starting with the version and, if
@@ -13,8 +13,8 @@ set -euo pipefail
 readonly SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 readonly ROOT_DIR="$(dirname ${SCRIPT_DIR})"
 
-# Find all the "supported_version" files and see if they need update
-find "${ROOT_DIR}/src/" -path */supported_versions/* | \
+# Find all the "tested_version" files and see if they need update
+find "${ROOT_DIR}/src/" -path */tested_versions/* | \
     while read -r version_file; do \
         if [ -n "$(tail -c 1 ${version_file})" ]; then
             >&2 echo "Adding missing newline at the end of ${version_file}"
