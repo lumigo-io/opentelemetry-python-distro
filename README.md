@@ -97,25 +97,3 @@ The Lumigo OpenTelemetry Distro will automatically create the following OpenTele
 * A `Resource` built from the default OpenTelemetry resource with the `sdk...` attributes
 * If the `LUMIGO_TRACER_TOKEN` environment variable is set: a [BatchSpanProcessor](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L126), which uses an [`OTLPSpanExporter`](https://github.com/open-telemetry/opentelemetry-python/blob/50093f220f945ae38e769ab539c78c975e582bef/exporter/opentelemetry-exporter-otlp-proto-http/src/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py#L55) to push tracing data to Lumigo
 * If the `LUMIGO_DEBUG_SPANDUMP` environment variable is set: a [`SimpleSpanProcessor`](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L79), which uses an [`ConsoleSpanExporter`](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L415) to save to file the spans collected. Do not use this in production!
-
-## Contributing
-
-Contributions to this project are welcome from all! Below are a couple pointers on how to prepare your machine, as well as some information on testing.
-
-### Setup
-
-Getting your machine ready to develop against the package is a straightforward process:
-
-1. Clone this repository, and open a CLI in the cloned directory
-1. Create a virtual environment for the project `virtualenv venv -p python3`
-1. Activate the virtualenv: `. venv/bin/activate`
-1. Install dependencies: `pip install -r requirements.txt`
-1. Navigate to the source directory: `cd src` and 
-1. Run the setup script: `python setup.py develop`.
-1. Run `pre-commit install` in your repository to install pre-commit hooks
-
-**Note**: If you are using pycharm, ensure that you set it to use the virtualenv virtual environment manager. This is available in the menu under `PyCharm -> Preferences -> Project -> Interpreter`
-
-### Running the test suite
-
-Run `./scripts/checks.sh` in the root folder.
