@@ -38,6 +38,7 @@ push_tags
 echo "Uploading to PyPi"
 pip install twine wheel --quiet
 python setup.py bdist_wheel
+twine check dist/*
 twine upload dist/*
 
 echo "Done"
