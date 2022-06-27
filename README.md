@@ -1,4 +1,4 @@
-# lumigo_opentelemetry :stars:
+# Lumigo OpenTelemetry Distro for Python :stars:
 
 [![Tracer Testing](https://github.com/lumigo-io/opentelemetry-python-distro/actions/workflows/push-actions.yml/badge.svg)](https://github.com/lumigo-io/opentelemetry-python-distro/actions/workflows/push-actions.yml)
 ![Version](https://badge.fury.io/py/lumigo_opentelemetry.svg)
