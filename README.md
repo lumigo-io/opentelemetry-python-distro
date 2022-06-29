@@ -42,7 +42,7 @@ export LUMIGO_TRACER_TOKEN=<token>
 
 It is also strongly suggested that you set the `OTEL_SERVICE_NAME` environment variable with, as value, the service name you have chosen for your application:
 
-```
+```sh
 # Replace `<service name> with the desired name of the service`
 export OTEL_SERVICE_NAME=<service name>
 ```
