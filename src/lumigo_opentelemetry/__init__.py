@@ -125,10 +125,6 @@ def init():
         "framework": framework,
     }
 
-    if lumigo_token:
-        # TODO Remove from resource attributes as soon as the edge endpoint supports token in HTTP headers
-        attributes["lumigoToken"] = lumigo_token.strip()
-
     tracer_resource = Resource.create(attributes=attributes)
     tracer_provider = TracerProvider(resource=tracer_resource)
 
