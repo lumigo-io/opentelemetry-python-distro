@@ -49,26 +49,27 @@ export OTEL_SERVICE_NAME=<service name>
 
 ### Tracer activation
 
-There are two ways to activate the `lumigo_opentelemetry` package: via a [manual import](#manual-instrumentation), or via an [environment-based configuration](#no-code-instrumentation).
+There are two ways to activate the `lumigo_opentelemetry` package: one based on importing the package in code (manual activation), and the other via the environment (no-code activation).
+The [no-code activation](#no-code-activation) approach is the preferred one.
 
-#### Manual instrumentation
+#### No-code activation
 
-**Note:** The instructions in this section are mutually exclusive with those provided in the [No-code instrumentation](#no-code-instrumentation) section.
-
-Import `lumigo_opentelemetry` at the beginning of your main file:
-
-```python
-import lumigo_opentelemetry
-```
-
-#### No-code instrumentation
-
-**Note:** The instructions in this section are mutually exclusive with those provided in the [Manual instrumentation](#manual-instrumentation) section.
+**Note:** The instructions in this section are mutually exclusive with those provided in the [Manual instrumentation](#manual-activation) section.
 
 Set the following environment variable:
 
 ```sh
 export AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
+```
+
+#### Manual activation
+
+**Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) section.
+
+Import `lumigo_opentelemetry` at the beginning of your main file:
+
+```python
+import lumigo_opentelemetry
 ```
 
 ## Configuration
