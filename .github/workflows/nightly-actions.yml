@@ -22,4 +22,6 @@ jobs:
       - run: pip3 install nox
       - run: pip3 install psutil
       - run: python3 -m nox
+        env:
+          TEST_PATCH_VERSIONS: true
       - run: git push origin
