@@ -1,10 +1,11 @@
 import tempfile
 
 import nox
+from packaging.version import parse as parse_version, Version
 
 import os
 import time
-from typing import List, Union
+from typing import List, Union, Dict
 
 
 def python_versions() -> Union[List[str], bool]:
@@ -31,10 +32,15 @@ def dependency_versions(directory: str, dependency_name: str) -> List[str]:
                 for line in f.readlines()
                 if line.strip()[0] != "!"  # We mark incompatible versions with '1'
             ]
-            minor_to_version = {
-                version[: version.find(".", 2)]: version for version in all_versions
-            }
-            return list(minor_to_version.values())
+            if os.getenv("TEST_PATCH_VERSIONS", "").lower() == "true":
+                return all_versions
+            minor_to_version: Dict[str, Version] = {}
+            for version in all_versions:
+                parsed_version = parse_version(version)
+                minor = f"{parsed_version.major}.{parsed_version.minor}"
+                if minor_to_version.get(minor, parse_version("0")) < parsed_version:
+                    minor_to_version[minor] = parsed_version
+            return [v.public for v in minor_to_version.values()]
     except FileNotFoundError:
         return []
 
