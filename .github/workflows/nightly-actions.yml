@@ -1,17 +1,20 @@
 name: Version Testing
-on:
-  schedule:
-    - cron: "0 0 * * *"
+on: [push]
+#  schedule:
+#    - cron: "0 0 * * *"
 jobs:
   check-new-versions-of-instrumented-packages:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
     name: check-new-verisons-of-instrumented-packages
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: sudo apt update && sudo apt install -y libxml-xpath-perl git
       - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
@@ -24,4 +27,4 @@ jobs:
       - run: python3 -m nox
         env:
           TEST_PATCH_VERSIONS: true
-      - run: git push origin
+#      - run: git push origin
