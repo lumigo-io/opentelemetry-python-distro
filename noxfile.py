@@ -26,11 +26,15 @@ def dependency_versions(directory: str, dependency_name: str) -> List[str]:
             + f"/src/test/integration/{directory}/tested_versions/{dependency_name}",
             "r",
         ) as f:
-            return [
+            all_versions = [
                 line.strip()
                 for line in f.readlines()
                 if line.strip()[0] != "!"  # We mark incompatible versions with '1'
             ]
+            minor_to_version = {
+                version[: version.find(".", 2)]: version for version in all_versions
+            }
+            return list(minor_to_version.values())
     except FileNotFoundError:
         return []
 
