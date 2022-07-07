@@ -124,13 +124,10 @@ def integration_tests_fastapi_fastapi(
     session,
     fastapi_version,
 ):
-    uvicorn_version = dependency_versions(
-        directory="fastapi", dependency_name="uvicorn"
-    )[0]
     integration_tests_fastapi(
         session=session,
         fastapi_version=fastapi_version,
-        uvicorn_version=uvicorn_version,
+        uvicorn_version="0.17.6",  # arbitrary version
     )
 
 
@@ -143,12 +140,9 @@ def integration_tests_fastapi_uvicorn(
     session,
     uvicorn_version,
 ):
-    fastapi_version = dependency_versions(
-        directory="fastapi", dependency_name="fastapi"
-    )[0]
     integration_tests_fastapi(
         session=session,
-        fastapi_version=fastapi_version,
+        fastapi_version="0.78.0",  # arbitrary version
         uvicorn_version=uvicorn_version,
     )
 
