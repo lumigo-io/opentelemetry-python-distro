@@ -33,7 +33,7 @@ def dependency_versions(directory: str, dependency_name: str) -> List[str]:
                 if line.strip()[0] != "!"  # We mark incompatible versions with '1'
             ]
             if os.getenv("TEST_PATCH_VERSIONS", "").lower() == "true":
-                print("running all versions of:", dependency_name, all_versions)
+                print("running all versions of", dependency_name, all_versions)
                 return all_versions
             minor_to_version: Dict[str, Version] = {}
             for version in all_versions:
@@ -42,7 +42,7 @@ def dependency_versions(directory: str, dependency_name: str) -> List[str]:
                 if minor_to_version.get(minor, parse_version("0")) < parsed_version:
                     minor_to_version[minor] = parsed_version
             minor_versions = [v.public for v in minor_to_version.values()]
-            print("running minor versions of:", dependency_name, minor_versions)
+            print("running minor versions of", dependency_name, minor_versions)
             return minor_versions
     except FileNotFoundError:
         return []
