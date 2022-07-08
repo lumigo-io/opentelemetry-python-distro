@@ -35,17 +35,19 @@ pip install lumigo_opentelemetry
 
 Configure the `LUMIGO_TRACER_TOKEN` environment variable with the token value generated for you by the Lumigo platform, under `Settings --> Tracing --> Manual tracing`:
 
-```sh
-# Replace `<token>` below with the token generated for you by the Lumigo platform
-export LUMIGO_TRACER_TOKEN=<token>
+```console
+LUMIGO_TRACER_TOKEN=<token>
 ```
+
+Replace `<token>` below with the token generated for you by the Lumigo platform.
 
 It is also strongly suggested that you set the `OTEL_SERVICE_NAME` environment variable with, as value, the service name you have chosen for your application:
 
-```sh
-# Replace `<service name> with the desired name of the service`
-export OTEL_SERVICE_NAME=<service name>
+```console
+OTEL_SERVICE_NAME=<service name>
 ```
+
+Replace `<service name> with the desired name of the service`.
 
 ### Tracer activation
 
@@ -58,8 +60,8 @@ The [no-code activation](#no-code-activation) approach is the preferred one.
 
 Set the following environment variable:
 
-```sh
-export AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
+```console
+AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 ```
 
 #### Manual activation
