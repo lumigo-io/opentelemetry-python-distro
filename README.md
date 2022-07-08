@@ -16,6 +16,12 @@ The Lumigo OpenTelemetry Distribution for Python is made of several upstream Ope
 
 ## Setup
 
+Adding the Lumigo OpenTelemetry Distro for Python to your application is a three-step process:
+
+1. [Add the Lumigo OpenTelemetry Distro for Python as dependency](#add-lumigo_opentelemetry-as-dependency)
+2. [Provide configurations through environment variables](#environment-based-configuration)
+3. [Activate the tracer](#tracer-activation), which can also be achieved through environment variables
+
 ### Add lumigo_opentelemetry as dependency
 
 The [`lumigo_opentelemetry` package](https://pypi.org/project/lumigo_opentelemetry/) needs to be a dependency of your application.
@@ -48,6 +54,8 @@ OTEL_SERVICE_NAME=<service name>
 ```
 
 Replace `<service name> with the desired name of the service`.
+
+**Note:** While you are providing environment variables for configuration, consider also providing the one needed for [no-code tracer activation](#no-code-activation) :-)
 
 ### Tracer activation
 
