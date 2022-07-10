@@ -1,11 +1,87 @@
+from __future__ import annotations
 import tempfile
+from contextlib import contextmanager
+from dataclasses import dataclass
+from xml.etree import ElementTree
 
 import nox
+import requests
 from packaging.version import parse as parse_version, Version
 
 import os
 import time
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
+
+
+@dataclass(frozen=True)
+class TestedVersions:
+    success: Tuple[str, ...]
+    failed: Tuple[str, ...]
+
+    @staticmethod
+    def _add_version_to_file(
+        directory: str, dependency_name: str, dependency_version: str, success: bool
+    ):
+        dependency_file_path = TestedVersions.get_file_path(directory, dependency_name)
+        with open(dependency_file_path, "a") as f:
+            f.write(f"{'' if success else '!'}{dependency_version}\n")
+
+    @staticmethod
+    @contextmanager
+    def save_tests_result(
+        directory: str, dependency_name: str, dependency_version: str
+    ):
+        if os.getenv("ADD_NEW_VERSIONS", "").lower() == "true":
+            try:
+                yield
+            except Exception:
+                TestedVersions._add_version_to_file(
+                    directory, dependency_name, dependency_version, False
+                )
+                raise
+            TestedVersions._add_version_to_file(
+                directory, dependency_name, dependency_version, True
+            )
+        else:
+            yield
+
+    @staticmethod
+    def get_file_path(directory: str, dependency_name: str) -> str:
+        return (
+            os.path.dirname(__file__)
+            + f"/src/test/integration/{directory}/tested_versions/{dependency_name}"
+        )
+
+    @staticmethod
+    def from_file(path: str) -> TestedVersions:
+        success = []
+        failed = []
+        with open(path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("!"):
+                    failed.append(line)
+                else:
+                    success.append(line)
+        return TestedVersions(success=tuple(success), failed=tuple(failed))
+
+
+def install_package(package_name: str, package_version: str, session) -> None:
+    try:
+        session.install(f"{package_name}=={package_version}")
+    except Exception:
+        session.log(f"Cannot install '{package_name}' version '{package_version}'")
+        raise
+
+
+def get_versions_from_pypi(package_name: str) -> List[str]:
+    response = requests.get(f"https://pypi.org/rss/project/{package_name}/releases.xml")
+    response.raise_for_status()
+    xml_tree = ElementTree.fromstring(response.text)
+    versions = [i.text for i in xml_tree.findall("channel/item/title") if i.text]
+    # Verify all strings have the format for version
+    [Version(version) for version in versions]
+    return versions
 
 
 def python_versions() -> Union[List[str], bool]:
@@ -20,32 +96,25 @@ def python_versions() -> Union[List[str], bool]:
 
 def dependency_versions(directory: str, dependency_name: str) -> List[str]:
     """Dependenciy versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
-    packages, and symlinked under the relevant integration tests."""
-    try:
-        with open(
-            os.path.dirname(__file__)
-            + f"/src/test/integration/{directory}/tested_versions/{dependency_name}",
-            "r",
-        ) as f:
-            all_versions = [
-                line.strip()
-                for line in f.readlines()
-                if line.strip()[0] != "!"  # We mark incompatible versions with '1'
-            ]
-            if os.getenv("TEST_PATCH_VERSIONS", "").lower() == "true":
-                print("running all versions of", dependency_name, all_versions)
-                return all_versions
-            minor_to_version: Dict[str, Version] = {}
-            for version in all_versions:
-                parsed_version = parse_version(version)
-                minor = f"{parsed_version.major}.{parsed_version.minor}"
-                if minor_to_version.get(minor, parse_version("0")) < parsed_version:
-                    minor_to_version[minor] = parsed_version
-            minor_versions = [v.public for v in minor_to_version.values()]
-            print("running minor versions of", dependency_name, minor_versions)
-            return minor_versions
-    except FileNotFoundError:
-        return []
+    packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
+    tested_versions = TestedVersions.from_file(
+        TestedVersions.get_file_path(directory, dependency_name)
+    )
+    if os.getenv("ADD_NEW_VERSIONS", "").lower() == "true":
+        all_tested_versions = tested_versions.success + tested_versions.failed
+        pypi_versions = set(get_versions_from_pypi(dependency_name))
+        new_versions = list(pypi_versions.difference(all_tested_versions))
+        print("running new versions of", dependency_name, new_versions)
+        return new_versions
+    minor_to_version: Dict[str, Version] = {}
+    for version in tested_versions.success:
+        parsed_version = parse_version(version)
+        minor = f"{parsed_version.major}.{parsed_version.minor}"
+        if minor_to_version.get(minor, parse_version("0")) < parsed_version:
+            minor_to_version[minor] = parsed_version
+    minor_versions = [v.public for v in minor_to_version.values()]
+    print("running minor versions of", dependency_name, minor_versions)
+    return minor_versions
 
 
 @nox.session(python=python_versions())
@@ -56,63 +125,60 @@ def integration_tests_boto3(
     session,
     boto3_version,
 ):
-    try:
-        session.install(f"boto3=={boto3_version}")
-    except:  # noqa
-        session.log("Cannot install 'boto3' version '%s'", boto3_version)
-        return
+    with TestedVersions.save_tests_result("boto3", "boto3", boto3_version):
+        install_package("boto3", boto3_version, session)
 
-    session.install(".")
+        session.install(".")
 
-    abs_path = os.path.abspath("src/test/integration/boto3/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
-        full_path = f"{temp_file}.txt"
+        abs_path = os.path.abspath("src/test/integration/boto3/")
+        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+            full_path = f"{temp_file}.txt"
 
-        with session.chdir("src/test/integration/boto3"):
-            session.install("-r", "requirements_others.txt")
+            with session.chdir("src/test/integration/boto3"):
+                session.install("-r", "requirements_others.txt")
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                try:
+                    session.run(
+                        "sh",
+                        "./scripts/start_uvicorn",
+                        env={
+                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                            "OTEL_SERVICE_NAME": "app",
+                        },
+                        external=True,
+                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                    # TODO Make this deterministic
+                    # Wait 1s to give time for app to start
+                    time.sleep(8)
 
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_boto3.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                    },
-                )
-            finally:
-                import psutil
+                    session.run(
+                        "pytest",
+                        "--tb",
+                        "native",
+                        "--log-cli-level=INFO",
+                        "--color=yes",
+                        "-v",
+                        "./tests/test_boto3.py",
+                        env={
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        },
+                    )
+                finally:
+                    import psutil
 
-                # Kill all uvicorn processes
-                for proc in psutil.process_iter():
-                    # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                    if proc.name() == "uvicorn":
-                        proc.kill()
-                    elif proc.name().lower() == "python":
-                        cmdline = proc.cmdline()
-                        if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                    # Kill all uvicorn processes
+                    for proc in psutil.process_iter():
+                        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+                        if proc.name() == "uvicorn":
                             proc.kill()
+                        elif proc.name().lower() == "python":
+                            cmdline = proc.cmdline()
+                            if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                                proc.kill()
 
-                session.run("rm", "-f", full_path, external=True)
+                    session.run("rm", "-f", full_path, external=True)
 
 
 @nox.session(python=python_versions())
@@ -124,11 +190,12 @@ def integration_tests_fastapi_fastapi(
     session,
     fastapi_version,
 ):
-    integration_tests_fastapi(
-        session=session,
-        fastapi_version=fastapi_version,
-        uvicorn_version="0.17.6",  # arbitrary version
-    )
+    with TestedVersions.save_tests_result("fastapi", "fastapi", fastapi_version):
+        integration_tests_fastapi(
+            session=session,
+            fastapi_version=fastapi_version,
+            uvicorn_version="0.17.6",  # arbitrary version
+        )
 
 
 @nox.session(python=python_versions())
@@ -140,11 +207,12 @@ def integration_tests_fastapi_uvicorn(
     session,
     uvicorn_version,
 ):
-    integration_tests_fastapi(
-        session=session,
-        fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version=uvicorn_version,
-    )
+    with TestedVersions.save_tests_result("fastapi", "uvicorn", uvicorn_version):
+        integration_tests_fastapi(
+            session=session,
+            fastapi_version="0.78.0",  # arbitrary version
+            uvicorn_version=uvicorn_version,
+        )
 
 
 def integration_tests_fastapi(
@@ -152,17 +220,8 @@ def integration_tests_fastapi(
     fastapi_version,
     uvicorn_version,
 ):
-    try:
-        session.install(f"uvicorn=={uvicorn_version}")
-    except:  # noqa
-        session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
-        return
-
-    try:
-        session.install(f"fastapi=={fastapi_version}")
-    except:  # noqa
-        session.log("Cannot install 'uvicorn' version '%s'", uvicorn_version)
-        return
+    install_package("uvicorn", uvicorn_version, session)
+    install_package("fastapi", fastapi_version, session)
 
     session.install(".")
 
@@ -222,63 +281,60 @@ def integration_tests_fastapi(
     "flask_version", dependency_versions(directory="flask", dependency_name="flask")
 )
 def integration_tests_flask(session, flask_version):
-    try:
-        session.install(f"flask=={flask_version}")
-    except:  # noqa
-        session.log("Cannot install 'flask' version '%s'", flask_version)
-        return
+    with TestedVersions.save_tests_result("flask", "flask", flask_version):
+        install_package("flask", flask_version, session)
 
-    session.install(".")
+        session.install(".")
 
-    abs_path = os.path.abspath("src/test/integration/flask/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
-        full_path = f"{temp_file}.txt"
+        abs_path = os.path.abspath("src/test/integration/flask/")
+        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+            full_path = f"{temp_file}.txt"
 
-        with session.chdir("src/test/integration/flask"):
-            session.install("-r", "requirements_others.txt")
+            with session.chdir("src/test/integration/flask"):
+                session.install("-r", "requirements_others.txt")
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_flask",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                try:
+                    session.run(
+                        "sh",
+                        "./scripts/start_flask",
+                        env={
+                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                            "OTEL_SERVICE_NAME": "app",
+                        },
+                        external=True,
+                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                    # TODO Make this deterministic
+                    # Wait 1s to give time for app to start
+                    time.sleep(8)
 
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_flask.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                    },
-                )
-            finally:
-                import psutil
+                    session.run(
+                        "pytest",
+                        "--tb",
+                        "native",
+                        "--log-cli-level=INFO",
+                        "--color=yes",
+                        "-v",
+                        "./tests/test_flask.py",
+                        env={
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        },
+                    )
+                finally:
+                    import psutil
 
-                # Kill all uvicorn processes
-                for proc in psutil.process_iter():
-                    # The python process is names "Python" os OS X and "flask" on CircleCI
-                    if proc.name() == "flask":
-                        proc.kill()
-                    elif proc.name().lower() == "python":
-                        cmdline = proc.cmdline()
-                        if len(cmdline) > 1 and cmdline[1].endswith("/flask"):
+                    # Kill all uvicorn processes
+                    for proc in psutil.process_iter():
+                        # The python process is names "Python" os OS X and "flask" on CircleCI
+                        if proc.name() == "flask":
                             proc.kill()
+                        elif proc.name().lower() == "python":
+                            cmdline = proc.cmdline()
+                            if len(cmdline) > 1 and cmdline[1].endswith("/flask"):
+                                proc.kill()
 
-                session.run("rm", "-f", full_path, external=True)
+                    session.run("rm", "-f", full_path, external=True)
 
 
 @nox.session(python=python_versions())
@@ -290,63 +346,60 @@ def integration_tests_pymongo(
     session,
     pymongo_version,
 ):
-    try:
-        session.install(f"pymongo=={pymongo_version}")
-    except:  # noqa
-        session.log("Cannot install 'pymongo' version '%s'", pymongo_version)
-        return
+    with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
+        install_package("pymongo", pymongo_version, session)
 
-    session.install(".")
+        session.install(".")
 
-    abs_path = os.path.abspath("src/test/integration/pymongo/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
-        full_path = f"{temp_file}.txt"
+        abs_path = os.path.abspath("src/test/integration/pymongo/")
+        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+            full_path = f"{temp_file}.txt"
 
-        with session.chdir("src/test/integration/pymongo"):
-            session.install("-r", "requirements_others.txt")
+            with session.chdir("src/test/integration/pymongo"):
+                session.install("-r", "requirements_others.txt")
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                try:
+                    session.run(
+                        "sh",
+                        "./scripts/start_uvicorn",
+                        env={
+                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                            "OTEL_SERVICE_NAME": "app",
+                        },
+                        external=True,
+                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                    # TODO Make this deterministic
+                    # Wait 1s to give time for app to start
+                    time.sleep(8)
 
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_pymongo.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                    },
-                )
-            finally:
-                import psutil
+                    session.run(
+                        "pytest",
+                        "--tb",
+                        "native",
+                        "--log-cli-level=INFO",
+                        "--color=yes",
+                        "-v",
+                        "./tests/test_pymongo.py",
+                        env={
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        },
+                    )
+                finally:
+                    import psutil
 
-                # Kill all uvicorn processes
-                for proc in psutil.process_iter():
-                    # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                    if proc.name() == "uvicorn":
-                        proc.kill()
-                    elif proc.name().lower() == "python":
-                        cmdline = proc.cmdline()
-                        if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                    # Kill all uvicorn processes
+                    for proc in psutil.process_iter():
+                        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+                        if proc.name() == "uvicorn":
                             proc.kill()
+                        elif proc.name().lower() == "python":
+                            cmdline = proc.cmdline()
+                            if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                                proc.kill()
 
-                session.run("rm", "-f", full_path, external=True)
+                    session.run("rm", "-f", full_path, external=True)
 
 
 @nox.session(python=python_versions())
@@ -358,60 +411,57 @@ def integration_tests_pymysql(
     session,
     pymysql_version,
 ):
-    try:
-        session.install(f"PyMySQL=={pymysql_version}")
-    except:  # noqa
-        session.log("Cannot install 'PyMySQL' version '%s'", pymysql_version)
-        return
+    with TestedVersions.save_tests_result("pymysql", "pymysql", pymysql_version):
+        install_package("PyMySQL", pymysql_version, session)
 
-    session.install(".")
+        session.install(".")
 
-    abs_path = os.path.abspath("src/test/integration/pymysql/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
-        full_path = f"{temp_file}.txt"
+        abs_path = os.path.abspath("src/test/integration/pymysql/")
+        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+            full_path = f"{temp_file}.txt"
 
-        with session.chdir("src/test/integration/pymysql"):
-            session.install("-r", "requirements_others.txt")
+            with session.chdir("src/test/integration/pymysql"):
+                session.install("-r", "requirements_others.txt")
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                try:
+                    session.run(
+                        "sh",
+                        "./scripts/start_uvicorn",
+                        env={
+                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                            "OTEL_SERVICE_NAME": "app",
+                        },
+                        external=True,
+                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                    # TODO Make this deterministic
+                    # Wait 1s to give time for app to start
+                    time.sleep(8)
 
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_pymysql.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                    },
-                )
-            finally:
-                import psutil
+                    session.run(
+                        "pytest",
+                        "--tb",
+                        "native",
+                        "--log-cli-level=INFO",
+                        "--color=yes",
+                        "-v",
+                        "./tests/test_pymysql.py",
+                        env={
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        },
+                    )
+                finally:
+                    import psutil
 
-                # Kill all uvicorn processes
-                for proc in psutil.process_iter():
-                    # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                    if proc.name() == "uvicorn":
-                        proc.kill()
-                    elif proc.name().lower() == "python":
-                        cmdline = proc.cmdline()
-                        if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                    # Kill all uvicorn processes
+                    for proc in psutil.process_iter():
+                        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+                        if proc.name() == "uvicorn":
                             proc.kill()
+                        elif proc.name().lower() == "python":
+                            cmdline = proc.cmdline()
+                            if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                                proc.kill()
 
-                session.run("rm", "-f", full_path, external=True)
+                    session.run("rm", "-f", full_path, external=True)
