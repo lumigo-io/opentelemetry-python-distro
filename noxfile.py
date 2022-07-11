@@ -94,7 +94,13 @@ def python_versions() -> Union[List[str], bool]:
     return ["3.7", "3.8", "3.9", "3.10"]
 
 
-def dependency_versions(directory: str, dependency_name: str) -> List[str]:
+def should_run_patch() -> bool:
+    return os.getenv("TEST_PATCH_VERSIONS", "").lower() == "true"
+
+
+def dependency_versions(
+    directory: str, dependency_name: str, run_patch: bool
+) -> List[str]:
     """Dependenciy versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
@@ -119,7 +125,10 @@ def dependency_versions(directory: str, dependency_name: str) -> List[str]:
 
 @nox.session(python=python_versions())
 @nox.parametrize(
-    "boto3_version", dependency_versions(directory="boto3", dependency_name="boto3")
+    "boto3_version",
+    dependency_versions(
+        directory="boto3", dependency_name="boto3", run_patch=should_run_patch()
+    ),
 )
 def integration_tests_boto3(
     session,
@@ -184,7 +193,11 @@ def integration_tests_boto3(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "fastapi_version",
-    dependency_versions(directory="fastapi", dependency_name="fastapi"),
+    dependency_versions(
+        directory="fastapi",
+        dependency_name="fastapi",
+        run_patch=should_run_patch(),
+    ),
 )
 def integration_tests_fastapi_fastapi(
     session,
@@ -201,7 +214,11 @@ def integration_tests_fastapi_fastapi(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "uvicorn_version",
-    dependency_versions(directory="fastapi", dependency_name="uvicorn"),
+    dependency_versions(
+        directory="fastapi",
+        dependency_name="uvicorn",
+        run_patch=should_run_patch(),
+    ),
 )
 def integration_tests_fastapi_uvicorn(
     session,
@@ -278,7 +295,10 @@ def integration_tests_fastapi(
 
 @nox.session(python=python_versions())
 @nox.parametrize(
-    "flask_version", dependency_versions(directory="flask", dependency_name="flask")
+    "flask_version",
+    dependency_versions(
+        directory="flask", dependency_name="flask", run_patch=should_run_patch()
+    ),
 )
 def integration_tests_flask(session, flask_version):
     with TestedVersions.save_tests_result("flask", "flask", flask_version):
@@ -340,7 +360,11 @@ def integration_tests_flask(session, flask_version):
 @nox.session(python=python_versions())
 @nox.parametrize(
     "pymongo_version",
-    dependency_versions(directory="pymongo", dependency_name="pymongo"),
+    dependency_versions(
+        directory="pymongo",
+        dependency_name="pymongo",
+        run_patch=should_run_patch(),
+    ),
 )
 def integration_tests_pymongo(
     session,
@@ -405,7 +429,11 @@ def integration_tests_pymongo(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "pymysql_version",
-    dependency_versions(directory="pymysql", dependency_name="pymysql"),
+    dependency_versions(
+        directory="pymysql",
+        dependency_name="pymysql",
+        run_patch=should_run_patch(),
+    ),
 )
 def integration_tests_pymysql(
     session,
