@@ -18,9 +18,9 @@ jobs:
       - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
       - run: pip3 install -r requirements.txt
       - run: python3 -m nox
+        env:
+          ADD_NEW_VERSIONS: true
       - run: new_versions=$(./scripts/describe_supported_versions_diff.sh)
       - run: git checkout -b $(date +version-testing-%Y%m%d)
       - run: git commit -am "Add new supported versions\n\n${new_versions}"x
-        env:
-          ADD_NEW_VERSIONS: true
 #      - run: git push origin

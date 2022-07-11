@@ -103,7 +103,8 @@ def python_versions() -> Union[List[str], bool]:
 
 def should_add_new_versions() -> bool:
     result = os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
-    print(f"DEBUG should_add_new_versions: {result}")
+    print(f"DEBUG: ADD_NEW_VERSIONS: {os.getenv('ADD_NEW_VERSIONS')}")
+    print(f"DEBUG: should_add_new_versions: {result}")
     return result
 
 
