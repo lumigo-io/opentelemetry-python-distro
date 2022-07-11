@@ -31,7 +31,7 @@ class TestedVersions:
     def save_tests_result(
         directory: str, dependency_name: str, dependency_version: str
     ):
-        if os.getenv("ADD_NEW_VERSIONS", "").lower() == "true":
+        if should_add_new_versions():
             try:
                 yield
             except Exception:
@@ -94,19 +94,19 @@ def python_versions() -> Union[List[str], bool]:
     return ["3.7", "3.8", "3.9", "3.10"]
 
 
-def should_run_patch() -> bool:
-    return os.getenv("TEST_PATCH_VERSIONS", "").lower() == "true"
+def should_add_new_versions() -> bool:
+    return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
 
 
 def dependency_versions(
-    directory: str, dependency_name: str, run_patch: bool
+    directory: str, dependency_name: str, add_new_versions: bool
 ) -> List[str]:
     """Dependenciy versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, dependency_name)
     )
-    if os.getenv("ADD_NEW_VERSIONS", "").lower() == "true":
+    if add_new_versions:
         all_tested_versions = tested_versions.success + tested_versions.failed
         pypi_versions = set(get_versions_from_pypi(dependency_name))
         new_versions = list(pypi_versions.difference(all_tested_versions))
@@ -127,7 +127,9 @@ def dependency_versions(
 @nox.parametrize(
     "boto3_version",
     dependency_versions(
-        directory="boto3", dependency_name="boto3", run_patch=should_run_patch()
+        directory="boto3",
+        dependency_name="boto3",
+        add_new_versions=should_add_new_versions(),
     ),
 )
 def integration_tests_boto3(
@@ -196,7 +198,7 @@ def integration_tests_boto3(
     dependency_versions(
         directory="fastapi",
         dependency_name="fastapi",
-        run_patch=should_run_patch(),
+        add_new_versions=should_add_new_versions(),
     ),
 )
 def integration_tests_fastapi_fastapi(
@@ -217,7 +219,7 @@ def integration_tests_fastapi_fastapi(
     dependency_versions(
         directory="fastapi",
         dependency_name="uvicorn",
-        run_patch=should_run_patch(),
+        add_new_versions=should_add_new_versions(),
     ),
 )
 def integration_tests_fastapi_uvicorn(
@@ -297,7 +299,9 @@ def integration_tests_fastapi(
 @nox.parametrize(
     "flask_version",
     dependency_versions(
-        directory="flask", dependency_name="flask", run_patch=should_run_patch()
+        directory="flask",
+        dependency_name="flask",
+        add_new_versions=should_add_new_versions(),
     ),
 )
 def integration_tests_flask(session, flask_version):
@@ -363,7 +367,7 @@ def integration_tests_flask(session, flask_version):
     dependency_versions(
         directory="pymongo",
         dependency_name="pymongo",
-        run_patch=should_run_patch(),
+        add_new_versions=should_add_new_versions(),
     ),
 )
 def integration_tests_pymongo(
@@ -432,7 +436,7 @@ def integration_tests_pymongo(
     dependency_versions(
         directory="pymysql",
         dependency_name="pymysql",
-        run_patch=should_run_patch(),
+        add_new_versions=should_add_new_versions(),
     ),
 )
 def integration_tests_pymysql(
