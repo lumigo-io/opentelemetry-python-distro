@@ -23,8 +23,13 @@ class TestedVersions:
         directory: str, dependency_name: str, dependency_version: str, success: bool
     ):
         dependency_file_path = TestedVersions.get_file_path(directory, dependency_name)
+        new_line = f"{'' if success else '!'}{dependency_version}\n"
+        print(f"Adding the following line to {dependency_file_path}: {new_line}")
         with open(dependency_file_path, "a") as f:
-            f.write(f"{'' if success else '!'}{dependency_version}\n")
+            f.write(new_line)
+        print(
+            "dependency file", dependency_file_path, open(dependency_file_path).read()
+        )
 
     @staticmethod
     @contextmanager
