@@ -28,7 +28,9 @@ class TestedVersions:
         with open(dependency_file_path, "a") as f:
             f.write(new_line)
         print(
-            "dependency file", dependency_file_path, open(dependency_file_path).read()
+            "DEBUG: dependency file",
+            dependency_file_path,
+            open(dependency_file_path).read(),
         )
 
     @staticmethod
@@ -100,7 +102,9 @@ def python_versions() -> Union[List[str], bool]:
 
 
 def should_add_new_versions() -> bool:
-    return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
+    result = os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
+    print(f"DEBUG should_add_new_versions: {result}")
+    return result
 
 
 def dependency_versions(
@@ -110,6 +114,9 @@ def dependency_versions(
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, dependency_name)
+    )
+    print(
+        "DEBUG: in dependency versions:", directory, dependency_name, add_new_versions
     )
     if add_new_versions:
         all_tested_versions = tested_versions.success + tested_versions.failed
