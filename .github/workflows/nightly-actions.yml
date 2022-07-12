@@ -17,10 +17,11 @@ jobs:
       - run: sudo apt update && sudo apt install -y libxml-xpath-perl git
       - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
       - run: pip3 install -r requirements.txt
-      - run: (python3 -m nox)  # The brackets are used to avoid exit when the tests fail.
+      - run: (exit 1)  # The brackets are used to avoid exit when the tests fail.
         env:
           ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
+      - run: if [[ `git status --porcelain --untracked-files=no` ]]; then echo "no changes, skipping commit" && exit 0; fi
       - run: new_versions=$(./scripts/describe_supported_versions_diff.sh)
       - run: git checkout -b $(date +version-testing-%Y%m%d)
       - run: git commit -am "Add new supported versions\n\n${new_versions}"x
