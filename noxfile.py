@@ -45,7 +45,7 @@ class TestedVersions:
                 TestedVersions._add_version_to_file(
                     directory, dependency_name, dependency_version, False
                 )
-                raise
+                return  # The execution of the github job shouldn't be stopped.
             TestedVersions._add_version_to_file(
                 directory, dependency_name, dependency_version, True
             )
