@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10' ]
-    name: check-new-verisons-of-instrumented-packages
+    name: check-new-versions-of-instrumented-packages
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -23,3 +23,10 @@ jobs:
           ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
       - run: ./scripts/push_versions_branch.sh
+
+  push-branch:
+    runs-on: ubuntu-latest
+    name: push-branch
+    needs: check-new-versions-of-instrumented-packages
+    steps:
+      - run: echo "running"
