@@ -20,6 +20,7 @@ jobs:
       - run: (python3 -m nox)  # The brackets are used to avoid exit when the tests fail.
         env:
           ADD_NEW_VERSIONS: true
+      - run: git --no-pager diff
       - run: new_versions=$(./scripts/describe_supported_versions_diff.sh)
       - run: git checkout -b $(date +version-testing-%Y%m%d)
       - run: git commit -am "Add new supported versions\n\n${new_versions}"x

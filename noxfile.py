@@ -27,11 +27,6 @@ class TestedVersions:
         print(f"Adding the following line to {dependency_file_path}: {new_line}")
         with open(dependency_file_path, "a") as f:
             f.write(new_line)
-        print(
-            "DEBUG: dependency file",
-            dependency_file_path,
-            open(dependency_file_path).read(),
-        )
 
     @staticmethod
     @contextmanager
