@@ -37,8 +37,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: 3.7
-          path: copy3.7_requirements.txt
-      - run: cat copy3.7_requirements.txt
+          path: copy3.7
+      - run: ls copy3.7
+      - run: cat copy3.7/requirements.txt
       - uses: actions/download-artifact@v2
         with:
           name: 3.8
