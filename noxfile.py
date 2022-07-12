@@ -97,8 +97,7 @@ def python_versions() -> Union[List[str], bool]:
 
 
 def should_add_new_versions() -> bool:
-    result = os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
-    return result
+    return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
 
 
 def dependency_versions(
