@@ -15,4 +15,5 @@ typing_extensions==4.0.1
 Werkzeug==2.0.2
 zipp==3.8.0
 nox==2022.1.7
-psutil==5.9.1 
+psutil==5.9.1
+packaging==21.3
