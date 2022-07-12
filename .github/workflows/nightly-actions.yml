@@ -17,7 +17,8 @@ jobs:
       - run: sudo apt update && sudo apt install -y libxml-xpath-perl git
       - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
       - run: pip3 install -r requirements.txt
-      - run: (exit 1)  # The brackets are used to avoid exit when the tests fail.
+      - run: exit 1
+        continue-on-error: true
         env:
           ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
