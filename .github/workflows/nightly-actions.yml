@@ -14,13 +14,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - run: sudo apt update && sudo apt install -y libxml-xpath-perl git
-      - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
-      - run: pip3 install -r requirements.txt
-      - run: exit 0
-        continue-on-error: true
-        env:
-          ADD_NEW_VERSIONS: true
+#      - run: sudo apt update && sudo apt install -y libxml-xpath-perl git
+#      - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
+#      - run: pip3 install -r requirements.txt
+#      - run: python3 -m nox
+#        continue-on-error: true
+#        env:
+#          ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
       - run: ./scripts/push_versions_branch.sh
       - uses: actions/upload-artifact@v2
@@ -36,11 +36,11 @@ jobs:
       - run: echo "running"
       - uses: actions/download-artifact@v2
         with:
-          name: python3.7
+          name: 3.7
           path: copy3.7_requirements.txt
       - run: cat copy3.7_requirements.txt
       - uses: actions/download-artifact@v2
         with:
-          name: python3.8
+          name: 3.8
           path: copy3.8_requirements.txt
       - run: cat copy3.8_requirements.txt
