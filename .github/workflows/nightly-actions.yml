@@ -23,6 +23,10 @@ jobs:
           ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
       - run: ./scripts/push_versions_branch.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.python-version }}
+          path: requirements.txt
 
   push-branch:
     runs-on: ubuntu-latest
@@ -30,3 +34,13 @@ jobs:
     needs: check-new-versions-of-instrumented-packages
     steps:
       - run: echo "running"
+      - uses: actions/download-artifact@v2
+        with:
+          name: python3.7
+          path: copy3.7_requirements.txt
+      - run: cat copy3.7_requirements.txt
+      - uses: actions/download-artifact@v2
+        with:
+          name: python3.8
+          path: copy3.8_requirements.txt
+      - run: cat copy3.8_requirements.txt
