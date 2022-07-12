@@ -17,7 +17,7 @@ jobs:
       - run: sudo apt update && sudo apt install -y libxml-xpath-perl git
       - run: git config user.email "versionbot@lumigo.io" && git config user.name "Version Bot"
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox
+      - run: (python3 -m nox)  # The brackets are used to avoid exit when the tests fail.
         env:
           ADD_NEW_VERSIONS: true
       - run: new_versions=$(./scripts/describe_supported_versions_diff.sh)
