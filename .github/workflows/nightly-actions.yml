@@ -61,6 +61,6 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          branch: $(date +version-testing-%Y%m%d)
+          branch: temp-name # $(date +version-testing-%Y%m%d)
           commit-message: "Add new supported versions\n\n${new_versions}"
           assignees: nir@lumigo.io,guy@lumigo.io
