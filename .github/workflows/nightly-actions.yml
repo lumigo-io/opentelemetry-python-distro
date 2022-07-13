@@ -23,13 +23,9 @@ jobs:
 #          ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
       - run: ./scripts/push_versions_branch.sh
+      - run: echo "changed line" >> src/lumigo_opentelemetry/instrumentations/boto/tested_versions/boto3
       - run: mkdir versions_artifact
-      - run: cp src/lumigo_opentelemetry/instrumentations/boto/tested_versions/boto3 versions_artifact
-      - run: cp src/lumigo_opentelemetry/instrumentations/fastapi/tested_versions/fastapi versions_artifact
-      - run: cp src/lumigo_opentelemetry/instrumentations/fastapi/tested_versions/uvicorn versions_artifact
-      - run: cp src/lumigo_opentelemetry/instrumentations/flask/tested_versions/flask versions_artifact
-      - run: cp src/lumigo_opentelemetry/instrumentations/pymysql/tested_versions/pymysql versions_artifact
-      - run: cp src/lumigo_opentelemetry/instrumentations/pymongo/tested_versions/pymongo versions_artifact
+      - run: for val in `git diff --name-only`; cp "$val" versions_artifact; done
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.python-version }}
