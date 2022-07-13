@@ -2,7 +2,7 @@ import os
 from glob import glob
 from typing import List, Dict, Tuple
 
-from src.ci.tested_versions_utils import TestedVersions
+from ..src.ci.tested_versions_utils import TestedVersions
 
 ARTIFACT_DIR_NAME = "versions_artifacts"
 
