@@ -1,71 +1,15 @@
 from __future__ import annotations
+import os
 import tempfile
-from contextlib import contextmanager
-from dataclasses import dataclass
 from xml.etree import ElementTree
+import time
+from typing import List, Union, Dict
 
 import nox
 import requests
 from packaging.version import parse as parse_version, Version
 
-import os
-import time
-from typing import List, Union, Dict, Tuple
-
-
-@dataclass(frozen=True)
-class TestedVersions:
-    success: Tuple[str, ...]
-    failed: Tuple[str, ...]
-
-    @staticmethod
-    def _add_version_to_file(
-        directory: str, dependency_name: str, dependency_version: str, success: bool
-    ):
-        dependency_file_path = TestedVersions.get_file_path(directory, dependency_name)
-        new_line = f"{'' if success else '!'}{dependency_version}\n"
-        print(f"Adding the following line to {dependency_file_path}: {new_line}")
-        with open(dependency_file_path, "a") as f:
-            f.write(new_line)
-
-    @staticmethod
-    @contextmanager
-    def save_tests_result(
-        directory: str, dependency_name: str, dependency_version: str
-    ):
-        if should_add_new_versions():
-            try:
-                yield
-            except Exception:
-                TestedVersions._add_version_to_file(
-                    directory, dependency_name, dependency_version, False
-                )
-                raise
-            TestedVersions._add_version_to_file(
-                directory, dependency_name, dependency_version, True
-            )
-        else:
-            yield
-
-    @staticmethod
-    def get_file_path(directory: str, dependency_name: str) -> str:
-        return (
-            os.path.dirname(__file__)
-            + f"/src/test/integration/{directory}/tested_versions/{dependency_name}"
-        )
-
-    @staticmethod
-    def from_file(path: str) -> TestedVersions:
-        success = []
-        failed = []
-        with open(path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("!"):
-                    failed.append(line)
-                else:
-                    success.append(line)
-        return TestedVersions(success=tuple(success), failed=tuple(failed))
+from ci.tested_versions_utils import TestedVersions, should_add_new_versions
 
 
 def install_package(package_name: str, package_version: str, session) -> None:
@@ -94,10 +38,6 @@ def python_versions() -> Union[List[str], bool]:
         return False
 
     return ["3.7", "3.8", "3.9", "3.10"]
-
-
-def should_add_new_versions() -> bool:
-    return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
 
 
 def get_new_version_from_pypi(
