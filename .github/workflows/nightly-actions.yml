@@ -25,7 +25,7 @@ jobs:
       - run: ./scripts/push_versions_branch.sh
       - run: echo "changed line" >> src/lumigo_opentelemetry/instrumentations/boto/tested_versions/boto3
       - run: mkdir versions_artifact
-      - run: for val in `git diff --name-only`; cp "$val" versions_artifact; done
+      - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.python-version }}
