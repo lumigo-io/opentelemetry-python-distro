@@ -100,6 +100,16 @@ def should_add_new_versions() -> bool:
     return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
 
 
+def get_new_version_from_pypi(
+    dependency_name: str, tested_versions: TestedVersions
+) -> List[str]:
+    all_tested_versions = tested_versions.success + tested_versions.failed
+    pypi_versions = set(get_versions_from_pypi(dependency_name))
+    new_versions = list(pypi_versions.difference(all_tested_versions))
+    print("running new versions of", dependency_name, new_versions)
+    return new_versions
+
+
 def dependency_versions(
     directory: str, dependency_name: str, add_new_versions: bool
 ) -> List[str]:
@@ -109,11 +119,7 @@ def dependency_versions(
         TestedVersions.get_file_path(directory, dependency_name)
     )
     if add_new_versions:
-        all_tested_versions = tested_versions.success + tested_versions.failed
-        pypi_versions = set(get_versions_from_pypi(dependency_name))
-        new_versions = list(pypi_versions.difference(all_tested_versions))
-        print("running new versions of", dependency_name, new_versions)
-        return new_versions
+        return get_new_version_from_pypi(dependency_name, tested_versions)
     minor_to_version: Dict[str, Version] = {}
     for version in tested_versions.success:
         parsed_version = parse_version(version)
