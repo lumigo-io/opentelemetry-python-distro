@@ -52,7 +52,7 @@ jobs:
           path: versions_artifacts/3.9
       - uses: actions/download-artifact@v2
         with:
-          name: 3.10
+          name: '3.10'
           path: versions_artifacts/3.10
       - run: python3 scripts/gather_version_artifacts.py
       - run: git --no-pager diff
