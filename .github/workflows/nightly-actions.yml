@@ -18,7 +18,6 @@ jobs:
         continue-on-error: true
         env:
           ADD_NEW_VERSIONS: true
-      - run: echo "1.1.1" >> src/lumigo_opentelemetry/instrumentations/boto/tested_versions/boto3
       - run: git --no-pager diff
       - run: mkdir versions_artifact
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
