@@ -9,7 +9,7 @@ import nox
 import requests
 from packaging.version import parse as parse_version, Version
 
-from ci.tested_versions_utils import TestedVersions, should_add_new_versions
+from src.ci.tested_versions_utils import TestedVersions, should_add_new_versions
 
 
 def install_package(package_name: str, package_version: str, session) -> None:
