@@ -54,7 +54,7 @@ jobs:
         with:
           name: '3.10'
           path: versions_artifacts/3.10
-      - run: python3 scripts/gather_version_artifacts.py
+      - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
       - run: ./scripts/push_versions_branch.sh
 
