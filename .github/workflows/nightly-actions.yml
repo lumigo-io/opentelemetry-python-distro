@@ -48,8 +48,7 @@ jobs:
           path: downloaded_artifacts/3.7
       - run: ls downloaded_artifacts
       - run: ls downloaded_artifacts/3.7
-      - run: ls downloaded_artifacts/3.7/version_artifacts
-      - run: cat downloaded_artifacts/3.7/version_artifacts/boto3
+      - run: cat downloaded_artifacts/3.7/boto3
 #      - run: cat copy3.7/requirements.txt
 #      - uses: actions/download-artifact@v2
 #        with:
