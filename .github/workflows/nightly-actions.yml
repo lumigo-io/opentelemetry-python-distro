@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox --reuse-existing-virtualenvs --no-install
+      - run: python3 -m nox
         continue-on-error: true
         env:
           ADD_NEW_VERSIONS: true

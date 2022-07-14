@@ -11,8 +11,6 @@ from packaging.version import parse as parse_version, Version
 
 from src.ci.tested_versions_utils import TestedVersions, should_add_new_versions
 
-nox.options.reuse_existing_virtualenvs = True
-
 
 def install_package(package_name: str, package_version: str, session) -> None:
     try:
