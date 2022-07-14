@@ -58,7 +58,7 @@ jobs:
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
       - run: echo "::set-output name=branch_name::$(date +version-testing-%Y%m%d)"
         id: branch_name
-      - run: |  # need to set an env var in order to support multi-lines output
+      - run: |  # need to set an env var in order to support multi-lines output https://trstringer.com/github-actions-multiline-strings/
           new_versions="$(./scripts/describe_supported_versions_diff.sh)"
           echo "new_versions<<EOF" >> $GITHUB_ENV
           echo "$new_versions" >> $GITHUB_ENV
