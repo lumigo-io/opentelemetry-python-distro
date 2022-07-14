@@ -41,8 +41,9 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
 
 
 def python_versions() -> Union[List[str], bool]:
-    # On Github, just run the current Python version.
-    # In local, test all supported python versions.
+    # On Github, just run the current Python version without
+    # creating a venv.
+    # In local, try all supported python versions building venvs
     if os.getenv("CI", str(False)).lower() == "true":
         return False
 
