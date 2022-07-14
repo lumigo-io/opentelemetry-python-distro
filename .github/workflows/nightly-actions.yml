@@ -61,10 +61,10 @@ jobs:
 #      - run: echo "::set-output name=commit_message::$(./scripts/describe_supported_versions_diff.sh)"
 #        id: commit_message
       - run: |
-          new_versions=$(./scripts/describe_supported_versions_diff.sh)
+          new_versions="$(./scripts/describe_supported_versions_diff.sh)"
           echo "new_versions: ${new_versions}"
           echo "new_versions<<EOF" >> $GITHUB_ENV
-          echo "new_versions" >> $GITHUB_ENV
+          echo "$new_versions" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
