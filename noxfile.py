@@ -1,76 +1,30 @@
 from __future__ import annotations
+import os
 import tempfile
-from contextlib import contextmanager
-from dataclasses import dataclass
 from xml.etree import ElementTree
+import time
+from typing import List, Dict, Union
 
 import nox
 import requests
 from packaging.version import parse as parse_version, Version
 
-import os
-import time
-from typing import List, Union, Dict, Tuple
+from src.ci.tested_versions_utils import TestedVersions, should_add_new_versions
 
 
-@dataclass(frozen=True)
-class TestedVersions:
-    success: Tuple[str, ...]
-    failed: Tuple[str, ...]
-
-    @staticmethod
-    def _add_version_to_file(
-        directory: str, dependency_name: str, dependency_version: str, success: bool
-    ):
-        dependency_file_path = TestedVersions.get_file_path(directory, dependency_name)
-        new_line = f"{'' if success else '!'}{dependency_version}\n"
-        print(f"Adding the following line to {dependency_file_path}: {new_line}")
-        with open(dependency_file_path, "a") as f:
-            f.write(new_line)
-
-    @staticmethod
-    @contextmanager
-    def save_tests_result(
-        directory: str, dependency_name: str, dependency_version: str
-    ):
-        if should_add_new_versions():
-            try:
-                yield
-            except Exception:
-                TestedVersions._add_version_to_file(
-                    directory, dependency_name, dependency_version, False
-                )
-                raise
-            TestedVersions._add_version_to_file(
-                directory, dependency_name, dependency_version, True
-            )
-        else:
-            yield
-
-    @staticmethod
-    def get_file_path(directory: str, dependency_name: str) -> str:
-        return (
-            os.path.dirname(__file__)
-            + f"/src/test/integration/{directory}/tested_versions/{dependency_name}"
-        )
-
-    @staticmethod
-    def from_file(path: str) -> TestedVersions:
-        success = []
-        failed = []
-        with open(path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("!"):
-                    failed.append(line)
-                else:
-                    success.append(line)
-        return TestedVersions(success=tuple(success), failed=tuple(failed))
+def install(session, *args) -> None:
+    """
+    When running in CI we don't use venv and without venv `session.install` is deprecated.
+    """
+    if session.python is False:  # this means no venv
+        session.run("pip", "install", *args)
+    else:
+        session.install(*args)
 
 
 def install_package(package_name: str, package_version: str, session) -> None:
     try:
-        session.install(f"{package_name}=={package_version}")
+        install(session, f"{package_name}=={package_version}")
     except Exception:
         session.log(f"Cannot install '{package_name}' version '{package_version}'")
         raise
@@ -94,10 +48,6 @@ def python_versions() -> Union[List[str], bool]:
         return False
 
     return ["3.7", "3.8", "3.9", "3.10"]
-
-
-def should_add_new_versions() -> bool:
-    return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
 
 
 def get_new_version_from_pypi(
@@ -147,14 +97,14 @@ def integration_tests_boto3(
     with TestedVersions.save_tests_result("boto3", "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
-        session.install(".")
+        install(session, ".")
 
         abs_path = os.path.abspath("src/test/integration/boto3/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/boto3"):
-                session.install("-r", "requirements_others.txt")
+                install(session, "-r", "requirements_others.txt")
 
                 try:
                     session.run(
@@ -250,14 +200,14 @@ def integration_tests_fastapi(
     install_package("uvicorn", uvicorn_version, session)
     install_package("fastapi", fastapi_version, session)
 
-    session.install(".")
+    install(session, ".")
 
     abs_path = os.path.abspath("src/test/integration/fastapi/")
     with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/integration/fastapi"):
-            session.install("-r", "requirements_others.txt")
+            install(session, "-r", "requirements_others.txt")
 
             try:
                 session.run(
@@ -316,14 +266,14 @@ def integration_tests_flask(session, flask_version):
     with TestedVersions.save_tests_result("flask", "flask", flask_version):
         install_package("flask", flask_version, session)
 
-        session.install(".")
+        install(session, ".")
 
         abs_path = os.path.abspath("src/test/integration/flask/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/flask"):
-                session.install("-r", "requirements_others.txt")
+                install(session, "-r", "requirements_others.txt")
 
                 try:
                     session.run(
@@ -385,14 +335,14 @@ def integration_tests_pymongo(
     with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
         install_package("pymongo", pymongo_version, session)
 
-        session.install(".")
+        install(session, ".")
 
         abs_path = os.path.abspath("src/test/integration/pymongo/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymongo"):
-                session.install("-r", "requirements_others.txt")
+                install(session, "-r", "requirements_others.txt")
 
                 try:
                     session.run(
@@ -454,14 +404,14 @@ def integration_tests_pymysql(
     with TestedVersions.save_tests_result("pymysql", "pymysql", pymysql_version):
         install_package("PyMySQL", pymysql_version, session)
 
-        session.install(".")
+        install(session, ".")
 
         abs_path = os.path.abspath("src/test/integration/pymysql/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymysql"):
-                session.install("-r", "requirements_others.txt")
+                install(session, "-r", "requirements_others.txt")
 
                 try:
                     session.run(
