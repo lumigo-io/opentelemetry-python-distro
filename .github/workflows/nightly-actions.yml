@@ -58,7 +58,7 @@ jobs:
       - run: git --no-pager diff
 #      - run: ./scripts/push_versions_branch.sh
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
-      - run: echo '::set-output name=commit_message::"$(./scripts/describe_supported_versions_diff.sh)"'
+      - run: echo "::set-output name=commit_message::$(./scripts/describe_supported_versions_diff.sh)"
         id: commit_message
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
@@ -66,5 +66,5 @@ jobs:
           title: temp-title-name
           branch: temp-name # $(date +version-testing-%Y%m%d)
           commit-message: ${{steps.commit_message.outputs.commit_message}}
-          body: temp-body
+          body: ${{steps.commit_message.outputs.commit_message}} # temp-body
           reviewers: nirLumigo
