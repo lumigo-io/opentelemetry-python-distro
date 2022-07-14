@@ -5,6 +5,8 @@ set -eu
 readonly SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 readonly ROOT_DIR="$(dirname ${SCRIPT_DIR})"
 
+echo "Add new supported versions"
+
 git diff --name-only -- "${ROOT_DIR}/src/" | \
     sort | \
     while read -r modified_version_file; do \
