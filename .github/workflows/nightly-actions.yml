@@ -1,5 +1,7 @@
 name: Version Testing
-on: [push]
+on:
+  schedule:
+    - cron: "0 0 * * *"
 jobs:
   check-new-versions-of-instrumented-packages:
     runs-on: ubuntu-latest
@@ -13,11 +15,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-#      - run: pip3 install -r requirements.txt
-#      - run: python3 -m nox
-#        continue-on-error: true
-#        env:
-#          ADD_NEW_VERSIONS: true
+      - run: pip3 install -r requirements.txt
+      - run: python3 -m nox
+        continue-on-error: true
+        env:
+          ADD_NEW_VERSIONS: true
       - run: git --no-pager diff
       - run: mkdir versions_artifact
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
@@ -38,7 +40,7 @@ jobs:
           python-version: 3.7
       - run: mkdir versions_artifacts
       - uses: actions/download-artifact@v2
-        continue-on-error: true
+        continue-on-error: true  # when there aren't changes the artifact won't be uploaded and this step will fail
         with:
           name: 3.7
           path: versions_artifacts/3.7
