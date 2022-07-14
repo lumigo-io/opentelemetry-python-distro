@@ -57,5 +57,20 @@ jobs:
           path: versions_artifacts/3.10
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
-      - run: ./scripts/push_versions_branch.sh
-
+      - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
+      - run: echo "::set-output name=branch_name::$(date +version-testing-%Y%m%d)"
+        id: branch_name
+      - run: |  # need to set an env var in order to support multi-lines output https://trstringer.com/github-actions-multiline-strings/
+          new_versions="$(./scripts/describe_supported_versions_diff.sh)"
+          echo "new_versions<<EOF" >> $GITHUB_ENV
+          echo "$new_versions" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: ${{steps.branch_name.outputs.branch_name}}
+          branch: ${{steps.branch_name.outputs.branch_name}}
+          commit-message: ${{ env.new_versions }}
+          body: ${{ env.new_versions }}
+          base: main
+          reviewers: nirLumigo,GuyMoses
