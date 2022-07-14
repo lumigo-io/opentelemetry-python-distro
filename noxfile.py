@@ -80,7 +80,7 @@ def dependency_versions(
     return minor_versions
 
 
-@nox.session(python=python_versions(), reuse_venv=True)
+@nox.session(python=python_versions())
 @nox.parametrize(
     "boto3_version",
     dependency_versions(
