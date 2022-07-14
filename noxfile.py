@@ -3,7 +3,7 @@ import os
 import tempfile
 from xml.etree import ElementTree
 import time
-from typing import List, Union, Dict
+from typing import List, Dict, Optional
 
 import nox
 import requests
@@ -30,12 +30,12 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
     return versions
 
 
-def python_versions() -> Union[List[str], bool]:
+def python_versions() -> Optional[List[str]]:
     # On Github, just run the current Python version without
     # creating a venv.
     # In local, try all supported python versions building venvs.
     if os.getenv("CI", str(False)).lower() == "true":
-        return False
+        return None
 
     return ["3.7", "3.8", "3.9", "3.10"]
 
