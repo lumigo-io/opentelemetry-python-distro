@@ -16,7 +16,7 @@ def install(session, *args) -> None:
     """
     When running in CI we don't use venv and without venv `session.install` is deprecated.
     """
-    if session.pyton is False:  # this means no venv
+    if session.python is False:  # this means no venv
         session.run("pip", "install", *args)
     else:
         session.install(*args)
