@@ -56,10 +56,7 @@ jobs:
           path: versions_artifacts/3.10
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
-#      - run: ./scripts/push_versions_branch.sh
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
-#      - run: echo "::set-output name=commit_message::$(./scripts/describe_supported_versions_diff.sh)"
-#        id: commit_message
       - run: echo "::set-output name=branch_name::$(date +version-testing-%Y%m%d)"
         id: branch_name
       - run: |  # need to set an env var in order to support multi-lines output
@@ -74,4 +71,4 @@ jobs:
           branch: ${{steps.branch_name.outputs.branch_name}}
           commit-message: ${{ env.new_versions }}
           body: ${{ env.new_versions }}
-          reviewers: nirLumigo
+          reviewers: nirLumigo,GuyMoses
