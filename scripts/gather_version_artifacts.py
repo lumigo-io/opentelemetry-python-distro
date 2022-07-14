@@ -7,6 +7,27 @@ from src.ci.tested_versions_utils import TestedVersions
 ARTIFACT_DIR_NAME = "versions_artifacts"
 
 
+# Before this script runs, the job downloads the artifacts into files with the following example structure:
+#
+#   versions_artifacts/
+#       3.7/
+#           boto3: (next lines are the data inside the file)
+#               1.0.0
+#               !2.0.0
+#           fastapi:
+#               5.1.0
+#               5.2.0
+#       3.8/
+#           boto3:
+#               1.0.0
+#               2.0.0
+#           fastapi:
+#               5.1.0
+#               5.2.0
+#
+# Each file contains the original supported versions and the results from the tests in the previous job.
+
+
 def main() -> None:
     runtime_to_files = {
         python_runtime: sorted(
@@ -24,36 +45,37 @@ def main() -> None:
     origin_tested_files = glob(
         "src/lumigo_opentelemetry/instrumentations/*/tested_versions/*"
     )
-    for file_name in files_names:
-        handle_dependency(file_name, origin_tested_files, tuple(runtime_to_files))
+    for instrumentation_name in files_names:
+        handle_dependency(
+            instrumentation_name, origin_tested_files, tuple(runtime_to_files)
+        )
 
 
 def handle_dependency(
-    file_name: str, origin_tested_files: List[str], runtimes: Tuple[str, ...]
+    instrumentation_name: str, origin_tested_files: List[str], runtimes: Tuple[str, ...]
 ) -> None:
-    print("working on:", file_name)
+    print("working on:", instrumentation_name)
     origin_path = next(
         path
         for path in origin_tested_files
-        if path.endswith(f"tested_versions/{file_name}")
+        if path.endswith(f"tested_versions/{instrumentation_name}")
     )
-    origin_tested_versions = TestedVersions.from_file(origin_path)
     runtime_to_tested_versions = calculate_runtime_to_tested_versions_dict(
-        file_name, runtimes
+        instrumentation_name, runtimes
     )
     version_to_success = calculate_version_to_success_dict(
-        origin_tested_versions, runtime_to_tested_versions
+        origin_path, runtime_to_tested_versions
     )
     for version, success in version_to_success.items():
         TestedVersions.add_version_to_file(origin_path, version, success)
 
 
 def calculate_version_to_success_dict(
-    origin_tested_versions: TestedVersions,
+    origin_path: str,
     runtime_to_tested_versions: Dict[str, TestedVersions],
 ) -> Dict[str, bool]:
     version_to_success = {}
-    origin_versions = set(origin_tested_versions.get_all_versions())
+    origin_versions = set(TestedVersions.from_file(origin_path).get_all_versions())
     for runtime, tested_versions in runtime_to_tested_versions.items():
         for version in tested_versions.success:
             if version not in origin_versions and version not in version_to_success:
@@ -67,11 +89,11 @@ def calculate_version_to_success_dict(
 
 
 def calculate_runtime_to_tested_versions_dict(
-    file_name: str, runtimes: Tuple[str, ...]
+    instrumentation_name: str, runtimes: Tuple[str, ...]
 ) -> Dict[str, TestedVersions]:
     runtime_to_tested_versions = {
         runtime: TestedVersions.from_file(
-            os.path.join(ARTIFACT_DIR_NAME, runtime, file_name)
+            os.path.join(ARTIFACT_DIR_NAME, runtime, instrumentation_name)
         )
         for runtime in runtimes
     }
