@@ -11,6 +11,8 @@ from packaging.version import parse as parse_version, Version
 
 from src.ci.tested_versions_utils import TestedVersions, should_add_new_versions
 
+nox.options.reuse_existing_virtualenvs = True
+
 
 def install_package(package_name: str, package_version: str, session) -> None:
     try:
@@ -31,9 +33,8 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
 
 
 def python_versions() -> Optional[List[str]]:
-    # On Github, just run the current Python version without
-    # creating a venv.
-    # In local, try all supported python versions building venvs.
+    # On Github, just run the current Python version.
+    # In local, test all supported python versions.
     if os.getenv("CI", str(False)).lower() == "true":
         return None
 
