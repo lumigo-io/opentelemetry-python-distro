@@ -20,7 +20,9 @@ workflows:
     - lumigo-orb/be-deploy:
         filters:
           branches:
-            ignore: main
+            ignore:
+              - main
+              - /version-testing-\d+/  # PR opened by the nightly
         requires:
           - test
     - lumigo-orb/integration-test:
@@ -28,7 +30,9 @@ workflows:
         tests_spec: testPython
         filters:
           branches:
-            ignore: main
+            ignore:
+              - main
+              - /version-testing-\d+/  # PR opened by the nightly
         requires:
           - lumigo-orb/be-deploy
     - deploy:
