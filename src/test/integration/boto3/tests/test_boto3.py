@@ -6,6 +6,12 @@ from test.test_utils.spans_parser import SpansContainer
 
 
 class TestFastApiSpans(unittest.TestCase):
+    def assert_is_version(self, version: str):
+        self.assertTrue(version.startswith("3."))
+        minor, patch = version[2:].split(".")
+        self.assertTrue(minor.isdigit())
+        self.assertTrue(patch.isdigit())
+
     def test_boto3_instrumentation(self):
         response = requests.post("http://localhost:8001/invoke-boto3")
 
@@ -24,6 +30,8 @@ class TestFastApiSpans(unittest.TestCase):
         # assert root
         root = spans_container.get_root()
         self.assertEqual(root["attributes"]["http.method"], "POST")
+        self.assertEqual(root["resource"]["process.runtime.name"], "cpython")
+        self.assert_is_version(root["resource"]["process.runtime.version"])
 
         # assert child spans
         children = spans_container.get_non_internal_children()

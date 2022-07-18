@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import os
 
+from lumigo_opentelemetry.resources.detectors import ProcessResourceDetector
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
 
@@ -116,8 +118,6 @@ def init():
 
     # TODO Clean up needed
     attributes = {
-        # TODO Use a (built-in?) Resource Detector instead
-        "runtime": f"python{safe_get_version()}",
         # TODO Use a Resource Detector instead
         "envs": safe_get_envs(),
         # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
@@ -125,7 +125,9 @@ def init():
         "framework": framework,
     }
 
-    tracer_resource = Resource.create(attributes=attributes)
+    tracer_resource = Resource.create(attributes=attributes).merge(
+        ProcessResourceDetector().detect()
+    )
     tracer_provider = TracerProvider(resource=tracer_resource)
 
     if lumigo_token:
