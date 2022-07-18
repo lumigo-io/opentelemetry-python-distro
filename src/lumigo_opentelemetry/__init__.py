@@ -3,7 +3,10 @@ from __future__ import annotations
 import logging
 import os
 
-from lumigo_opentelemetry.resources.detectors import ProcessResourceDetector
+from lumigo_opentelemetry.resources.detectors import (
+    ProcessResourceDetector,
+    LumigoDistroDetector,
+)
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
@@ -27,6 +30,18 @@ def _setup_logger(logger_name="lumigo-opentelemetry"):
 
 
 logger = _setup_logger()
+
+
+def _get_lumigo_opentelemetry_version() -> str:
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "VERSION")) as version_file:
+            return version_file.read().strip()
+    except Exception as err:
+        logger.exception("failed getting lumigo_opentelemetry version", exc_info=err)
+        return "unknown"
+
+
+__version__ = _get_lumigo_opentelemetry_version()
 
 
 def auto_load(_):
@@ -125,8 +140,10 @@ def init():
         "framework": framework,
     }
 
-    tracer_resource = Resource.create(attributes=attributes).merge(
-        ProcessResourceDetector().detect()
+    tracer_resource = (
+        Resource.create(attributes=attributes)
+        .merge(ProcessResourceDetector().detect())
+        .merge(LumigoDistroDetector().detect())
     )
     tracer_provider = TracerProvider(resource=tracer_resource)
 
