@@ -9,6 +9,7 @@ from opentelemetry.sdk.resources import (
 )
 
 
+# TODO: ProcessResourceDetector will be part of the next release of opentelemetry-sdk. After the release - delete it.
 class ProcessResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
