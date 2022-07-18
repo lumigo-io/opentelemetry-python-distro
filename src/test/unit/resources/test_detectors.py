@@ -1,6 +1,9 @@
 from opentelemetry.sdk import resources
 
-from lumigo_opentelemetry.resources.detectors import ProcessResourceDetector
+from lumigo_opentelemetry.resources.detectors import (
+    ProcessResourceDetector,
+    LumigoDistroDetector,
+)
 
 
 def test_process_detector():
@@ -14,3 +17,11 @@ def test_process_detector():
         "3."
     )
     assert resources.PROCESS_RUNTIME_DESCRIPTION in aggregated_resource.attributes
+
+
+def test_lumigo_distro_version_detect():
+    resource = LumigoDistroDetector().detect()
+    major, minor, patch = resource.attributes["lumigo.distro.version"].split(".")
+    assert major.isdigit()
+    assert minor.isdigit()
+    assert patch.isdigit()
