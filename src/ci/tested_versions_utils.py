@@ -34,14 +34,14 @@ class NonSemanticVersion:
     comment: str
 
     def __eq__(self, other):
-        if isinstance(other, SemanticVersion):
+        if not isinstance(other, NonSemanticVersion):
            return False
 
         return self.version == other.version
 
     def __lt__(self, other):
-        if isinstance(other, SemanticVersion):
-           return True
+        if not isinstance(other, NonSemanticVersion):
+           return False
 
         return self.version < other.version
 
@@ -60,7 +60,7 @@ class SemanticVersion:
         return f"{self.major}.{self.minor}.{self.patch}{self.suffix or ''}"
 
     def __eq__(self, other):
-        if isinstance(other, NonSemanticVersion):
+        if not isinstance(other, SemanticVersion):
            return False
 
         return (
@@ -71,8 +71,8 @@ class SemanticVersion:
         )
 
     def __lt__(self, other):
-        if isinstance(other, NonSemanticVersion):
-           return False
+        if not isinstance(other, SemanticVersion):
+           return True
 
         if self.major < other.major:
             return True
