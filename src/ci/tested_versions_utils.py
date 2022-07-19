@@ -99,7 +99,10 @@ class SemanticVersion:
 
 
 def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
-    (supported_string, version_string, comment) = re.search(_splitVersionFromCommentPattern, version).groups()
+    res = re.search(_splitVersionFromCommentPattern, version)
+    if not res:
+        raise Error(f"Version does not parse as non-semantic: {version}")
+    (supported_string, version_string, comment) = res.groups()
     # The `supported_string` is either an empty string (supported) or the '!' string (not supported)
     supported = not bool(supported_string)
  
