@@ -25,7 +25,7 @@ class TestFastApiSpans(unittest.TestCase):
     def assert_otel_detector(self, root: dict):
         self.assertEqual(root["resource"]["K0"], "V0")
         self.assertEqual(root["resource"]["K1"], "V1")
-        self.assertEqual(root["resource"]["service.name"], "my-service")
+        self.assertEqual(root["resource"]["service.name"], "app")
 
     def test_boto3_instrumentation(self):
         response = requests.post("http://localhost:8001/invoke-boto3")
