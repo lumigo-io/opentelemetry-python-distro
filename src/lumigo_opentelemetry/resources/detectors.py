@@ -1,12 +1,15 @@
 import os
 import sys
 
+from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.resources import (
     ResourceDetector,
     Resource,
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
     PROCESS_RUNTIME_VERSION,
+    OTELResourceDetector,
+    get_aggregated_resources,
 )
 
 import lumigo_opentelemetry
@@ -51,3 +54,16 @@ class LumigoDistroDetector(ResourceDetector):
 class EnvVarsDetector(ResourceDetector):
     def detect(self) -> "Resource":
         return Resource({ENV_ATTR_NAME: dump(dict(os.environ))})
+
+
+def get_resource(attributes: dict) -> "Resource":
+    return get_aggregated_resources(
+        detectors=[
+            OTELResourceDetector(),
+            EnvVarsDetector(),
+            ProcessResourceDetector(),
+            LumigoDistroDetector(),
+            AwsEcsResourceDetector(),
+        ],
+        initial_resource=Resource.create(attributes=attributes),
+    )

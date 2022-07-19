@@ -3,13 +3,6 @@ from __future__ import annotations
 import logging
 import os
 
-from opentelemetry.sdk.resources import OTELResourceDetector
-
-from lumigo_opentelemetry.resources.detectors import (
-    ProcessResourceDetector,
-    LumigoDistroDetector,
-    EnvVarsDetector,
-)
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
@@ -87,7 +80,6 @@ def init():
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource, get_aggregated_resources
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -124,6 +116,7 @@ def init():
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
+    from lumigo_opentelemetry.resources.detectors import get_resource
 
     # TODO Clean up needed
     attributes = {
@@ -132,15 +125,7 @@ def init():
         "framework": framework,
     }
 
-    tracer_resource = get_aggregated_resources(
-        detectors=[
-            OTELResourceDetector(),
-            EnvVarsDetector(),
-            ProcessResourceDetector(),
-            LumigoDistroDetector(),
-        ],
-        initial_resource=Resource.create(attributes=attributes),
-    )
+    tracer_resource = get_resource(attributes)
     tracer_provider = TracerProvider(resource=tracer_resource)
 
     if lumigo_token:

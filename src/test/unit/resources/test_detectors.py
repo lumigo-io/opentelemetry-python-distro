@@ -8,6 +8,7 @@ from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
     LumigoDistroDetector,
     EnvVarsDetector,
+    get_resource,
 )
 
 
@@ -48,3 +49,15 @@ def test_env_vars_detector():
     resource = EnvVarsDetector().detect()
 
     assert resource.attributes["process.environ"] == json.dumps(envs)
+
+
+def test_get_resource_aws_ecs_resource_detector():
+    os.environ["ECS_CONTAINER_METADATA_URI"] = "mock-url"
+
+    resource = get_resource({"a": "b"})
+
+    assert resource.attributes["cloud.provider"] == "aws"
+    assert resource.attributes["cloud.platform"] == "aws_ecs"
+    assert isinstance(resource.attributes["container.name"], str)
+    assert len(resource.attributes["container.name"]) > 1
+    assert isinstance(resource.attributes["container.id"], str)
