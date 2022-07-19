@@ -1,3 +1,6 @@
 #!/bin/sh
 
+export OTEL_RESOURCE_ATTRIBUTES="K0=V0,K1=V1"
+export OTEL_SERVICE_NAME="my-service"
+
 uvicorn app:app --port 8001 &

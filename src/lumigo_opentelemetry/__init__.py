@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import os
 
+from opentelemetry.sdk.resources import OTELResourceDetector
+
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
     LumigoDistroDetector,
@@ -132,9 +134,10 @@ def init():
 
     tracer_resource = get_aggregated_resources(
         detectors=[
+            OTELResourceDetector(),
+            EnvVarsDetector(),
             ProcessResourceDetector(),
             LumigoDistroDetector(),
-            EnvVarsDetector(),
         ],
         initial_resource=Resource.create(attributes=attributes),
     )
