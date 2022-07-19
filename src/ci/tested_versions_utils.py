@@ -4,12 +4,27 @@ import os
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from functools import cmp_to_key
-from typing import Tuple, Union
+from typing import List, Union
 
 # Major, minor, patch and (non semver standard, suffix)
 _semanticVersionPattern = re.compile(r'(!)?(\d+).(\d+).(\d+)([^\s]*)(?:\s*#\s*(.*))?')
 _splitVersionFromCommentPattern = re.compile(r'(!)?([^\s]*)(?:\s*#\s*(.*))?')
+
+# This file implements a custom version parsing and sorting mechanism,
+# as `packaging.version` has strange behaviors that won't work for other
+# languages, like:
+#
+# ```
+# >>> from packaging.version import parse
+# >>> str(parse("1.2.4c"))
+# '1.2.4rc0'
+# ```
+#
+# ```
+# >>> from packaging.version import parse
+# >>> str(parse("1.2.4b"))
+# '1.2.4b0'
+# ```
 
 
 @dataclass(frozen=True)
@@ -17,6 +32,18 @@ class NonSemanticVersion:
     supported: bool
     version: str
     comment: str
+
+    def __eq__(self, other):
+        if isinstance(other, SemanticVersion):
+           return False
+
+        return self.version == other.version
+
+    def __lt__(self, other):
+        if isinstance(other, SemanticVersion):
+           return True
+
+        return self.version < other.version
 
 
 @dataclass(frozen=True)
@@ -32,47 +59,58 @@ class SemanticVersion:
     def version(self):
         return f"{self.major}.{self.minor}.{self.patch}{self.suffix or ''}"
 
+    def __eq__(self, other):
+        if isinstance(other, NonSemanticVersion):
+           return False
 
-def _compare_numbers(first: int, second: int) -> int:
-    return (first - second) - (second - first)
+        return (
+            self.major == other.major and
+            self.minor == other.minor and
+            self.patch == other.patch and
+            self.suffix == other.suffix
+        )
+
+    def __lt__(self, other):
+        if isinstance(other, NonSemanticVersion):
+           return False
+
+        if self.major < other.major:
+            return True
+
+        if self.major > other.major:
+            return False
+
+        if self.minor < other.minor:
+            return True
+
+        if self.minor > other.minor:
+            return False
+
+        if self.patch < other.patch:
+            return True
+
+        if self.patch > other.patch:
+            return False
+
+        if not self.suffix and self.suffix:
+            return True
+
+        if self.suffix and not self.suffix:
+            return False
+
+        return self.suffix < other.suffix
 
 
-def _compare_strings(first: str, second: str) -> int:
-    return 0 if (first == second) else (1 if first > second else -1)
-
-
-def compare_versions(v1: Union[SemanticVersion, NonSemanticVersion], v2: Union[SemanticVersion, NonSemanticVersion]) -> int:
-    if isinstance(v1, NonSemanticVersion) and isinstance(v2, NonSemanticVersion):
-        # Neither are valid semver, return lexographic order of the versions and comments
-        return _compare_strings(v1.version, v2.version) or _compare_strings(v1.comment, v2.comment)
-
-    if isinstance(v1, NonSemanticVersion) and isinstance(v2, SemanticVersion):
-        # SemVer comes first
-        return 1
-
-    if isinstance(v1, SemanticVersion) and isinstance(v2, NonSemanticVersion):
-        # SemVer comes first
-        return -1
-
-    # Both are semver
-    return (
-        _compare_numbers(v1.major, v2.major) or
-        _compare_numbers(v1.minor, v2.minor) or
-        _compare_numbers(v1.patch, v2.patch) or
-        _compare_strings(v1.comment, v2.comment)
-    )
-
-
-def parseVersion(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
+def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
     res = re.search(_semanticVersionPattern, version)
 
     if res:
         (supported, major, minor, patch, suffix, comment) = res.groups()
-        # The `supported` is either an emopty string (supported) or the '!' string (not supported)
-        print(f"'{version}': {not bool(supported)}, {major}, {minor}, {patch}, {suffix}, {comment}")
+        # The `supported` is either an empty string (supported) or the '!' string (not supported)
         return SemanticVersion(not bool(supported), int(major), int(minor), int(patch), suffix, comment)
 
     (supported, version, comment) = re.search(_splitVersionFromCommentPattern, version).groups()
+    # The `supported` is either an empty string (supported) or the '!' string (not supported)
     return NonSemanticVersion(not bool(supported), version, comment)
 
 
@@ -93,7 +131,7 @@ class TestedVersions:
     def add_version_to_file(path: str, version: str, supported: bool):
         tested_versions = TestedVersions.from_file(path)
 
-        parsed_version = parseVersion(('' if supported else '!') + version)
+        parsed_version = parse_version(('' if supported else '!') + version)
 
         try:
             previous_version = next(filter(lambda v: v.version == parsed_version.version, tested_versions.versions))
@@ -120,14 +158,14 @@ class TestedVersions:
             print(f"Adding the {parsed_version.version} as {'supported' if parsed_version.supported else 'not supported'} to {path}")
 
         with open(path, "w") as f:
-            for version in sorted(tested_versions.versions, key=cmp_to_key(compare_versions)):
-                if not version.supported:
+            for tested_version in sorted(tested_versions.versions):
+                if not tested_version.supported:
                     f.write('!')
 
-                f.write(version.version)
+                f.write(tested_version.version)
 
-                if comment := version.comment:
-                    f.write(' # ' + comment)
+                if tested_version.comment:
+                    f.write(' # ' + tested_version.comment)
 
                 f.write('\n')
 
@@ -136,7 +174,7 @@ class TestedVersions:
     def save_tests_result(
         directory: str, dependency_name: str, dependency_version: str
     ):
-        if should_add_new_versions():
+        if should_test_only_untested_versions():
             try:
                 yield
             except Exception:
@@ -160,18 +198,38 @@ class TestedVersions:
     @staticmethod
     def from_file(path: str) -> TestedVersions:
         with open(path, 'r') as f:
-            return TestedVersions([
-                parseVersion(line)
+            # Sort versions on creation
+            return TestedVersions(sorted([
+                parse_version(line)
                 for line in f
-            ])
+            ]))
 
     @property
-    def all_versions(self) -> Tuple[str, ...]:
+    def supported_versions(self) -> List[str]:
+        """Return all supported versions, sorted"""
         return [
-            entry.version
-            for entry in versions
+            tested_version.version
+            for tested_version in self.versions
+            if tested_version.supported
+        ]
+
+    @property
+    def unsupported_versions(self) -> List[str]:
+        """Return all unsupported versions, sorted"""
+        return [
+            tested_version.version
+            for tested_version in self.versions
+            if not tested_version.supported
+        ]
+
+    @property
+    def all_versions(self) -> List[str]:
+        """Return all versions, sorted"""
+        return [
+            tested_version.version
+            for tested_version in self.versions
         ]
 
 
-def should_add_new_versions() -> bool:
-    return os.getenv("ADD_NEW_VERSIONS", "").lower() == "true"
+def should_test_only_untested_versions() -> bool:
+    return os.getenv("TEST_ONLY_UNTESTED_NEW_VERSIONS", "").lower() == "true"
