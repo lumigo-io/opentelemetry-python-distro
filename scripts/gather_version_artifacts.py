@@ -60,11 +60,13 @@ def handle_dependency(
     )
 
     for version in list(runtime_to_tested_versions.values())[0].all_versions:
-        supported = all([
-            # A version is supported only if it works in all runtimes
-            (version in runtime_to_tested_versions[runtime].supported_versions)
-            for runtime in runtimes
-        ])
+        supported = all(
+            [
+                # A version is supported only if it works in all runtimes
+                (version in runtime_to_tested_versions[runtime].supported_versions)
+                for runtime in runtimes
+            ]
+        )
 
         TestedVersions.add_version_to_file(origin_path, version, supported)
 

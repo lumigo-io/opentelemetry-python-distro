@@ -9,7 +9,12 @@ import nox
 import requests
 import yaml
 
-from src.ci.tested_versions_utils import NonSemanticVersion, SemanticVersion, TestedVersions, should_test_only_untested_versions
+from src.ci.tested_versions_utils import (
+    NonSemanticVersion,
+    SemanticVersion,
+    TestedVersions,
+    should_test_only_untested_versions,
+)
 
 
 def install(session, *args) -> None:
@@ -34,11 +39,7 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
     response = requests.get(f"https://pypi.org/rss/project/{package_name}/releases.xml")
     response.raise_for_status()
     xml_tree = ElementTree.fromstring(response.text)
-    return [
-        i.text
-        for i in xml_tree.findall("channel/item/title")
-        if i.text
-    ]
+    return [i.text for i in xml_tree.findall("channel/item/title") if i.text]
 
 
 def python_versions() -> Union[List[str], bool]:
@@ -48,9 +49,13 @@ def python_versions() -> Union[List[str], bool]:
     if os.getenv("CI", str(False)).lower() == "true":
         return False
 
-    with open(os.path.dirname(__file__) + '/.github/workflows/nightly-actions.yml') as f:
+    with open(
+        os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
+    ) as f:
         github_workflow = yaml.load(f, Loader=yaml.FullLoader)
-        return github_workflow['jobs']['check-new-versions-of-instrumented-packages']['strategy']['matrix']['python-version']
+        return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
+            "strategy"
+        ]["matrix"]["python-version"]
 
 
 def get_new_version_from_pypi(
@@ -77,10 +82,12 @@ def dependency_versions_to_be_tested(
     # These versions are already sorted. We use the full object representation,
     # rather than `TestedVersions.supported_versions`, as we need to perform
     # logic on major, minor and patch.
-    supported_versions: List[Union[SemanticVersion, NonSemanticVersion]] = list(filter(
-        lambda tested_version: tested_version.supported,
-        tested_versions.versions,
-    ))
+    supported_versions: List[Union[SemanticVersion, NonSemanticVersion]] = list(
+        filter(
+            lambda tested_version: tested_version.supported,
+            tested_versions.versions,
+        )
+    )
 
     if len(supported_versions) == 1:
         # Only one version? We surely want to test it!
@@ -90,7 +97,7 @@ def dependency_versions_to_be_tested(
     for i in range(len(supported_versions))[1:]:
         # Iterate from the second element so that we can look back and
         # detect a change in minor and major
-        previous_version = supported_versions[i-1]
+        previous_version = supported_versions[i - 1]
         current_version = supported_versions[i]
 
         if isinstance(previous_version, NonSemanticVersion):
@@ -104,8 +111,8 @@ def dependency_versions_to_be_tested(
         else:
             # Both previous and current are semantic versions
             if (
-                previous_version.major < current_version.major or
-                previous_version.minor < current_version.minor
+                previous_version.major < current_version.major
+                or previous_version.minor < current_version.minor
             ):
                 # Break in major or minor version; the previous_version is
                 # the last in its series

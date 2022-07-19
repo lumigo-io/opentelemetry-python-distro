@@ -4,11 +4,11 @@ import os
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Optional, Union
 
 # Major, minor, patch and (non semver standard, suffix)
-_semanticVersionPattern = re.compile(r'(\d+).(\d+).(\d+)([^\s]*)')
-_splitVersionFromCommentPattern = re.compile(r'(!)?([^\s]*)(?:\s*#\s*(.*))?')
+_semanticVersionPattern = re.compile(r"(\d+).(\d+).(\d+)([^\s]*)")
+_splitVersionFromCommentPattern = re.compile(r"(!)?([^\s]*)(?:\s*#\s*(.*))?")
 
 # This file implements a custom version parsing and sorting mechanism,
 # as `packaging.version` has strange behaviors that won't work for other
@@ -35,13 +35,13 @@ class NonSemanticVersion:
 
     def __eq__(self, other):
         if not isinstance(other, NonSemanticVersion):
-           return False
+            return False
 
         return self.version == other.version
 
     def __lt__(self, other):
         if not isinstance(other, NonSemanticVersion):
-           return False
+            return False
 
         return self.version < other.version
 
@@ -58,18 +58,18 @@ class SemanticVersion:
 
     def __eq__(self, other):
         if not isinstance(other, SemanticVersion):
-           return False
+            return False
 
         return (
-            self.major == other.major and
-            self.minor == other.minor and
-            self.patch == other.patch and
-            self.suffix == other.suffix
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+            and self.suffix == other.suffix
         )
 
     def __lt__(self, other):
         if not isinstance(other, SemanticVersion):
-           return True
+            return True
 
         if self.major < other.major:
             return True
@@ -105,7 +105,7 @@ def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
     (supported_string, version_string, comment) = res.groups()
     # The `supported_string` is either an empty string (supported) or the '!' string (not supported)
     supported = not bool(supported_string)
- 
+
     res = re.search(_semanticVersionPattern, version_string)
     if res:
         (major, minor, patch, suffix) = res.groups()
@@ -144,13 +144,18 @@ class TestedVersions:
     def add_version_to_file(path: str, version: str, supported: bool):
         tested_versions = TestedVersions.from_file(path)
 
-        parsed_version = parse_version(('' if supported else '!') + version)
+        parsed_version = parse_version(("" if supported else "!") + version)
+        previous_version: Optional[Union[SemanticVersion, NonSemanticVersion]] = None
 
         try:
-            previous_version = next(filter(lambda v: v.version == parsed_version.version, tested_versions.versions))
+            previous_version = next(
+                filter(
+                    lambda v: v.version == parsed_version.version,
+                    tested_versions.versions,
+                )
+            )
         except StopIteration:
             # This version does not appear in the file
-            previous_version = None
             pass
 
         tested_versions.versions.append(parsed_version)
@@ -158,29 +163,39 @@ class TestedVersions:
             tested_versions.versions.remove(previous_version)
 
             if parsed_version.supported == previous_version.supported:
-                print(f"Version '{parsed_version.version}' already marked as {'supported' if parsed_version.supported else 'not supported'} in {path}")
+                print(
+                    f"Version '{parsed_version.version}' already marked as {'supported' if parsed_version.supported else 'not supported'} in {path}"
+                )
             else:
-                print(f"Turning version '{parsed_version.version}' to {'supported' if parsed_version.supported else 'not supported'} in {path}")
+                print(
+                    f"Turning version '{parsed_version.version}' to {'supported' if parsed_version.supported else 'not supported'} in {path}"
+                )
 
             if parsed_version.comment != previous_version.comment:
                 if parsed_version.comment:
-                    print(f"Updating comment for version '{parsed_version.version}' in {path}")
+                    print(
+                        f"Updating comment for version '{parsed_version.version}' in {path}"
+                    )
                 else:
-                    print(f"Removing comment for version '{parsed_version.version}' in {path}")
+                    print(
+                        f"Removing comment for version '{parsed_version.version}' in {path}"
+                    )
         else:
-            print(f"Adding the {parsed_version.version} as {'supported' if parsed_version.supported else 'not supported'} to {path}")
+            print(
+                f"Adding the {parsed_version.version} as {'supported' if parsed_version.supported else 'not supported'} to {path}"
+            )
 
         with open(path, "w") as f:
             for tested_version in sorted(tested_versions.versions):
                 if not tested_version.supported:
-                    f.write('!')
+                    f.write("!")
 
                 f.write(tested_version.version)
 
                 if tested_version.comment:
-                    f.write(' # ' + tested_version.comment)
+                    f.write(" # " + tested_version.comment)
 
-                f.write('\n')
+                f.write("\n")
 
     @staticmethod
     @contextmanager
@@ -210,12 +225,9 @@ class TestedVersions:
 
     @staticmethod
     def from_file(path: str) -> TestedVersions:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             # Sort versions on creation
-            return TestedVersions(sorted([
-                parse_version(line)
-                for line in f
-            ]))
+            return TestedVersions(sorted([parse_version(line) for line in f]))
 
     @property
     def supported_versions(self) -> List[str]:
@@ -238,10 +250,7 @@ class TestedVersions:
     @property
     def all_versions(self) -> List[str]:
         """Return all versions, sorted"""
-        return [
-            tested_version.version
-            for tested_version in self.versions
-        ]
+        return [tested_version.version for tested_version in self.versions]
 
 
 def should_test_only_untested_versions() -> bool:
