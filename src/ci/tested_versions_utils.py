@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List, Union
 
 # Major, minor, patch and (non semver standard, suffix)
-_semanticVersionPattern = re.compile(r'(!)?(\d+).(\d+).(\d+)([^\s]*)(?:\s*#\s*(.*))?')
+_semanticVersionPattern = re.compile(r'(\d+).(\d+).(\d+)([^\s]*)')
 _splitVersionFromCommentPattern = re.compile(r'(!)?([^\s]*)(?:\s*#\s*(.*))?')
 
 # This file implements a custom version parsing and sorting mechanism,
@@ -49,15 +49,12 @@ class NonSemanticVersion:
 @dataclass(frozen=True)
 class SemanticVersion:
     supported: bool
+    version: str
     major: int
     minor: int
     patch: int
     suffix: str
     comment: str
-
-    @property
-    def version(self):
-        return f"{self.major}.{self.minor}.{self.patch}{self.suffix or ''}"
 
     def __eq__(self, other):
         if not isinstance(other, SemanticVersion):
@@ -102,16 +99,29 @@ class SemanticVersion:
 
 
 def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
-    res = re.search(_semanticVersionPattern, version)
-
+    (supported_string, version_string, comment) = re.search(_splitVersionFromCommentPattern, version).groups()
+    # The `supported_string` is either an empty string (supported) or the '!' string (not supported)
+    supported = not bool(supported_string)
+ 
+    res = re.search(_semanticVersionPattern, version_string)
     if res:
-        (supported, major, minor, patch, suffix, comment) = res.groups()
-        # The `supported` is either an empty string (supported) or the '!' string (not supported)
-        return SemanticVersion(not bool(supported), int(major), int(minor), int(patch), suffix, comment)
+        (major, minor, patch, suffix) = res.groups()
+        return SemanticVersion(
+            supported=supported,
+            version=version_string,
+            major=int(major),
+            minor=int(minor),
+            patch=int(patch),
+            suffix=suffix,
+            comment=comment,
+        )
 
-    (supported, version, comment) = re.search(_splitVersionFromCommentPattern, version).groups()
     # The `supported` is either an empty string (supported) or the '!' string (not supported)
-    return NonSemanticVersion(not bool(supported), version, comment)
+    return NonSemanticVersion(
+        supported=supported,
+        version=version_string,
+        comment=comment,
+    )
 
 
 @dataclass(frozen=True)
