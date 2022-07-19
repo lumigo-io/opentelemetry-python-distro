@@ -1,3 +1,5 @@
+import json
+
 import requests
 import time
 import unittest
@@ -11,6 +13,14 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertTrue(major.isdigit())
         self.assertTrue(minor.isdigit())
         self.assertTrue(patch.isdigit())
+
+    def assert_have_env_vars(self, root):
+        collected_envs: str = root["resource"]["process.environ"]
+        self.assertTrue(isinstance(collected_envs, str))
+        self.assertGreaterEqual(len(collected_envs), 1)
+        self.assertTrue(
+            collected_envs.endswith("...[too long]") or json.loads(collected_envs)
+        )
 
     def test_boto3_instrumentation(self):
         response = requests.post("http://localhost:8001/invoke-boto3")
@@ -34,6 +44,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertTrue(root["resource"]["process.runtime.version"].startswith("3."))
         self.assert_is_version(root["resource"]["process.runtime.version"])
         self.assert_is_version(root["resource"]["lumigo.distro.version"])
+        self.assert_have_env_vars(root)
 
         # assert child spans
         children = spans_container.get_non_internal_children()

@@ -6,6 +6,7 @@ import os
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
     LumigoDistroDetector,
+    EnvVarsDetector,
 )
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
@@ -84,11 +85,9 @@ def init():
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.resources import Resource, get_aggregated_resources
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-    from lumigo_opentelemetry.libs.json_utils import dump
 
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
@@ -118,13 +117,6 @@ def init():
             logger.exception("failed to fetch ecs metadata", exc_info=e)
             return ""
 
-    def safe_get_envs() -> str:
-        try:
-            return dump(dict(os.environ))
-        except Exception as e:
-            logger.exception("failed getting envs", exc_info=e)
-            return ""
-
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
 
     # Activate instrumentations
@@ -133,17 +125,18 @@ def init():
 
     # TODO Clean up needed
     attributes = {
-        # TODO Use a Resource Detector instead
-        "envs": safe_get_envs(),
         # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
         "metadata": safe_get_metadata(),
         "framework": framework,
     }
 
-    tracer_resource = (
-        Resource.create(attributes=attributes)
-        .merge(ProcessResourceDetector().detect())
-        .merge(LumigoDistroDetector().detect())
+    tracer_resource = get_aggregated_resources(
+        detectors=[
+            ProcessResourceDetector(),
+            LumigoDistroDetector(),
+            EnvVarsDetector(),
+        ],
+        initial_resource=Resource.create(attributes=attributes),
     )
     tracer_provider = TracerProvider(resource=tracer_resource)
 
