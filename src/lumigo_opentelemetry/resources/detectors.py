@@ -1,3 +1,4 @@
+import os
 import sys
 
 from opentelemetry.sdk.resources import (
@@ -8,7 +9,11 @@ from opentelemetry.sdk.resources import (
     PROCESS_RUNTIME_VERSION,
 )
 
+import lumigo_opentelemetry
+from lumigo_opentelemetry.libs.json_utils import dump
+
 LUMIGO_DISTRO_VERSION_ATTR_NAME = "lumigo.distro.version"
+ENV_ATTR_NAME = "process.environ"
 
 
 # TODO: ProcessResourceDetector will be part of the next release of opentelemetry-sdk. After the release - delete it.
@@ -36,10 +41,13 @@ class ProcessResourceDetector(ResourceDetector):
 
 class LumigoDistroDetector(ResourceDetector):
     def detect(self) -> "Resource":
-        import lumigo_opentelemetry
-
         return Resource(
             {
                 LUMIGO_DISTRO_VERSION_ATTR_NAME: lumigo_opentelemetry.__version__,
             }
         )
+
+
+class EnvVarsDetector(ResourceDetector):
+    def detect(self) -> "Resource":
+        return Resource({ENV_ATTR_NAME: dump(dict(os.environ))})

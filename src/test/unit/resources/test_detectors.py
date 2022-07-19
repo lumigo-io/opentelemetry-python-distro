@@ -1,9 +1,22 @@
+import json
+import os
+
+import pytest
 from opentelemetry.sdk import resources
 
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
     LumigoDistroDetector,
+    EnvVarsDetector,
 )
+
+
+@pytest.fixture(autouse=True)
+def keep_env_vars():
+    original_environ = os.environ.copy()
+    yield
+    os.environ.clear()
+    os.environ.update(original_environ)
 
 
 def test_process_detector():
@@ -25,3 +38,13 @@ def test_lumigo_distro_version_detect():
     assert major.isdigit()
     assert minor.isdigit()
     assert patch.isdigit()
+
+
+def test_env_vars_detector():
+    os.environ.clear()
+    envs = {"a": "b", "k": "v"}
+    os.environ.update(envs)
+
+    resource = EnvVarsDetector().detect()
+
+    assert resource.attributes["process.environ"] == json.dumps(envs)
