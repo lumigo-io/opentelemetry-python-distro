@@ -10,20 +10,12 @@ ARTIFACT_DIR_NAME = "versions_artifacts"
 # Before this script runs, the job downloads the artifacts into files with the following example structure:
 #
 #   versions_artifacts/
-#       3.7/
-#           boto3: (next lines are the data inside the file)
-#               1.0.0
-#               !2.0.0
-#           fastapi:
-#               5.1.0
-#               5.2.0
-#       3.8/
-#           boto3:
-#               1.0.0
-#               2.0.0
-#           fastapi:
-#               5.1.0
-#               5.2.0
+#       boto3: (next lines are the data inside the file)
+#           1.0.0
+#           !2.0.0
+#       fastapi:
+#           5.1.0
+#           5.2.0
 #
 # Each file contains the original supported versions and the results from the tests in the previous job.
 
