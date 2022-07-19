@@ -67,7 +67,7 @@ def calculate_version_to_success_dict(
     runtime_to_tested_versions: Dict[str, TestedVersions],
 ) -> Dict[str, bool]:
     version_to_success = {}
-    origin_versions = set(TestedVersions.from_file(origin_path).get_all_versions())
+    origin_versions = set(TestedVersions.from_file(origin_path).all_versions)
     for runtime, tested_versions in runtime_to_tested_versions.items():
         for version in tested_versions.success:
             if version not in origin_versions and version not in version_to_success:
@@ -91,11 +91,11 @@ def calculate_runtime_to_tested_versions_dict(
     }
     print("runtime_to_tested_versions:", runtime_to_tested_versions)
     all_versions = sorted(
-        list(runtime_to_tested_versions.values())[0].get_all_versions()
+        list(runtime_to_tested_versions.values())[0].all_versions
     )
     if any(
         [
-            sorted(tested_versions.get_all_versions()) != all_versions
+            sorted(tested_versions.all_versions) != all_versions
             for tested_versions in runtime_to_tested_versions.values()
         ]
     ):

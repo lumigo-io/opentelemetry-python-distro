@@ -165,7 +165,8 @@ class TestedVersions:
                 for line in f
             ])
 
-    def get_all_versions(self) -> Tuple[str, ...]:
+    @property
+    def all_versions(self) -> Tuple[str, ...]:
         return [
             entry.version
             for entry in versions

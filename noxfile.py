@@ -53,9 +53,8 @@ def python_versions() -> Union[List[str], bool]:
 def get_new_version_from_pypi(
     dependency_name: str, tested_versions: TestedVersions
 ) -> List[str]:
-    all_tested_versions = tested_versions.success + tested_versions.failed
     pypi_versions = set(get_versions_from_pypi(dependency_name))
-    new_versions = list(pypi_versions.difference(all_tested_versions))
+    new_versions = list(pypi_versions.difference(tested_versions.all_versions))
     print("running new versions of", dependency_name, new_versions)
     return new_versions
 
