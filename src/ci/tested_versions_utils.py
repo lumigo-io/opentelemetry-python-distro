@@ -265,3 +265,139 @@ class TestedVersions:
 
 def should_test_only_untested_versions() -> bool:
     return os.getenv("TEST_ONLY_UNTESTED_NEW_VERSIONS", "").lower() == "true"
+
+
+def generate_support_matrix_markdown(
+    src_root=None, package_url_template="https://pypi.org/project/{}"
+) -> List[str]:
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+    if src_root:
+        project_root = os.path.join(project_root, src_root)
+
+    # Find all the 'tested_versions' folders and the files inside
+    package_support_version_directories = []
+    for root, directories, files in os.walk(project_root):
+        for directory in directories:
+            if os.path.basename(directory) == "tested_versions":
+                package_support_version_directories += [os.path.join(root, directory)]
+
+    res = [
+        "| Instrumentation | Package | Supported Versions |",
+        "| --- | --- | --- |"
+    ]
+    for package_support_version_directory in sorted(package_support_version_directories):
+        res += _generate_support_matrix_markdown_row(
+            package_support_version_directory, package_url_template
+        )
+
+    return res
+
+
+def _generate_support_matrix_markdown_row(
+    tested_versions_directory, package_url_template
+) -> List[str]:
+    """Generate the markdown row for an instrumentation"""
+
+    # The package name is the name of the parent of the 'tested_versions' directory
+    # But there are cases, like FastAPI, where we actually test multiple packages,
+    # like fastapi and uvicorn
+    instrumentation = os.path.basename(os.path.dirname(tested_versions_directory))
+
+    packages = sorted(os.listdir(tested_versions_directory))
+
+    res = []
+    if len(packages) == 1:
+        package = packages[0]
+
+        supported_version_ranges = _get_supported_version_ranges(
+            os.path.join(tested_versions_directory, packages[0])
+        )
+
+        res.append(
+            f"| {instrumentation} | [{package}]({package_url_template.format(package)}) | {supported_version_ranges[0]} |"
+        )
+        for supported_version_range in supported_version_ranges[1:]:
+            res.append(f"| | | {supported_version_range} |")
+    else:
+        first_package = packages[0]
+        supported_version_ranges_first_package = _get_supported_version_ranges(
+            os.path.join(tested_versions_directory, first_package)
+        )
+
+        res.append(
+            f"| {instrumentation} | [{first_package}]({package_url_template.format(first_package)}) | {supported_version_ranges_first_package[0]} |"
+        )
+        for supported_version_range in supported_version_ranges_first_package[1:]:
+            res.append(f"| | | {supported_version_range} |")
+
+        for package in packages[1:]:
+            supported_version_ranges = _get_supported_version_ranges(
+                os.path.join(tested_versions_directory, package)
+            )
+            res.append(
+                f"| | [{package}]({package_url_template.format(package)}) | {supported_version_ranges[0]} |"
+            )
+
+            for supported_version_range in supported_version_ranges[1:]:
+                res.append(f"| | | {supported_version_range} |")
+
+    return res
+
+def _get_supported_version_ranges(tested_versions_file):
+    tested_versions = TestedVersions.from_file(tested_versions_file)
+    # The versions are sorted, and assumed not to have gaps
+    # We go over the list versions, and generate version ranges based on minors and patches
+
+    version_ranges = []
+    current_range = []
+
+    for current_version in tested_versions.versions:
+        if not current_range:
+            if current_version.supported:
+                # Start a new version range
+                current_range = [current_version]
+                continue
+            else:
+                # We have not started a range, and we will skip this version
+                continue
+
+        if not current_version.supported:
+            # We have started a range, and it finished with this version
+            version_ranges.append(_version_range_to_string(current_range))
+            current_range = []
+            continue
+
+        if isinstance(current_version, NonSemanticVersion):
+            # Each NonSemanticVersion breaks the previous range
+            version_ranges.append(_version_range_to_string(current_range))
+            # Start a new version range
+            current_range = [current_version]
+            continue
+
+        # If we get here, all versions in the current range are SemanticVersions and supported
+        # We always break on a change of major
+        if current_range[0].major < current_version.major:
+            # There is a change of major
+            version_ranges.append(_version_range_to_string(current_range))
+            current_range = [current_version]
+            continue
+
+        current_range.append(current_version)
+
+    # Process the last version range
+    if current_range:
+        version_ranges.append(_version_range_to_string(current_range))
+
+    return version_ranges
+
+
+def _version_range_to_string(version_range: List[Union[NonSemanticVersion, SemanticVersion]]) -> str:
+    if len(version_range) == 1:
+        return version_range[0].version
+
+    # Only SemanticVersions have ranges of more than one version
+    first_version = version_range[0]
+    last_version = version_range[len(version_range) - 1]
+
+    return f"{first_version.major}.{first_version.minor}.{first_version.patch}{first_version.suffix}~{last_version.major}.{last_version.minor}.{last_version.patch}{last_version.suffix}"
