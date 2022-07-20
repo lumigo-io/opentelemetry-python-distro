@@ -6,9 +6,23 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
+# This regexp splits the version line across three capture groups:
+# `(!)?` captures whether or not the version is supported (if supported, the `!` character is missing)
+# `([^\s]+)` represents the actual version, as it is a list of non-whitespace characters
+# `(.*)` is the conent of the comment.
+# The various non-capturing groups `(?:\s*)` get rid of whitespace sequences before the ! mark,
+# in between `!` and the version, and in between the version and the (optional) comment, denoted by `#`
+#
+# For example:
+#
+#  * '  ! 1.2.3  # This is awesome' => ['!', '1.2.3', 'This is awesome']
+#  * '1.2.3' => ['', '1.2.3', '']
+_splitVersionFromCommentPattern = re.compile(r"(?:\s*)(!)?(?:\s*)([^\s]+)(?:\s*#\s*(.*))?")
+
 # Major, minor, patch and (non semver standard, suffix)
+# A "1.2.3" value (no suffix) is split into the four capture groups: [ '1', '2', '3', '' ]
+# A "1.2.3-ciao" value is split into the four capture groups: [ '1', '2', '3', '-ciao' ]
 _semanticVersionPattern = re.compile(r"(\d+).(\d+).(\d+)([^\s]*)")
-_splitVersionFromCommentPattern = re.compile(r"(!)?([^\s]*)(?:\s*#\s*(.*))?")
 
 # This file implements a custom version parsing and sorting mechanism,
 # as `packaging.version` has strange behaviors that won't work for other
