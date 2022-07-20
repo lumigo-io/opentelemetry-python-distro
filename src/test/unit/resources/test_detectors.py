@@ -40,10 +40,13 @@ def test_env_vars_detector(monkeypatch):
         monkeypatch.delenv(key)
     monkeypatch.setenv("a", "b")
     monkeypatch.setenv("k", "v")
+    monkeypatch.setenv("secret", "value")
 
     resource = EnvVarsDetector().detect()
 
-    assert resource.attributes["process.environ"] == json.dumps({"a": "b", "k": "v"})
+    assert resource.attributes["process.environ"] == json.dumps(
+        {"a": "b", "k": "v", "secret": "****"}
+    )
 
 
 def test_get_resource_aws_ecs_resource_detector(monkeypatch):
