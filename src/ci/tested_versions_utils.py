@@ -17,12 +17,12 @@ from typing import List, Optional, Union
 #
 #  * '  ! 1.2.3  # This is awesome' => ['!', '1.2.3', 'This is awesome']
 #  * '1.2.3' => ['', '1.2.3', '']
-_splitVersionFromCommentPattern = re.compile(r"(?:\s*)(!)?(?:\s*)([^\s]+)(?:\s*#\s*(.*))?")
+_SPLIT_VERSION_FROM_COMMENT_PATTERN = re.compile(r"(?:\s*)(!)?(?:\s*)([^\s]+)(?:\s*#\s*(.*))?")
 
 # Major, minor, patch and (non semver standard, suffix)
 # A "1.2.3" value (no suffix) is split into the four capture groups: [ '1', '2', '3', '' ]
 # A "1.2.3-ciao" value is split into the four capture groups: [ '1', '2', '3', '-ciao' ]
-_semanticVersionPattern = re.compile(r"(\d+).(\d+).(\d+)([^\s]*)")
+_SEMANTIC_VERSION_PATTERN = re.compile(r"(\d+).(\d+).(\d+)([^\s]*)")
 
 # This file implements a custom version parsing and sorting mechanism,
 # as `packaging.version` has strange behaviors that won't work for other
@@ -113,14 +113,14 @@ class SemanticVersion:
 
 
 def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
-    res = re.search(_splitVersionFromCommentPattern, version)
+    res = re.search(_SPLIT_VERSION_FROM_COMMENT_PATTERN, version)
     if not res:
         raise Exception(f"Version does not parse as non-semantic: {version}")
     (supported_string, version_string, comment) = res.groups()
     # The `supported_string` is either an empty string (supported) or the '!' string (not supported)
     supported = not bool(supported_string)
 
-    res = re.search(_semanticVersionPattern, version_string)
+    res = re.search(_SEMANTIC_VERSION_PATTERN, version_string)
     if res:
         (major, minor, patch, suffix) = res.groups()
         return SemanticVersion(
