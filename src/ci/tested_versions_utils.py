@@ -188,16 +188,12 @@ class TestedVersions:
 
             if previous_version.supported and (not parsed_version.supported):
                 # This is, above all, the most dangerous case we could possibly overlook
-                print(
-                    f"DANGER! Removing support for {previous_version.version}!"
-                )
+                print(f"DANGER! Removing support for {previous_version.version}!")
 
             if (not previous_version.supported) and parsed_version.supported:
                 print(f"COOL! Adding support for {previous_version.version}!")
         else:
-            print(
-                f"Adding '{parsed_version}' to {path}"
-            )
+            print(f"Adding '{parsed_version}' to {path}")
 
         with open(path, "w") as f:
             for tested_version in sorted(tested_versions.versions):
