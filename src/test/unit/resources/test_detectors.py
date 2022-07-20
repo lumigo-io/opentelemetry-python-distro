@@ -4,7 +4,6 @@ import urllib.request
 from contextlib import contextmanager
 
 from opentelemetry.sdk import resources
-import pytest
 
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
@@ -12,14 +11,6 @@ from lumigo_opentelemetry.resources.detectors import (
     EnvVarsDetector,
     get_resource,
 )
-
-
-@pytest.fixture(autouse=True)
-def keep_env_vars():
-    original_environ = os.environ.copy()
-    yield
-    os.environ.clear()
-    os.environ.update(original_environ)
 
 
 def test_process_detector():
@@ -43,18 +34,19 @@ def test_lumigo_distro_version_detect():
     assert patch.isdigit()
 
 
-def test_env_vars_detector():
-    os.environ.clear()
-    envs = {"a": "b", "k": "v"}
-    os.environ.update(envs)
+def test_env_vars_detector(monkeypatch):
+    for key in os.environ:
+        monkeypatch.delenv(key)
+    monkeypatch.setenv("a", "b")
+    monkeypatch.setenv("k", "v")
 
     resource = EnvVarsDetector().detect()
 
-    assert resource.attributes["process.environ"] == json.dumps(envs)
+    assert resource.attributes["process.environ"] == json.dumps({"a": "b", "k": "v"})
 
 
-def test_get_resource_aws_ecs_resource_detector():
-    os.environ["ECS_CONTAINER_METADATA_URI"] = "mock-url"
+def test_get_resource_aws_ecs_resource_detector(monkeypatch):
+    monkeypatch.setenv("ECS_CONTAINER_METADATA_URI", "mock-url")
 
     resource = get_resource({})
 
