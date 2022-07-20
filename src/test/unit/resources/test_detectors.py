@@ -1,9 +1,10 @@
 import json
 import os
+import urllib.request
+from contextlib import contextmanager
 
 from opentelemetry.sdk import resources
 import pytest
-import responses
 
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
@@ -64,24 +65,20 @@ def test_get_resource_aws_ecs_resource_detector():
     assert isinstance(resource.attributes["container.id"], str)
 
 
-def load_json(filename: str):
-    with open(os.path.join(os.path.dirname(__file__), filename)) as f:
-        return json.load(f)
+@contextmanager
+def mocked_urlopen(url: str, timeout: int):
+    filename = (
+        "metadatav4-response-task.json"
+        if url.endswith("/task")
+        else "metadatav4-response-container.json"
+    )
+    with open(os.path.join(os.path.dirname(__file__), filename), "rb") as f:
+        yield f
 
 
-@responses.activate
-def test_get_resource_lumigo_aws_ecs_resource_detector(monkeypatch):
+def test_get_resource_lumigo_aws_ecs_resource_detector(monkeypatch, caplog):
     aws_ecs_metadata_url = "http://test.uri.ecs"
-    responses.add(
-        method="GET",
-        url=aws_ecs_metadata_url,
-        json=load_json("metadatav4-response-container.json"),
-    )
-    responses.add(
-        method="GET",
-        url=f"{aws_ecs_metadata_url}/task",
-        json=load_json("metadatav4-response-task.json"),
-    )
+    monkeypatch.setattr(urllib.request, "urlopen", mocked_urlopen)
     monkeypatch.setenv("ECS_CONTAINER_METADATA_URI_V4", aws_ecs_metadata_url)
 
     resource = get_resource({})
@@ -101,3 +98,22 @@ def test_get_resource_lumigo_aws_ecs_resource_detector(monkeypatch):
     )
     assert resource.attributes["aws.ecs.task.family"] == "curltest"
     assert resource.attributes["aws.ecs.task.revision"] == "26"
+
+
+def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
+    monkeypatch, caplog
+):
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: 1 / 0)
+    monkeypatch.setenv("ECS_CONTAINER_METADATA_URI_V4", "http://test.uri.ecs")
+
+    resource = get_resource({})
+
+    assert resource.attributes[resources.PROCESS_RUNTIME_NAME] == "cpython"
+    assert "aws.ecs.container.arn" not in resource.attributes
+    assert list(
+        filter(
+            lambda record: "division by zero" in record.message
+            and "LumigoAwsEcsResourceDetector" in record.message,
+            caplog.records,
+        )
+    )

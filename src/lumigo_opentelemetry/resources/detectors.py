@@ -1,7 +1,8 @@
+import json
 import os
 import sys
+import urllib.request
 
-import requests
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.resources import (
     ResourceDetector,
@@ -61,6 +62,11 @@ class EnvVarsDetector(ResourceDetector):
 class LumigoAwsEcsResourceDetector(ResourceDetector):
     """Implements the lookup of the `aws.ecs` resource attributes using the Metadata v4 endpoint."""
 
+    @staticmethod
+    def _http_get(url: str) -> dict:
+        with urllib.request.urlopen(url, timeout=1) as response:
+            return json.loads(response.read().decode())
+
     def detect(self) -> "Resource":
         metadata_endpoint = os.environ.get("ECS_CONTAINER_METADATA_URI_V4")
 
@@ -68,13 +74,10 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
             return Resource.get_empty()
 
         # Returns https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v4.html#task-metadata-endpoint-v4-response
-        metadata_container_response = requests.get(metadata_endpoint, timeout=1)
-        metadata_container_response.raise_for_status()
-        metadata_container = metadata_container_response.json()
-
-        metadata_task_response = requests.get(f"{metadata_endpoint}/task", timeout=1)
-        metadata_task_response.raise_for_status()
-        metadata_task = metadata_task_response.json()
+        metadata_container = LumigoAwsEcsResourceDetector._http_get(metadata_endpoint)
+        metadata_task = LumigoAwsEcsResourceDetector._http_get(
+            f"{metadata_endpoint}/task"
+        )
 
         task_arn = metadata_task["TaskARN"]
         base_arn = task_arn[0 : task_arn.rindex(":")]  # noqa
