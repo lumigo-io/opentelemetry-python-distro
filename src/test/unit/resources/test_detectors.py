@@ -4,6 +4,7 @@ import urllib.request
 from contextlib import contextmanager
 
 from opentelemetry.sdk import resources
+from opentelemetry.semconv.resource import ResourceAttributes
 
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
@@ -50,11 +51,11 @@ def test_get_resource_aws_ecs_resource_detector(monkeypatch):
 
     resource = get_resource({})
 
-    assert resource.attributes["cloud.provider"] == "aws"
-    assert resource.attributes["cloud.platform"] == "aws_ecs"
-    assert isinstance(resource.attributes["container.name"], str)
-    assert len(resource.attributes["container.name"]) > 1
-    assert isinstance(resource.attributes["container.id"], str)
+    assert resource.attributes[ResourceAttributes.CLOUD_PROVIDER] == "aws"
+    assert resource.attributes[ResourceAttributes.CLOUD_PLATFORM] == "aws_ecs"
+    assert isinstance(resource.attributes[ResourceAttributes.CONTAINER_NAME], str)
+    assert len(resource.attributes[ResourceAttributes.CONTAINER_NAME]) > 1
+    assert isinstance(resource.attributes[ResourceAttributes.CONTAINER_ID], str)
 
 
 @contextmanager
@@ -76,20 +77,20 @@ def test_get_resource_lumigo_aws_ecs_resource_detector(monkeypatch, caplog):
     resource = get_resource({})
 
     assert (
-        resource.attributes["aws.ecs.container.arn"]
+        resource.attributes[ResourceAttributes.AWS_ECS_CONTAINER_ARN]
         == "arn:aws:ecs:us-west-2:111122223333:container/0206b271-b33f-47ab-86c6-a0ba208a70a9"
     )
     assert (
-        resource.attributes["aws.ecs.cluster.arn"]
+        resource.attributes[ResourceAttributes.AWS_ECS_CLUSTER_ARN]
         == "arn:aws:ecs:us-west-2:111122223333:cluster/default"
     )
-    assert resource.attributes["aws.ecs.launchtype"] == "EC2"
+    assert resource.attributes[ResourceAttributes.AWS_ECS_LAUNCHTYPE] == "EC2"
     assert (
-        resource.attributes["aws.ecs.task.arn"]
+        resource.attributes[ResourceAttributes.AWS_ECS_TASK_ARN]
         == "arn:aws:ecs:us-west-2:111122223333:task/default/158d1c8083dd49d6b527399fd6414f5c"
     )
-    assert resource.attributes["aws.ecs.task.family"] == "curltest"
-    assert resource.attributes["aws.ecs.task.revision"] == "26"
+    assert resource.attributes[ResourceAttributes.AWS_ECS_TASK_FAMILY] == "curltest"
+    assert resource.attributes[ResourceAttributes.AWS_ECS_TASK_REVISION] == "26"
 
 
 def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
@@ -101,7 +102,7 @@ def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
     resource = get_resource({})
 
     assert resource.attributes[resources.PROCESS_RUNTIME_NAME] == "cpython"
-    assert "aws.ecs.container.arn" not in resource.attributes
+    assert ResourceAttributes.AWS_ECS_CONTAINER_ARN not in resource.attributes
     assert list(
         filter(
             lambda record: "division by zero" in record.message
