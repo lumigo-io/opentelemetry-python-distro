@@ -73,11 +73,6 @@ def init():
         activation_mode,
     )
 
-    from platform import python_version
-    from typing import Dict
-
-    import requests
-
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
@@ -86,31 +81,7 @@ def init():
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
     )
-
     lumigo_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
-
-    metadata_cache: Dict[str, str] = {}
-
-    def safe_get_version() -> str:
-        try:
-            return python_version()
-        except Exception as e:
-            logger.exception("failed getting python version", exc_info=e)
-            return ""
-
-    def safe_get_metadata() -> str:
-        try:
-            metadata_uri = os.environ.get("ECS_CONTAINER_METADATA_URI")
-            if not metadata_uri:
-                return ""
-            if metadata_cache.get(metadata_uri):
-                return metadata_cache[metadata_uri]
-            metadata_cache[metadata_uri] = requests.get(metadata_uri).text
-            return metadata_cache[metadata_uri]
-        except Exception as e:
-            logger.exception("failed to fetch ecs metadata", exc_info=e)
-            return ""
-
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
 
     # Activate instrumentations
@@ -118,14 +89,7 @@ def init():
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
     from lumigo_opentelemetry.resources.detectors import get_resource
 
-    # TODO Clean up needed
-    attributes = {
-        # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
-        "metadata": safe_get_metadata(),
-        "framework": framework,
-    }
-
-    tracer_resource = get_resource(attributes)
+    tracer_resource = get_resource(attributes={"framework": framework})
     tracer_provider = TracerProvider(resource=tracer_resource)
 
     if lumigo_token:
