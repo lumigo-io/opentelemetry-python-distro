@@ -17,7 +17,9 @@ from typing import List, Optional, Union
 #
 #  * '  ! 1.2.3  # This is awesome' => ['!', '1.2.3', 'This is awesome']
 #  * '1.2.3' => ['', '1.2.3', '']
-_SPLIT_VERSION_FROM_COMMENT_PATTERN = re.compile(r"(?:\s*)(!)?(?:\s*)([^\s]+)(?:\s*#\s*(.*))?")
+_SPLIT_VERSION_FROM_COMMENT_PATTERN = re.compile(
+    r"(?:\s*)(!)?(?:\s*)([^\s]+)(?:\s*#\s*(.*))?"
+)
 
 # Major, minor, patch and (non semver standard, suffix)
 # A "1.2.3" value (no suffix) is split into the four capture groups: [ '1', '2', '3', '' ]
@@ -58,6 +60,9 @@ class NonSemanticVersion:
             return False
 
         return self.version < other.version
+
+    def __str__(self):
+        return f"{'!' if self.supported else ''}{version}{' # ' + self.comment if self.comment else ''}"
 
 
 @dataclass(frozen=True)
@@ -110,6 +115,9 @@ class SemanticVersion:
             return False
 
         return self.suffix < other.suffix
+
+    def __str__(self):
+        return f"{'!' if self.supported else ''}{version}{' # ' + self.comment if self.comment else ''}"
 
 
 def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
@@ -174,26 +182,14 @@ class TestedVersions:
 
         tested_versions.versions.append(parsed_version)
         if previous_version:
-            tested_versions.versions.remove(previous_version)
-
-            if parsed_version.supported == previous_version.supported:
+            print(f"Updating '{previous_version}' to '{parsed_version}' in {path}")
+            if previous_version.supported and not parsed_version.supported:
+                # This is, above all, the most dangerous case we could possibly overlook
                 print(
-                    f"Version '{parsed_version.version}' already marked as {'supported' if parsed_version.supported else 'not supported'} in {path}"
+                    f"DANGER! We are removing support for {previous_version.version}!"
                 )
-            else:
-                print(
-                    f"Turning version '{parsed_version.version}' to {'supported' if parsed_version.supported else 'not supported'} in {path}"
-                )
-
-            if parsed_version.comment != previous_version.comment:
-                if parsed_version.comment:
-                    print(
-                        f"Updating comment for version '{parsed_version.version}' in {path}"
-                    )
-                else:
-                    print(
-                        f"Removing comment for version '{parsed_version.version}' in {path}"
-                    )
+            elif not previous_version.supported and parsed_version.supported:
+                print(f"COOL! Adding support for {previous_version.version}!")
         else:
             print(
                 f"Adding the {parsed_version.version} as {'supported' if parsed_version.supported else 'not supported'} to {path}"
