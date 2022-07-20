@@ -43,7 +43,7 @@ _SEMANTIC_VERSION_PATTERN = re.compile(r"(\d+).(\d+).(\d+)([^\s]*)")
 # ```
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False, order=False)
 class NonSemanticVersion:
     supported: bool
     version: str
@@ -61,11 +61,11 @@ class NonSemanticVersion:
 
         return self.version < other.version
 
-    def __str__(self):
-        return f"{'!' if self.supported else ''}{version}{' # ' + self.comment if self.comment else ''}"
+    def __repr__(self):
+        return f"{'' if self.supported else '!'}{self.version}{' # ' + self.comment if self.comment else ''}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False, order=False)
 class SemanticVersion:
     supported: bool
     version: str
@@ -116,8 +116,8 @@ class SemanticVersion:
 
         return self.suffix < other.suffix
 
-    def __str__(self):
-        return f"{'!' if self.supported else ''}{version}{' # ' + self.comment if self.comment else ''}"
+    def __repr__(self):
+        return f"{'' if self.supported else '!'}{self.version}{' # ' + self.comment if self.comment else ''}"
 
 
 def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
@@ -182,17 +182,21 @@ class TestedVersions:
 
         tested_versions.versions.append(parsed_version)
         if previous_version:
+            tested_versions.versions.remove(previous_version)
+
             print(f"Updating '{previous_version}' to '{parsed_version}' in {path}")
-            if previous_version.supported and not parsed_version.supported:
+
+            if previous_version.supported and (not parsed_version.supported):
                 # This is, above all, the most dangerous case we could possibly overlook
                 print(
-                    f"DANGER! We are removing support for {previous_version.version}!"
+                    f"DANGER! Removing support for {previous_version.version}!"
                 )
-            elif not previous_version.supported and parsed_version.supported:
+
+            if (not previous_version.supported) and parsed_version.supported:
                 print(f"COOL! Adding support for {previous_version.version}!")
         else:
             print(
-                f"Adding the {parsed_version.version} as {'supported' if parsed_version.supported else 'not supported'} to {path}"
+                f"Adding '{parsed_version}' to {path}"
             )
 
         with open(path, "w") as f:
