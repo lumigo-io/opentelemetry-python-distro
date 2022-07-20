@@ -108,10 +108,10 @@ class SemanticVersion:
         if self.patch > other.patch:
             return False
 
-        if not self.suffix and self.suffix:
+        if not self.suffix and other.suffix:
             return True
 
-        if self.suffix and not self.suffix:
+        if self.suffix and not other.suffix:
             return False
 
         return self.suffix < other.suffix
