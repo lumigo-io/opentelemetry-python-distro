@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import attr
 import os
 import re
-from attr import attrib
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List, Optional, Union
@@ -149,11 +149,10 @@ def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
         comment=comment,
     )
 
-
-@dataclass(frozen=True)
+@attr.s(frozen=True)
 class TestedVersions:
-    versions: List[Union[SemanticVersion, NonSemanticVersion]] = attrib(
-        converter=sorted
+    versions: List[Union[SemanticVersion, NonSemanticVersion]] = attr.ib(
+        converter=lambda l: sorted(l)
     )
 
     @staticmethod
