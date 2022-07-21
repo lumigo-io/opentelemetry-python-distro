@@ -149,6 +149,7 @@ def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
         comment=comment,
     )
 
+
 @attr.s(frozen=True)
 class TestedVersions:
     versions: List[Union[SemanticVersion, NonSemanticVersion]] = attr.ib(

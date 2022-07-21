@@ -6,6 +6,7 @@ from ci.tested_versions_utils import (
     _get_supported_version_ranges,
 )
 
+
 def test_tested_versions_sorts_on_constructor():
     assert TestedVersions(
         [
@@ -19,12 +20,14 @@ def test_tested_versions_sorts_on_constructor():
         parse_version("0.0.3"),
     ]
 
+
 def test_tested_versions_is_frozen():
     try:
         TestedVersions([]).versions = [parse_version("0.0.1")]
         raise Exception("We should not have gotten here")
     except attr.exceptions.FrozenInstanceError:
         pass
+
 
 def test_parse_version():
     assert parse_version("  1.2.3  # test!") == SemanticVersion(
