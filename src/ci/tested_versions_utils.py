@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from attr import attrib
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import List, Optional, Union
@@ -151,7 +152,9 @@ def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
 
 @dataclass(frozen=True)
 class TestedVersions:
-    versions: List[Union[SemanticVersion, NonSemanticVersion]]
+    versions: List[Union[SemanticVersion, NonSemanticVersion]] = attrib(
+        converter=sorted
+    )
 
     @staticmethod
     def _add_version_to_file(
@@ -237,7 +240,7 @@ class TestedVersions:
     def from_file(path: str) -> TestedVersions:
         with open(path, "r") as f:
             # Sort versions on creation
-            return TestedVersions(sorted([parse_version(line) for line in f]))
+            return TestedVersions([parse_version(line) for line in f])
 
     @property
     def supported_versions(self) -> List[str]:
@@ -310,7 +313,9 @@ def _generate_support_matrix_markdown_row(
         package = packages[0]
 
         supported_version_ranges = _get_supported_version_ranges(
-            os.path.join(tested_versions_directory, packages[0])
+            TestedVersions.from_file(
+                os.path.join(tested_versions_directory, packages[0])
+            )
         )
 
         res.append(
@@ -321,7 +326,9 @@ def _generate_support_matrix_markdown_row(
     else:
         first_package = packages[0]
         supported_version_ranges_first_package = _get_supported_version_ranges(
-            os.path.join(tested_versions_directory, first_package)
+            TestedVersions.from_file(
+                os.path.join(tested_versions_directory, first_package)
+            )
         )
 
         res.append(
@@ -332,7 +339,9 @@ def _generate_support_matrix_markdown_row(
 
         for package in packages[1:]:
             supported_version_ranges = _get_supported_version_ranges(
-                os.path.join(tested_versions_directory, package)
+                TestedVersions.from_file(
+                    os.path.join(tested_versions_directory, package)
+                )
             )
             res.append(
                 f"| | [{package}]({package_url_template.format(package)}) | {supported_version_ranges[0]} |"
@@ -344,8 +353,7 @@ def _generate_support_matrix_markdown_row(
     return res
 
 
-def _get_supported_version_ranges(tested_versions_file):
-    tested_versions = TestedVersions.from_file(tested_versions_file)
+def _get_supported_version_ranges(tested_versions: TestedVersions) -> List[str]:
     # The versions are sorted, and assumed not to have gaps
     # We go over the list versions, and generate version ranges based on minors and patches
 
