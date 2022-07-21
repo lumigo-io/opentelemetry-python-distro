@@ -1,5 +1,4 @@
 from ci.tested_versions_utils import (
-    NonSemanticVersion,
     SemanticVersion,
     TestedVersions,
     parse_version,
