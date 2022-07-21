@@ -153,7 +153,7 @@ def parse_version(version: str) -> Union[SemanticVersion, NonSemanticVersion]:
 @attr.s(frozen=True)
 class TestedVersions:
     versions: List[Union[SemanticVersion, NonSemanticVersion]] = attr.ib(
-        converter=lambda l: sorted(l)
+        converter=sorted
     )
 
     @staticmethod
@@ -358,7 +358,7 @@ def _get_supported_version_ranges(tested_versions: TestedVersions) -> List[str]:
     # We go over the list versions, and generate version ranges based on minors and patches
 
     version_ranges = []
-    current_range = []
+    current_range: List[Union[NonSemanticVersion, SemanticVersion]] = []
 
     for current_version in tested_versions.versions:
         if not current_range:
@@ -407,7 +407,7 @@ def _version_range_to_string(
         return version_range[0].version
 
     # Only SemanticVersions have ranges of more than one version
-    first_version = version_range[0]
-    last_version = version_range[len(version_range) - 1]
+    first_version: SemanticVersion = version_range[0]
+    last_version: SemanticVersion = version_range[len(version_range) - 1]
 
     return f"{first_version.major}.{first_version.minor}.{first_version.patch}{first_version.suffix}~{last_version.major}.{last_version.minor}.{last_version.patch}{last_version.suffix}"
