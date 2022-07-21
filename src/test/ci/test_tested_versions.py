@@ -29,42 +29,49 @@ def test_tested_versions_is_frozen():
         pass
 
 
-def test_parse_version():
+def test_parse_supported_semantic_version():
     assert parse_version("  1.2.3  # test!") == SemanticVersion(
         True, "1.2.3  # test!", 1, 2, 3, "", "test!"
     )
 
-    # We disregard comments in the equality check
+
+def test_parse_semantic_version_equality_ignores_supported_flag():
     assert parse_version("!1.2.3") == SemanticVersion(
         False, "1.2.3  # test!", 1, 2, 3, "", "test!"
     )
 
-    # We preserve the actual version string for semantic versions
+
+def test_parse_semantic_version_equality_ignores_comment():
+    # We disregard support in equality checks
+    assert parse_version("1.2.3 # comment") == parse_version("1.2.3")
+
+
+def test_parse_semantic_version_preserve_original_version_string():
     assert (
         SemanticVersion(False, "   1.2.3  # test!", 1, 2, 3, "", "test!").version
         == "   1.2.3  # test!"
     )
 
-    # We disregard support in equality checks
-    assert parse_version("!1.2.3") == parse_version("1.2.3")
 
-    # We disregard support in ordering
+def test_semantic_version_sorting_ignores_supported_flag():
     assert parse_version("!1.2.3") < parse_version("1.2.4")
 
-    # Non-semantic versions are considered always larger than semantic ones
+
+def test_semantic_version_always_smaller_than_non_semantic_version():
     assert parse_version("!1.2.3") < parse_version("0.1")
 
-    # Non-semantic versions are orders lexicographically
+
+def test_non_semantic_versions_are_sorted_lexicographically():
     assert parse_version("0.11") < parse_version("0.2")
 
-    # Test version sorting
+
+def test_sorting_mixed_version_types():
     assert sorted(
         [parse_version("1.3.5"), parse_version("0.2"), parse_version("1.2.3")]
     ) == [parse_version("1.2.3"), parse_version("1.3.5"), parse_version("0.2")]
 
 
-def test_version_ranges():
-    # Start simple :-)
+def test_consecutive_semantic_version_range():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -75,7 +82,8 @@ def test_version_ranges():
         )
     ) == ["0.0.1~0.0.3"]
 
-    # Simple range break within same minor
+
+def test_semantic_version_ranges_with_break():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -88,7 +96,8 @@ def test_version_ranges():
         )
     ) == ["0.0.1~0.0.2", "0.0.4~0.0.5"]
 
-    # Simple range break within with minor jump
+
+def test_semantic_version_ranges_with_break_and_minor_jump():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -101,7 +110,8 @@ def test_version_ranges():
         )
     ) == ["0.0.1~0.0.2", "0.0.4~0.1.1"]
 
-    # Simple range break within with major jump
+
+def test_semantic_version_ranges_with_break_and_major_jump():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -114,7 +124,8 @@ def test_version_ranges():
         )
     ) == ["0.0.1~0.0.2", "0.0.4", "1.0.0"]
 
-    # Test we skip correctly unsupported first version
+
+def test_semantic_version_ranges_with_unsupported_beginning():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -125,7 +136,8 @@ def test_version_ranges():
         )
     ) == ["0.0.2~0.0.3"]
 
-    # Test we skip correctly unsupported multiple first versions
+
+def test_semantic_version_ranges_with_multiple_unsupported_beginning():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -136,7 +148,8 @@ def test_version_ranges():
         )
     ) == ["0.0.3"]
 
-    # Test we skip correctly unsupported last version
+
+def test_semantic_version_ranges_with_unsupported_ending():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -147,7 +160,8 @@ def test_version_ranges():
         )
     ) == ["0.0.1~0.0.2"]
 
-    # Test we skip correctly unsupported last versions
+
+def test_semantic_version_ranges_with_multiple_unsupported_ending():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -158,7 +172,8 @@ def test_version_ranges():
         )
     ) == ["0.0.1"]
 
-    # Test we skip correctly versions
+
+def test_semantic_version_ranges_with_multiple_unsupported_beginning_and_breaks():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -172,7 +187,8 @@ def test_version_ranges():
         )
     ) == ["0.0.2~0.1.0", "1.0.1"]
 
-    # Skipping non-semantic versions
+
+def test_skipping_non_semantic_versions():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -186,7 +202,8 @@ def test_version_ranges():
         )
     ) == ["0.0.2~0.1.0", "nonsemantic"]
 
-    # Skipping all non-semantic versions
+
+def test_skipping_multiple_non_semantic_versions():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -200,7 +217,8 @@ def test_version_ranges():
         )
     ) == ["0.0.2~0.1.0"]
 
-    # Multiple non-semantic versions
+
+def test_non_semantic_version_ranges():
     assert _get_supported_version_ranges(
         TestedVersions(
             [
