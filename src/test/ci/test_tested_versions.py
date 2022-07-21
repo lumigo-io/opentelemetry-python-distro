@@ -135,6 +135,7 @@ def test_version_ranges():
         )
     ) == ["0.0.1"]
 
+    # Test we skip correctly versions
     assert _get_supported_version_ranges(
         TestedVersions(
             [
@@ -147,3 +148,46 @@ def test_version_ranges():
             ]
         )
     ) == ["0.0.2~0.1.0", "1.0.1"]
+
+    # Skipping non-semantic versions
+    assert _get_supported_version_ranges(
+        TestedVersions(
+            [
+                parse_version("!0.0.1"),
+                parse_version("0.0.2"),
+                parse_version("0.0.3"),
+                parse_version("0.1.0"),
+                parse_version("!0.2"),
+                parse_version("nonsemantic"),
+            ]
+        )
+    ) == ["0.0.2~0.1.0", "nonsemantic"]
+
+    # Skipping all non-semantic versions
+    assert _get_supported_version_ranges(
+        TestedVersions(
+            [
+                parse_version("!0.0.1"),
+                parse_version("0.0.2"),
+                parse_version("0.0.3"),
+                parse_version("0.1.0"),
+                parse_version("!0.2"),
+                parse_version("!nonsemantic"),
+            ]
+        )
+    ) == ["0.0.2~0.1.0"]
+
+    # Multiple non-semantic versions
+    assert _get_supported_version_ranges(
+        TestedVersions(
+            [
+                parse_version("!0.0.1"),
+                parse_version("0.0.2"),
+                parse_version("0.0.3"),
+                parse_version("0.1.0"),
+                parse_version("!0.2"),
+                parse_version("nonsemantic1"),
+                parse_version("nonsemantic2"),
+            ]
+        )
+    ) == ["0.0.2~0.1.0", "nonsemantic1", "nonsemantic2"]
