@@ -282,11 +282,10 @@ def generate_support_matrix_markdown(
             if os.path.basename(directory) == "tested_versions":
                 package_support_version_directories += [os.path.join(root, directory)]
 
-    res = [
-        "| Instrumentation | Package | Supported Versions |",
-        "| --- | --- | --- |"
-    ]
-    for package_support_version_directory in sorted(package_support_version_directories):
+    res = ["| Instrumentation | Package | Supported Versions |", "| --- | --- | --- |"]
+    for package_support_version_directory in sorted(
+        package_support_version_directories
+    ):
         res += _generate_support_matrix_markdown_row(
             package_support_version_directory, package_url_template
         )
@@ -344,6 +343,7 @@ def _generate_support_matrix_markdown_row(
 
     return res
 
+
 def _get_supported_version_ranges(tested_versions_file):
     tested_versions = TestedVersions.from_file(tested_versions_file)
     # The versions are sorted, and assumed not to have gaps
@@ -392,7 +392,9 @@ def _get_supported_version_ranges(tested_versions_file):
     return version_ranges
 
 
-def _version_range_to_string(version_range: List[Union[NonSemanticVersion, SemanticVersion]]) -> str:
+def _version_range_to_string(
+    version_range: List[Union[NonSemanticVersion, SemanticVersion]]
+) -> str:
     if len(version_range) == 1:
         return version_range[0].version
 
