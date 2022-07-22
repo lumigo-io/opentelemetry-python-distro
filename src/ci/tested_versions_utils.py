@@ -5,7 +5,7 @@ import os
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Union, cast
 
 # This regexp splits the version line across three capture groups:
 # `(!)?` captures whether or not the version is supported (if supported, the `!` character is missing)
@@ -240,7 +240,7 @@ class TestedVersions:
     def from_file(path: str) -> TestedVersions:
         with open(path, "r") as f:
             # Sort versions on creation
-            return TestedVersions([parse_version(line) for line in f])
+            return TestedVersions([parse_version(line) for line in f])  # type: ignore # MyPy gets confused by the Union of RichSortable types
 
     @property
     def supported_versions(self) -> List[str]:
@@ -385,7 +385,7 @@ def _get_supported_version_ranges(tested_versions: TestedVersions) -> List[str]:
 
         # If we get here, all versions in the current range are SemanticVersions and supported
         # We always break on a change of major
-        if current_range[0].major < current_version.major:
+        if cast(SemanticVersion, current_range[0]).major < current_version.major:
             # There is a change of major
             version_ranges.append(_version_range_to_string(current_range))
             current_range = [current_version]
@@ -407,7 +407,7 @@ def _version_range_to_string(
         return version_range[0].version
 
     # Only SemanticVersions have ranges of more than one version
-    first_version: SemanticVersion = version_range[0]
-    last_version: SemanticVersion = version_range[len(version_range) - 1]
+    first_version = cast(SemanticVersion, version_range[0])
+    last_version = cast(SemanticVersion, version_range[len(version_range) - 1])
 
     return f"{first_version.major}.{first_version.minor}.{first_version.patch}{first_version.suffix}~{last_version.major}.{last_version.minor}.{last_version.patch}{last_version.suffix}"
