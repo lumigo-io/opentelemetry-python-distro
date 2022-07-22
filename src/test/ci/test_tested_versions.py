@@ -72,163 +72,199 @@ def test_sorting_mixed_version_types():
 
 
 def test_consecutive_semantic_version_range():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("0.0.3"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("0.0.3"),
+                ]
+            )
         )
-    ) == ["0.0.1~0.0.3"]
+        == ["0.0.1~0.0.3"]
+    )
 
 
 def test_semantic_version_ranges_with_break():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("!0.0.3"),
-                parse_version("0.0.4"),
-                parse_version("0.0.5"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("!0.0.3"),
+                    parse_version("0.0.4"),
+                    parse_version("0.0.5"),
+                ]
+            )
         )
-    ) == ["0.0.1~0.0.2", "0.0.4~0.0.5"]
+        == ["0.0.1~0.0.2", "0.0.4~0.0.5"]
+    )
 
 
 def test_semantic_version_ranges_with_break_and_minor_jump():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("!0.0.3"),
-                parse_version("0.0.4"),
-                parse_version("0.1.1"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("!0.0.3"),
+                    parse_version("0.0.4"),
+                    parse_version("0.1.1"),
+                ]
+            )
         )
-    ) == ["0.0.1~0.0.2", "0.0.4~0.1.1"]
+        == ["0.0.1~0.0.2", "0.0.4~0.1.1"]
+    )
 
 
 def test_semantic_version_ranges_with_break_and_major_jump():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("!0.0.3"),
-                parse_version("0.0.4"),
-                parse_version("1.0.0"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("!0.0.3"),
+                    parse_version("0.0.4"),
+                    parse_version("1.0.0"),
+                ]
+            )
         )
-    ) == ["0.0.1~0.0.2", "0.0.4", "1.0.0"]
+        == ["0.0.1~0.0.2", "0.0.4", "1.0.0"]
+    )
 
 
 def test_semantic_version_ranges_with_unsupported_beginning():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("!0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("0.0.3"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("!0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("0.0.3"),
+                ]
+            )
         )
-    ) == ["0.0.2~0.0.3"]
+        == ["0.0.2~0.0.3"]
+    )
 
 
 def test_semantic_version_ranges_with_multiple_unsupported_beginning():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("!0.0.1"),
-                parse_version("!0.0.2"),
-                parse_version("0.0.3"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("!0.0.1"),
+                    parse_version("!0.0.2"),
+                    parse_version("0.0.3"),
+                ]
+            )
         )
-    ) == ["0.0.3"]
+        == ["0.0.3"]
+    )
 
 
 def test_semantic_version_ranges_with_unsupported_ending():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("!0.0.3"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("!0.0.3"),
+                ]
+            )
         )
-    ) == ["0.0.1~0.0.2"]
+        == ["0.0.1~0.0.2"]
+    )
 
 
 def test_semantic_version_ranges_with_multiple_unsupported_ending():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("0.0.1"),
-                parse_version("!0.0.2"),
-                parse_version("!0.0.3"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("0.0.1"),
+                    parse_version("!0.0.2"),
+                    parse_version("!0.0.3"),
+                ]
+            )
         )
-    ) == ["0.0.1"]
+        == ["0.0.1"]
+    )
 
 
 def test_semantic_version_ranges_with_multiple_unsupported_beginning_and_breaks():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("!0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("0.0.3"),
-                parse_version("0.1.0"),
-                parse_version("!0.1.1"),
-                parse_version("1.0.1"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("!0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("0.0.3"),
+                    parse_version("0.1.0"),
+                    parse_version("!0.1.1"),
+                    parse_version("1.0.1"),
+                ]
+            )
         )
-    ) == ["0.0.2~0.1.0", "1.0.1"]
+        == ["0.0.2~0.1.0", "1.0.1"]
+    )
 
 
 def test_skipping_non_semantic_versions():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("!0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("0.0.3"),
-                parse_version("0.1.0"),
-                parse_version("!0.2"),
-                parse_version("nonsemantic"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("!0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("0.0.3"),
+                    parse_version("0.1.0"),
+                    parse_version("!0.2"),
+                    parse_version("nonsemantic"),
+                ]
+            )
         )
-    ) == ["0.0.2~0.1.0", "nonsemantic"]
+        == ["0.0.2~0.1.0", "nonsemantic"]
+    )
 
 
 def test_skipping_multiple_non_semantic_versions():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("!0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("0.0.3"),
-                parse_version("0.1.0"),
-                parse_version("!0.2"),
-                parse_version("!nonsemantic"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("!0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("0.0.3"),
+                    parse_version("0.1.0"),
+                    parse_version("!0.2"),
+                    parse_version("!nonsemantic"),
+                ]
+            )
         )
-    ) == ["0.0.2~0.1.0"]
+        == ["0.0.2~0.1.0"]
+    )
 
 
 def test_non_semantic_version_ranges():
-    assert _get_supported_version_ranges(
-        TestedVersions(
-            [
-                parse_version("!0.0.1"),
-                parse_version("0.0.2"),
-                parse_version("0.0.3"),
-                parse_version("0.1.0"),
-                parse_version("!0.2"),
-                parse_version("nonsemantic1"),
-                parse_version("nonsemantic2"),
-            ]
+    assert (
+        _get_supported_version_ranges(
+            TestedVersions(
+                [
+                    parse_version("!0.0.1"),
+                    parse_version("0.0.2"),
+                    parse_version("0.0.3"),
+                    parse_version("0.1.0"),
+                    parse_version("!0.2"),
+                    parse_version("nonsemantic1"),
+                    parse_version("nonsemantic2"),
+                ]
+            )
         )
-    ) == ["0.0.2~0.1.0", "nonsemantic1", "nonsemantic2"]
+        == ["0.0.2~0.1.0", "nonsemantic1", "nonsemantic2"]
+    )
