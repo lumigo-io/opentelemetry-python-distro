@@ -11,7 +11,11 @@ with (open(os.path.join(project_root, "README.md"), "r")) as readme:
 supported_packages_start_index = readme_content.index("## Supported packages\n")
 next_section_start_index = None
 
-for count, line in enumerate(readme_content[supported_packages_start_index + 2 :]):  # noqa: E203 # black and flake8 disagree and it is too much drama
+for count, line in enumerate(
+    readme_content[
+        supported_packages_start_index + 2 :  # noqa: E203
+    ]
+):
     if line.startswith("## "):
         next_section_start_index = supported_packages_start_index + 2 + count
         break

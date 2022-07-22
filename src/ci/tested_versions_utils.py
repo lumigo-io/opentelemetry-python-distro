@@ -5,7 +5,7 @@ import os
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Union, cast
+from typing import List, Optional, Union, cast
 
 # This regexp splits the version line across three capture groups:
 # `(!)?` captures whether or not the version is supported (if supported, the `!` character is missing)
