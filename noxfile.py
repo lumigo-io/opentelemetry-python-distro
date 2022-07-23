@@ -3,13 +3,18 @@ import os
 import tempfile
 from xml.etree import ElementTree
 import time
-from typing import List, Dict, Union
+from typing import List, Union
 
 import nox
 import requests
-from packaging.version import parse as parse_version, Version
+import yaml
 
-from src.ci.tested_versions_utils import TestedVersions, should_add_new_versions
+from src.ci.tested_versions_utils import (
+    NonSemanticVersion,
+    SemanticVersion,
+    TestedVersions,
+    should_test_only_untested_versions,
+)
 
 
 def install(session, *args) -> None:
@@ -34,10 +39,7 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
     response = requests.get(f"https://pypi.org/rss/project/{package_name}/releases.xml")
     response.raise_for_status()
     xml_tree = ElementTree.fromstring(response.text)
-    versions = [i.text for i in xml_tree.findall("channel/item/title") if i.text]
-    # Verify all strings have the format for version
-    [Version(version) for version in versions]
-    return versions
+    return [i.text for i in xml_tree.findall("channel/item/title") if i.text]
 
 
 def python_versions() -> Union[List[str], bool]:
@@ -47,47 +49,91 @@ def python_versions() -> Union[List[str], bool]:
     if os.getenv("CI", str(False)).lower() == "true":
         return False
 
-    return ["3.7", "3.8", "3.9", "3.10"]
+    with open(
+        os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
+    ) as f:
+        github_workflow = yaml.load(f, Loader=yaml.FullLoader)
+        return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
+            "strategy"
+        ]["matrix"]["python-version"]
 
 
 def get_new_version_from_pypi(
     dependency_name: str, tested_versions: TestedVersions
 ) -> List[str]:
-    all_tested_versions = tested_versions.success + tested_versions.failed
     pypi_versions = set(get_versions_from_pypi(dependency_name))
-    new_versions = list(pypi_versions.difference(all_tested_versions))
+    new_versions = list(pypi_versions.difference(set(tested_versions.all_versions)))
     print("running new versions of", dependency_name, new_versions)
     return new_versions
 
 
-def dependency_versions(
-    directory: str, dependency_name: str, add_new_versions: bool
+def dependency_versions_to_be_tested(
+    directory: str, dependency_name: str, test_untested_versions: bool
 ) -> List[str]:
-    """Dependenciy versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
+    """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, dependency_name)
     )
-    if add_new_versions:
+    if test_untested_versions:
         return get_new_version_from_pypi(dependency_name, tested_versions)
-    minor_to_version: Dict[str, Version] = {}
-    for version in tested_versions.success:
-        parsed_version = parse_version(version)
-        minor = f"{parsed_version.major}.{parsed_version.minor}"
-        if minor_to_version.get(minor, parse_version("0")) < parsed_version:
-            minor_to_version[minor] = parsed_version
-    minor_versions = [v.public for v in minor_to_version.values()]
-    print("running minor versions of", dependency_name, minor_versions)
-    return minor_versions
+
+    # To avoid unbearable build times, we only retest the last patch of each minor.
+    # These versions are already sorted. We use the full object representation,
+    # rather than `TestedVersions.supported_versions`, as we need to perform
+    # logic on major, minor and patch.
+    supported_versions: List[Union[SemanticVersion, NonSemanticVersion]] = list(
+        filter(
+            lambda tested_version: tested_version.supported,
+            tested_versions.versions,
+        )
+    )
+
+    if len(supported_versions) == 1:
+        # Only one version? We surely want to test it!
+        return supported_versions
+
+    supported_versions_to_test = []
+    for i in range(len(supported_versions))[1:]:
+        # Iterate from the second element so that we can look back and
+        # detect a change in minor and major
+        previous_version = supported_versions[i - 1]
+        current_version = supported_versions[i]
+
+        if isinstance(previous_version, NonSemanticVersion):
+            # There is no concept of 'minor' and 'patch' in non-semantic version,
+            # so we gotta test 'em all
+            supported_versions_to_test.append(previous_version)
+        elif isinstance(current_version, NonSemanticVersion):
+            # The 'next' version is non-semantic, so we are guaranteed
+            # that the last version is the last in its series
+            supported_versions_to_test.append(previous_version)
+        else:
+            # Both previous and current are semantic versions
+            if (
+                previous_version.major < current_version.major
+                or previous_version.minor < current_version.minor
+            ):
+                # Break in major or minor version; the previous_version is
+                # the last in its series
+                supported_versions_to_test.append(previous_version)
+
+    # By definition, the biggest version is one we want to test
+    supported_versions_to_test.append(supported_versions[len(supported_versions) - 1])
+
+    return [
+        supported_version_to_test.version
+        for supported_version_to_test in supported_versions_to_test
+    ]
 
 
 @nox.session(python=python_versions())
 @nox.parametrize(
     "boto3_version",
-    dependency_versions(
+    dependency_versions_to_be_tested(
         directory="boto3",
         dependency_name="boto3",
-        add_new_versions=should_add_new_versions(),
+        test_untested_versions=should_test_only_untested_versions(),
     ),
 )
 def integration_tests_boto3(
@@ -153,10 +199,10 @@ def integration_tests_boto3(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "fastapi_version",
-    dependency_versions(
+    dependency_versions_to_be_tested(
         directory="fastapi",
         dependency_name="fastapi",
-        add_new_versions=should_add_new_versions(),
+        test_untested_versions=should_test_only_untested_versions(),
     ),
 )
 def integration_tests_fastapi_fastapi(
@@ -174,10 +220,10 @@ def integration_tests_fastapi_fastapi(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "uvicorn_version",
-    dependency_versions(
+    dependency_versions_to_be_tested(
         directory="fastapi",
         dependency_name="uvicorn",
-        add_new_versions=should_add_new_versions(),
+        test_untested_versions=should_test_only_untested_versions(),
     ),
 )
 def integration_tests_fastapi_uvicorn(
@@ -256,10 +302,10 @@ def integration_tests_fastapi(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "flask_version",
-    dependency_versions(
+    dependency_versions_to_be_tested(
         directory="flask",
         dependency_name="flask",
-        add_new_versions=should_add_new_versions(),
+        test_untested_versions=should_test_only_untested_versions(),
     ),
 )
 def integration_tests_flask(session, flask_version):
@@ -322,10 +368,10 @@ def integration_tests_flask(session, flask_version):
 @nox.session(python=python_versions())
 @nox.parametrize(
     "pymongo_version",
-    dependency_versions(
+    dependency_versions_to_be_tested(
         directory="pymongo",
         dependency_name="pymongo",
-        add_new_versions=should_add_new_versions(),
+        test_untested_versions=should_test_only_untested_versions(),
     ),
 )
 def integration_tests_pymongo(
@@ -391,10 +437,10 @@ def integration_tests_pymongo(
 @nox.session(python=python_versions())
 @nox.parametrize(
     "pymysql_version",
-    dependency_versions(
+    dependency_versions_to_be_tested(
         directory="pymysql",
         dependency_name="pymysql",
-        add_new_versions=should_add_new_versions(),
+        test_untested_versions=should_test_only_untested_versions(),
     ),
 )
 def integration_tests_pymysql(
