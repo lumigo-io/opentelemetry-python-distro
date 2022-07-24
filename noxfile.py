@@ -140,7 +140,7 @@ def integration_tests_boto3(
     session,
     boto3_version,
 ):
-    with TestedVersions.save_tests_result("boto3", "boto3", boto3_version):
+    with TestedVersions.save_tests_result("botocore", "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
         install(session, ".")
@@ -175,7 +175,7 @@ def integration_tests_boto3(
                         "--log-cli-level=INFO",
                         "--color=yes",
                         "-v",
-                        "./tests/test_boto3.py",
+                        "./tests/test_botocore.py",
                         env={
                             "LUMIGO_DEBUG_SPANDUMP": full_path,
                         },
