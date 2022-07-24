@@ -61,6 +61,7 @@ jobs:
         with:
           name: '3.10'
           path: versions_artifacts/3.10
+      - run: python3 -m pip install -r requirements.txt
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
