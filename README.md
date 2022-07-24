@@ -10,10 +10,6 @@ The Lumigo OpenTelemetry Distribution for Python is made of several upstream Ope
 
 **Note:** If you are looking for the Lumigo Python tracer for AWS Lambda functions, [`lumigo-tracer`](https://pypi.org/project/lumigo-tracer/) is the package you should use instead.
 
-## Supported Runtimes
-
-* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x
-
 ## Setup
 
 ### Add lumigo_opentelemetry as dependency
@@ -90,6 +86,22 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 * `LUMIGO_DEBUG_SPANDUMP`: path to a local file where to write a local copy of the spans that will be sent to Lumigo; this option handy for local testing but **should not be used in production** unless you are instructed to do so by Lumigo support.
 * `LUMIGO_SECRET_MASKING_REGEX=["regex1", "regex2"]`: Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`.
 * `LUMIGO_SWITCH_OFF=TRUE`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected. 
+
+## Supported runtimes
+
+* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x
+
+## Supported packages
+
+| Instrumentation | Package | Supported Versions |
+| --- | --- | --- |
+| boto | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.24.31 |
+| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.79.0 |
+| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.18.2 |
+| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.1.3 |
+| pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.12.3 |
+| pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
+| | | 1.0.0~1.0.2 |
 
 ## Baseline setup
 

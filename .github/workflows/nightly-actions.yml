@@ -3,10 +3,12 @@ on:
   schedule:
     - cron: "0 7 * * *"
 jobs:
+  # If this key gets renamed, nox.py needs to be adjusted
   check-new-versions-of-instrumented-packages:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # If this key gets renamed, nox.py needs to be adjusted
         python-version: [ '3.7', '3.8', '3.9', '3.10' ]
     name: check-new-versions-of-instrumented-packages
     steps:
@@ -19,7 +21,7 @@ jobs:
       - run: python3 -m nox
         continue-on-error: true
         env:
-          ADD_NEW_VERSIONS: true
+          TEST_ONLY_UNTESTED_NEW_VERSIONS: true
       - run: git --no-pager diff
       - run: mkdir versions_artifact
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
@@ -64,6 +66,8 @@ jobs:
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
       - run: echo "::set-output name=branch_name::$(date +version-testing-%Y%m%d)"
         id: branch_name
+      - run: |  # update 'Supported packages' section in README.md
+          python3 -m scripts.update_supported_packages_documentation
       - run: |  # need to set an env var in order to support multi-lines output https://trstringer.com/github-actions-multiline-strings/
           new_versions="$(./scripts/describe_supported_versions_diff.sh)"
           echo "new_versions<<EOF" >> $GITHUB_ENV

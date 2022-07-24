@@ -13,14 +13,8 @@ ARTIFACT_DIR_NAME = "versions_artifacts"
 #       3.7/
 #           boto3: (next lines are the data inside the file)
 #               1.0.0
-#               !2.0.0
-#           fastapi:
-#               5.1.0
-#               5.2.0
-#       3.8/
-#           boto3:
-#               1.0.0
-#               2.0.0
+#              !2.0.0
+#       3.10/
 #           fastapi:
 #               5.1.0
 #               5.2.0
@@ -60,32 +54,21 @@ def handle_dependency(
         for path in origin_tested_files
         if path.endswith(f"tested_versions/{instrumentation_name}")
     )
+
     runtime_to_tested_versions = calculate_runtime_to_tested_versions_dict(
         instrumentation_name, runtimes
     )
-    version_to_success = calculate_version_to_success_dict(
-        origin_path, runtime_to_tested_versions
-    )
-    for version, success in version_to_success.items():
-        TestedVersions.add_version_to_file(origin_path, version, success)
 
+    for version in list(runtime_to_tested_versions.values())[0].all_versions:
+        supported = all(
+            [
+                # A version is supported only if it works in all runtimes
+                (version in runtime_to_tested_versions[runtime].supported_versions)
+                for runtime in runtimes
+            ]
+        )
 
-def calculate_version_to_success_dict(
-    origin_path: str,
-    runtime_to_tested_versions: Dict[str, TestedVersions],
-) -> Dict[str, bool]:
-    version_to_success = {}
-    origin_versions = set(TestedVersions.from_file(origin_path).get_all_versions())
-    for runtime, tested_versions in runtime_to_tested_versions.items():
-        for version in tested_versions.success:
-            if version not in origin_versions and version not in version_to_success:
-                version_to_success[version] = True
-        for version in tested_versions.failed:
-            if version not in origin_versions:
-                version_to_success[version] = False
-    if not version_to_success:
-        print("no new versions found, not writing to file")
-    return version_to_success
+        TestedVersions.add_version_to_file(origin_path, version, supported)
 
 
 def calculate_runtime_to_tested_versions_dict(
@@ -98,12 +81,12 @@ def calculate_runtime_to_tested_versions_dict(
         for runtime in runtimes
     }
     print("runtime_to_tested_versions:", runtime_to_tested_versions)
-    all_versions = sorted(
-        list(runtime_to_tested_versions.values())[0].get_all_versions()
-    )
+
+    # Sanity check that we tested the same versions in all runtimes
+    all_versions = set(list(runtime_to_tested_versions.values())[0].all_versions)
     if any(
         [
-            sorted(tested_versions.get_all_versions()) != all_versions
+            set(tested_versions.all_versions) != all_versions
             for tested_versions in runtime_to_tested_versions.values()
         ]
     ):
