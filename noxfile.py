@@ -160,6 +160,7 @@ def integration_tests_boto3(
                             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
                             "LUMIGO_DEBUG_SPANDUMP": full_path,
                             "OTEL_SERVICE_NAME": "app",
+                            "OTEL_RESOURCE_ATTRIBUTES": "K0=V0,K1=V1",  # for testing OTELResourceDetector
                         },
                         external=True,
                     )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
