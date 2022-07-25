@@ -175,7 +175,7 @@ def integration_tests_boto3(
                         "--log-cli-level=INFO",
                         "--color=yes",
                         "-v",
-                        "./tests/test_botocore.py",
+                        "./tests/test_boto3.py",
                         env={
                             "LUMIGO_DEBUG_SPANDUMP": full_path,
                         },
