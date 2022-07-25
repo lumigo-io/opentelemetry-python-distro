@@ -1,17 +1,20 @@
-import os
-
+from os import path
 from setuptools import setup
 
-VERSION_PATH = os.path.join(
-    os.path.dirname(__file__), "src", "lumigo_opentelemetry", "VERSION"
+PACKAGE_NAME = "lumigo_opentelemetry"
+
+VERSION_PATH = path.join(
+    path.dirname(__file__), "src", "lumigo_opentelemetry", "VERSION"
 )
+
 
 setup(
     version=open(VERSION_PATH).read(),
-    package_data={"lumigo_opentelemetry": ["VERSION"]},
+    package_data={PACKAGE_NAME: ["VERSION"]},
     entry_points={
-        "lumigo_opentelemetry": ["string = lumigo_opentelemetry:auto_load"],
+        PACKAGE_NAME: [f"string = {PACKAGE_NAME}:auto_load"],
     },
+    include_package_data=True,
     install_requires=[
         "asgiref~=3.0",
         "autowrapt>=1.0",

@@ -1,27 +1,25 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class FlaskInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class FlaskInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("flask")
 
-    def check_if_applicable(self) -> None:
-        import flask  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.flask import (
+            FlaskInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
+        return UpstreamInstrumentor()
+
+    def _do_instrument(self, instrumentor):
         import wrapt
         from lumigo_opentelemetry import logger
 
         @wrapt.patch_function_wrapper("flask", "Flask.__init__")
         def init_otel_flask_instrumentation(wrapped, instance, args, kwargs):  # type: ignore
             try:
-                from opentelemetry.instrumentation.flask import FlaskInstrumentor
-
                 return_value = wrapped(*args, **kwargs)
-                FlaskInstrumentor().instrument_app(instance)
+                instrumentor.instrument_app(instance)
                 return return_value
             except Exception as e:
                 logger.exception("failed instrumenting Flask", exc_info=e)
-
-
-instrumentor: AbstractInstrumentor = FlaskInstrumentorWrapper()

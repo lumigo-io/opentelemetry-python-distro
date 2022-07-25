@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class GrpcInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class GrpcInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("grpc")
 
-    def check_if_applicable(self) -> None:
-        import grpc  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.grpc import (
+            GrpcInstrumentorClient as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
-
-        GrpcInstrumentorClient().instrument()
-
-
-instrumentor: AbstractInstrumentor = GrpcInstrumentorWrapper()
+        return UpstreamInstrumentor()

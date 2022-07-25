@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class PikaInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class PikaInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("pika")
 
-    def check_if_applicable(self) -> None:
-        import pika  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.pika import (
+            PikaInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.pika import PikaInstrumentor
-
-        PikaInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = PikaInstrumentorWrapper()
+        return UpstreamInstrumentor()

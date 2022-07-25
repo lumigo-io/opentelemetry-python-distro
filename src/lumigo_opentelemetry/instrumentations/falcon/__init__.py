@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class FalconInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class FalconInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("falcon")
 
-    def check_if_applicable(self) -> None:
-        import falcon  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.falcon import (
+            FalconInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.falcon import FalconInstrumentor
-
-        FalconInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = FalconInstrumentorWrapper()
+        return UpstreamInstrumentor()

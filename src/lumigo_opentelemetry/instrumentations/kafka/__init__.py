@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class KafkaInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class KafkaInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("kafka")
 
-    def check_if_applicable(self) -> None:
-        import kafka  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.kafka import (
+            KafkaInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.kafka import KafkaInstrumentor
-
-        KafkaInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = KafkaInstrumentorWrapper()
+        return UpstreamInstrumentor()

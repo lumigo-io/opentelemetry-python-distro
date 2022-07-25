@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class DjangoInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class DjangoInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("django")
 
-    def check_if_applicable(self) -> None:
-        import django  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.django import (
+            DjangoInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.django import DjangoInstrumentor
-
-        DjangoInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = DjangoInstrumentorWrapper()
+        return UpstreamInstrumentor()

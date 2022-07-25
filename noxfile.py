@@ -7,9 +7,13 @@ from typing import List, Union, Optional
 
 import nox
 import requests
+import sys
 import yaml
 
-from src.ci.tested_versions_utils import (
+# Ensure that nox can use the ci scripts
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+
+from ci.tested_versions_utils import (
     NonSemanticVersion,
     SemanticVersion,
     TestedVersions,
@@ -74,7 +78,7 @@ def dependency_versions_to_be_tested(
     # logic on major, minor and patch.
     supported_versions: List[Union[SemanticVersion, NonSemanticVersion]] = list(
         filter(
-            lambda tested_version: tested_version.supported,
+            lambda tested_version: tested_version.supported or True,
             tested_versions.versions,
         )
     )
@@ -115,6 +119,22 @@ def dependency_versions_to_be_tested(
         supported_version_to_test.version
         for supported_version_to_test in supported_versions_to_test
     ]
+
+
+def python_versions() -> Union[List[str], bool]:
+    # On Github, just run the current Python version without
+    # creating a venv.
+    # In local, try all supported python versions building venvs.
+    if os.getenv("CI", str(False)).lower() == "true":
+        return False
+
+    with open(
+        os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
+    ) as f:
+        github_workflow = yaml.load(f, Loader=yaml.FullLoader)
+        return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
+            "strategy"
+        ]["matrix"]["python-version"]
 
 
 @nox.session(python=python_versions())

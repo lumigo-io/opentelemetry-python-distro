@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class BotoInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class BotoInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("boto")
 
-    def check_if_applicable(self) -> None:
-        import boto  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.boto import (
+            BotoInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.boto import BotoInstrumentor
-
-        BotoInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = BotoInstrumentorWrapper()
+        return UpstreamInstrumentor()

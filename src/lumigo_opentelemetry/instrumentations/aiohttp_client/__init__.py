@@ -1,19 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class AioHttpInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class AioHttpInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("aiohttp_client")
 
-    def check_if_applicable(self) -> None:
-        import aiohttp  # noqa
-
-    def install_instrumentation(self) -> None:
+    def get_otel_instrumentor(self):
         from opentelemetry.instrumentation.aiohttp_client import (
-            AioHttpClientInstrumentor,
+            AioHttpClientInstrumentor as UpstreamInstrumentor,
         )
 
-        AioHttpClientInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = AioHttpInstrumentorWrapper()
+        return UpstreamInstrumentor()

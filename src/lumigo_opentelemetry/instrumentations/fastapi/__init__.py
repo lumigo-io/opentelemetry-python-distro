@@ -1,26 +1,26 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from .parsers import FastAPIParser
 
+class FastApiInstrumentor(AbstractInstrumentor):
+    def __init__(self):
+        super().__init__("fastapi")
 
-class FastApiInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
-        super().__init__("fast-api")
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.fastapi import (
+            FastAPIInstrumentor as UpstreamInstrumentor,
+        )
 
-    def check_if_applicable(self) -> None:
-        import fastapi  # noqa
+        return UpstreamInstrumentor()
 
-    def install_instrumentation(self) -> None:
+    def _do_instrument(self, instrumentor):
         import wrapt
-
         from lumigo_opentelemetry import logger
 
         @wrapt.patch_function_wrapper("fastapi", "FastAPI.__init__")
         def init_otel_middleware(wrapped, instance, args, kwargs):  # type: ignore
             try:
-                from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-
                 return_value = wrapped(*args, **kwargs)
-                FastAPIInstrumentor().instrument_app(
+                instrumentor.instrument_app(
                     instance,
                     server_request_hook=FastAPIParser.server_request_hook,
                     client_request_hook=FastAPIParser.client_request_hook,
@@ -31,6 +31,3 @@ class FastApiInstrumentorWrapper(AbstractInstrumentor):
 
             except Exception as e:
                 logger.exception("failed instrumenting FastAPI", exc_info=e)
-
-
-instrumentor: AbstractInstrumentor = FastApiInstrumentorWrapper()

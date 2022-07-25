@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class MySqlInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class MySqlInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("mysql")
 
-    def check_if_applicable(self) -> None:
-        import mysql.connector  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.mysql import (
+            MySQLInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.mysql import MySQLInstrumentor
-
-        MySQLInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = MySqlInstrumentorWrapper()
+        return UpstreamInstrumentor()

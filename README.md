@@ -86,6 +86,8 @@ The Lumigo OpenTelemetry Distro for Python is made of several upstream OpenTelem
 
 * [General configurations](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#general-sdk-configuration)
 * [Batch span processor configurations](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#batch-span-processor): The Lumigo OpenTelemetry Distro for Python uses a batch processor for sending data to Lumigo.
+* The `OTEL_PYTHON_DISABLED_INSTRUMENTATIONS` accepts comma-separated instrumentation identifiers, and prevents them from being activated.
+  The list of the supported instrumentations is provided in the [Supported packages](#supported-packages) section.
 
 ### Lumigo-specific configurations
 
@@ -95,6 +97,7 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 * `LUMIGO_DEBUG=TRUE`: Enables debug logging
 * `LUMIGO_DEBUG_SPANDUMP`: path to a local file where to write a local copy of the spans that will be sent to Lumigo; this option handy for local testing but **should not be used in production** unless you are instructed to do so by Lumigo support.
 * `LUMIGO_SECRET_MASKING_REGEX=["regex1", "regex2"]`: Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`.
+* `LUMIGO_SKIP_COMPATIBILITY_CHECKS=FALSE`: The Lumigo OpenTelemetry Distro for Python has strong compatibility checks built-in, see the [Compatibility checks](#compatibility-checks) section; this setting suppresses those checks. It is not advised to be used in production, as trying to instrument untested (or tested and found incompatible) versions of packages may endanger the application.
 * `LUMIGO_SWITCH_OFF=TRUE`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected. 
 
 ## Supported runtimes
@@ -112,6 +115,29 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.12.3 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
 | | | 1.0.0~1.0.2 |
+
+### Compatibility checks
+
+Distributed-tracing instrumentation is very often built using wrappers around APIs or internals of the instrumented packages.
+APIs may change across major and minor versions, and internals may change with literally any new version (albeit, in reality, this tends to happen seldomly in mature libraries).
+
+To ensure that the Lumigo OpenTelemetry Distro for Python is safe, we perform extensive compatibility checks for all known versions of packages we instrument.
+The outcome is documented in the [Supported packages](#supported-packages) section, and the same data that we use to populate the latter, is also used at runtime by the Lumigo OpenTelemetry Distro for Python to ensure that it will not try to instrument versions that are untested (which may happen if you pin your `lumigo_opentelemetry` package and update other dependencies) or proven to be incompatible.
+
+When the Lumigo OpenTelemetry Distro for Python detects an incompatible or untested version of a package in your application, it emits a log like:
+
+```
+#LUMIGO# - 2022-07-26 13:46:06,468 - WARNING - Incompatible version '1.17.22' of the 'boto3' package found for the 'boto' instrumentation: the 'boto3' package is not be instrumented; to suppress this log, set the 'OTEL_PYTHON_DISABLED_INSTRUMENTATIONS=boto' environment variable; to supress this compatibility check, set the 'LUMIGO_SKIP_COMPATIBILITY_CHECKS=boto' environment variable
+```
+
+The log message provides guidance on what you can do:
+
+* Either you disable the unsafe instrumentation via the `OTEL_PYTHON_DISABLED_INSTRUMENTATIONS` environment variable, which accepts a comma-separate list of instrumentation identifiers, or
+* You suppress the compatibility check for the instrumentation via the `LUMIGO_SKIP_COMPATIBILITY_CHECKS` environment variable, which accepts a comma-separate list of instrumentation identifiers
+
+**Note:** it is truly unadvisable to suppress compatibility checks via the `LUMIGO_SKIP_COMPATIBILITY_CHECKS` in production usage without extensive testing for specific dependency versions or direct guidance from Lumigo's support.
+
+Moreover, we release updates for the `lumigo_opentelemetry` package regularly (we check for new dependency versions nightly!): please consider rather updating the `lumigo_opentelemetry` package instead of suppressing compatibility checks.
 
 ## Baseline setup
 

@@ -1,19 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class ElasticsearchInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class ElasticsearchInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("elasticsearch")
 
-    def check_if_applicable(self) -> None:
-        import elasticsearch  # noqa
-
-    def install_instrumentation(self) -> None:
+    def get_otel_instrumentor(self):
         from opentelemetry.instrumentation.elasticsearch import (
-            ElasticsearchInstrumentor,
+            ElasticsearchInstrumentor as UpstreamInstrumentor,
         )
 
-        ElasticsearchInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = ElasticsearchInstrumentorWrapper()
+        return UpstreamInstrumentor()

@@ -1,17 +1,12 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
-
-class HttpxInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self) -> None:
+class HttpxInstrumentor(AbstractInstrumentor):
+    def __init__(self):
         super().__init__("httpx")
 
-    def check_if_applicable(self) -> None:
-        import httpx  # noqa
+    def get_otel_instrumentor(self):
+        from opentelemetry.instrumentation.httpx import (
+            HTTPXClientInstrumentor as UpstreamInstrumentor,
+        )
 
-    def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-
-        HTTPXClientInstrumentor().instrument()
-
-
-instrumentor: AbstractInstrumentor = HttpxInstrumentorWrapper()
+        return UpstreamInstrumentor()
