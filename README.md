@@ -105,9 +105,47 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 
 ## Baseline setup
 
-The Lumigo OpenTelemetry Distro will automatically create the following OpenTelemetry constructs provided to a `TraceProvider`:
+The Lumigo OpenTelemetry Distro will automatically create the following OpenTelemetry constructs provided to a `TraceProvider`.
 
-* A `Resource` built from the default OpenTelemetry resource with the `sdk...` attributes
+### Resource attributes
+
+#### SDK resource attributes
+
+* The attributes from the default resource:
+  * `telemetry.sdk.language`: `python`
+  * `telemetry.sdk.name`: `opentelemetry`
+  * `telemetry.sdk.version`: depends on the version of the `opentelemetry-sdk` included in the [dependencies](./setup.py)
+
+* The `lumigo.distro.version` containing the version of the Lumigo OpenTelemetry Distro for Python as specified in the [VERSION file](./src/lumigo_opentelemetry/VERSION)
+
+#### Process resource attributes
+
+* The following `process.runtime.*` attributes as specified in the [Process Semantic Conventions](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/process/#process-runtimes):
+  * `process.runtime.description`
+  * `process.runtime.name`
+  * `process.runtime.version`
+
+* A non-standard `process.environ` resource attribute, containing a stringified representation of the process environment, with environment variables scrubbed based on the [`LUMIGO_SECRET_MASKING_REGEX`](#lumigo-specific-configurations) configuration.
+
+#### Amazon ECS resource attributes
+
+If the instrumented Python application is running on the Amazon Elastic Container Service (ECS):
+  * `cloud.provider` attribute with value `aws`
+  * `cloud.platform` with value `aws_ecs`
+  * `container.name` with the hostname of the ECS Task container
+  * `container.id` with the ID of the Docker container (based on the cgroup id)
+
+If the ECS task uses the ECS agent v1.4.0, and has therefore access to the [Task metadata endpoint version 4](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v4.html), the following experimental attributes as specified in the [AWS ECS Resource Attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/42081e023b3827d824c45031e3ccd19318ff3411/specification/resource/semantic_conventions/cloud_provider/aws/ecs.md) specification:
+
+  * `aws.ecs.container.arn`
+  * `aws.ecs.cluster.arn`
+  * `aws.ecs.launchtype`
+  * `aws.ecs.task.arn`
+  * `aws.ecs.task.family`
+  * `aws.ecs.task.revision`
+
+### Span exporters
+
 * If the `LUMIGO_TRACER_TOKEN` environment variable is set: a [BatchSpanProcessor](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L126), which uses an [`OTLPSpanExporter`](https://github.com/open-telemetry/opentelemetry-python/blob/50093f220f945ae38e769ab539c78c975e582bef/exporter/opentelemetry-exporter-otlp-proto-http/src/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py#L55) to push tracing data to Lumigo
 * If the `LUMIGO_DEBUG_SPANDUMP` environment variable is set: a [`SimpleSpanProcessor`](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L79), which uses an [`ConsoleSpanExporter`](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L415) to save to file the spans collected. Do not use this in production!
 

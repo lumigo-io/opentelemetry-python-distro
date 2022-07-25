@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
 
@@ -25,6 +26,18 @@ def _setup_logger(logger_name="lumigo-opentelemetry"):
 
 
 logger = _setup_logger()
+
+
+def _get_lumigo_opentelemetry_version() -> str:
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "VERSION")) as version_file:
+            return version_file.read().strip()
+    except Exception as err:
+        logger.exception("failed getting lumigo_opentelemetry version", exc_info=err)
+        return "unknown"
+
+
+__version__ = _get_lumigo_opentelemetry_version()
 
 
 def auto_load(_):
@@ -60,72 +73,23 @@ def init():
         activation_mode,
     )
 
-    from platform import python_version
-    from typing import Dict
-
-    import requests
-
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-    from lumigo_opentelemetry.libs.json_utils import dump
 
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
     )
-
     lumigo_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
-
-    metadata_cache: Dict[str, str] = {}
-
-    def safe_get_version() -> str:
-        try:
-            return python_version()
-        except Exception as e:
-            logger.exception("failed getting python version", exc_info=e)
-            return ""
-
-    def safe_get_metadata() -> str:
-        try:
-            metadata_uri = os.environ.get("ECS_CONTAINER_METADATA_URI")
-            if not metadata_uri:
-                return ""
-            if metadata_cache.get(metadata_uri):
-                return metadata_cache[metadata_uri]
-            metadata_cache[metadata_uri] = requests.get(metadata_uri).text
-            return metadata_cache[metadata_uri]
-        except Exception as e:
-            logger.exception("failed to fetch ecs metadata", exc_info=e)
-            return ""
-
-    def safe_get_envs() -> str:
-        try:
-            return dump(dict(os.environ))
-        except Exception as e:
-            logger.exception("failed getting envs", exc_info=e)
-            return ""
-
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
 
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
+    from lumigo_opentelemetry.resources.detectors import get_resource
 
-    # TODO Clean up needed
-    attributes = {
-        # TODO Use a (built-in?) Resource Detector instead
-        "runtime": f"python{safe_get_version()}",
-        # TODO Use a Resource Detector instead
-        "envs": safe_get_envs(),
-        # TODO Use a detector based on https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/cloud.md#cloud
-        "metadata": safe_get_metadata(),
-        "framework": framework,
-    }
-
-    tracer_resource = Resource.create(attributes=attributes)
+    tracer_resource = get_resource(attributes={"framework": framework})
     tracer_provider = TracerProvider(resource=tracer_resource)
 
     if lumigo_token:
