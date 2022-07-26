@@ -3,7 +3,7 @@ from os import getenv, listdir, path
 from importlib import resources
 from pkg_resources import get_distribution, resource_stream, DistInfoDistribution
 from re import compile, search
-from typing import List
+from typing import List, Optional
 from wrapt import patch_function_wrapper
 
 from lumigo_opentelemetry import logger
@@ -161,7 +161,7 @@ class CannotInstantiateOpenTelemetryInstrumentor(Exception):
 
 class MissingDependencyException(Exception):
 
-    package_name: str = None
+    package_name: Optional[str] = None
 
     def __init__(self, package_name, *args):
         super().__init__(f"Package {package_name} not found", *args)
@@ -170,9 +170,9 @@ class MissingDependencyException(Exception):
 
 class UnsupportedDependencyVersionException(Exception):
 
-    package_name: str = None
-    version_found: str = None
-    supported_versions: List[str] = None
+    package_name: Optional[str] = None
+    version_found: Optional[str] = None
+    supported_versions: Optional[List[str]] = None
 
     def __init__(self, package_name, version_found, supported_versions, *args):
         super().__init__(
