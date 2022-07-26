@@ -3,7 +3,7 @@ import os
 import tempfile
 from xml.etree import ElementTree
 import time
-from typing import List, Union, Optional
+from typing import cast, List, Optional, Union
 
 import nox
 import requests
@@ -85,9 +85,9 @@ def dependency_versions_to_be_tested(
 
     if len(supported_versions) == 1:
         # Only one version? We surely want to test it!
-        return supported_versions
+        return [supported_versions[0].version]
 
-    supported_versions_to_test = []
+    supported_versions_to_test: List[Union[SemanticVersion, NonSemanticVersion]] = []
     for i in range(len(supported_versions))[1:]:
         # Iterate from the second element so that we can look back and
         # detect a change in minor and major
@@ -97,11 +97,11 @@ def dependency_versions_to_be_tested(
         if isinstance(previous_version, NonSemanticVersion):
             # There is no concept of 'minor' and 'patch' in non-semantic version,
             # so we gotta test 'em all
-            supported_versions_to_test.append(previous_version)
+            supported_versions_to_test.append(cast(NonSemanticVersion, previous_version))
         elif isinstance(current_version, NonSemanticVersion):
             # The 'next' version is non-semantic, so we are guaranteed
             # that the last version is the last in its series
-            supported_versions_to_test.append(previous_version)
+            supported_versions_to_test.append(cast(NonSemanticVersion, previous_version))
         else:
             # Both previous and current are semantic versions
             if (
