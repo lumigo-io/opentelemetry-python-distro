@@ -52,4 +52,4 @@ jobs:
     steps:
       - lumigo-orb/checkout_code
       - lumigo-orb/checkout_utils
-      - run: ./scripts/bd_to_prod.sh
+      - run: . venv/bin/activate && pip install -r requirements.txt && ./scripts/bd_to_prod.sh
