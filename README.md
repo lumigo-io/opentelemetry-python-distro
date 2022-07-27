@@ -12,6 +12,12 @@ The Lumigo OpenTelemetry Distribution for Python is made of several upstream Ope
 
 ## Setup
 
+Adding the Lumigo OpenTelemetry Distro for Python to your application is a three-step process:
+
+1. [Add the Lumigo OpenTelemetry Distro for Python as dependency](#add-lumigo_opentelemetry-as-dependency)
+2. [Provide configurations through environment variables](#environment-based-configuration)
+3. [Activate the tracer](#tracer-activation), which can also be achieved through environment variables
+
 ### Add lumigo_opentelemetry as dependency
 
 The [`lumigo_opentelemetry` package](https://pypi.org/project/lumigo_opentelemetry/) needs to be a dependency of your application.
@@ -31,17 +37,21 @@ pip install lumigo_opentelemetry
 
 Configure the `LUMIGO_TRACER_TOKEN` environment variable with the token value generated for you by the Lumigo platform, under `Settings --> Tracing --> Manual tracing`:
 
-```sh
-# Replace `<token>` below with the token generated for you by the Lumigo platform
-export LUMIGO_TRACER_TOKEN=<token>
+```console
+LUMIGO_TRACER_TOKEN=<token>
 ```
+
+Replace `<token>` below with the token generated for you by the Lumigo platform.
 
 It is also strongly suggested that you set the `OTEL_SERVICE_NAME` environment variable with, as value, the service name you have chosen for your application:
 
-```sh
-# Replace `<service name> with the desired name of the service`
-export OTEL_SERVICE_NAME=<service name>
+```console
+OTEL_SERVICE_NAME=<service name>
 ```
+
+Replace `<service name> with the desired name of the service`.
+
+**Note:** While you are providing environment variables for configuration, consider also providing the one needed for [no-code tracer activation](#no-code-activation) :-)
 
 ### Tracer activation
 
@@ -54,8 +64,8 @@ The [no-code activation](#no-code-activation) approach is the preferred one.
 
 Set the following environment variable:
 
-```sh
-export AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
+```console
+AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 ```
 
 #### Manual activation
