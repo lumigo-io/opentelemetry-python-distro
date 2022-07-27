@@ -105,7 +105,7 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 
 | Instrumentation | Package | Supported Versions |
 | --- | --- | --- |
-| boto | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.24.31 |
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.24.35 |
 | fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.79.0 |
 | | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.18.2 |
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.1.3 |
