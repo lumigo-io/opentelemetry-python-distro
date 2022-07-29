@@ -75,7 +75,10 @@ def init():
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace import SpanLimits, TracerProvider
+    from opentelemetry.sdk.environment_variables import (
+        OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    )
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     DEFAULT_LUMIGO_ENDPOINT = (
@@ -90,7 +93,20 @@ def init():
     from lumigo_opentelemetry.resources.detectors import get_resource
 
     tracer_resource = get_resource(attributes={"framework": framework})
-    tracer_provider = TracerProvider(resource=tracer_resource)
+
+    span_limits = SpanLimits(
+        max_span_attribute_length=int(
+            os.environ.get(
+                OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+                "2048",
+            )
+        )
+    )
+
+    tracer_provider = TracerProvider(
+        resource=tracer_resource,
+        span_limits=span_limits,
+    )
 
     if lumigo_token:
         tracer_provider.add_span_processor(
