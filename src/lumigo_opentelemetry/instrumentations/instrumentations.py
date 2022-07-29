@@ -39,7 +39,9 @@ disabled_instrumentations = [
     ).split(",")
 ]
 
-logger.debug(f"Disabled instrumentations: {', '.join(disabled_instrumentations) or 'none'}")
+logger.debug(
+    f"Disabled instrumentations: {', '.join(disabled_instrumentations) or 'none'}"
+)
 
 instrumentors_to_attempt = [
     instrumentor

@@ -16,16 +16,18 @@ SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME = "LUMIGO_SKIP_COMPATIBILITY_CHECKS"
 
 COMPATIBILITY_CHECKS_TO_SKIP = [
     instrumentation_id.strip()
-    for instrumentation_id in getenv(
-        SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME, ""
-    ).split(",")
+    for instrumentation_id in getenv(SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME, "").split(
+        ","
+    )
 ]
 
 
-def _get_tested_version_files(instrumentation_id):
+def _get_tested_version_filenames(instrumentation_id):
     try:
         from importlib.resources import files
-        tested_versions_resource_dir = (files("lumigo_opentelemetry")
+
+        tested_versions_resource_dir = (
+            files("lumigo_opentelemetry")
             .joinpath("instrumentations")
             .joinpath(instrumentation_id)
             .joinpath("tested_versions")
@@ -33,17 +35,20 @@ def _get_tested_version_files(instrumentation_id):
 
         if tested_versions_resource_dir.is_dir():
             return [
-                path.basename(file)
-                for file in tested_versions_resource_dir.iterdir()
+                path.basename(file) for file in tested_versions_resource_dir.iterdir()
             ]
     except ImportError:
         # The importlib.resources.files API was introduced with Python 3.9
         # and importlib 1.4
         from pkg_resources import resource_isdir, resource_listdir
-        if resource_isdir("lumigo_opentelemetry", f"instrumentations/{instrumentation_id}/tested_versions"):
+
+        if resource_isdir(
+            "lumigo_opentelemetry",
+            f"instrumentations/{instrumentation_id}/tested_versions",
+        ):
             return resource_listdir(
                 "lumigo_opentelemetry",
-                f"instrumentations/{instrumentation_id}/tested_versions"
+                f"instrumentations/{instrumentation_id}/tested_versions",
             )
 
 
@@ -61,10 +66,10 @@ def _assert_compatibility(instrumentation_id, package_name):
         supported_versions = [
             search(
                 _SPLIT_VERSION_FROM_COMMENT_PATTERN,
-                version_line.decode('utf-8').strip(),
+                version_line.decode("utf-8").strip(),
             ).group()
             for version_line in f.readlines()
-            if not version_line.decode('utf-8').startswith("!")
+            if not version_line.decode("utf-8").startswith("!")
         ]
 
         if distribution.version not in supported_versions:
@@ -114,7 +119,9 @@ class AbstractInstrumentor(ABC):
         # We have now the OpenTelemetry instrumentor. If our instrumentation has
         # specialized 'tested_versions' data, let's compare it with what is in
         # the application.
-        compatibility_already_checked = self.instrumentation_id in COMPATIBILITY_CHECKS_TO_SKIP
+        compatibility_already_checked = (
+            self.instrumentation_id in COMPATIBILITY_CHECKS_TO_SKIP
+        )
 
         if compatibility_already_checked:
             logger.debug(
@@ -123,7 +130,9 @@ class AbstractInstrumentor(ABC):
                 SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME,
             )
         else:
-            tested_versions_files = _get_tested_version_files(self.instrumentation_id)
+            tested_versions_files = _get_tested_version_filenames(
+                self.instrumentation_id
+            )
 
             if not tested_versions_files:
                 logger.debug(
