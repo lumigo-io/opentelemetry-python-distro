@@ -1,6 +1,5 @@
 from abc import abstractmethod, ABC
-from os import getenv, listdir, path
-from importlib import resources
+from os import getenv, path
 from pkg_resources import get_distribution, resource_stream, DistInfoDistribution
 from re import compile, search
 from typing import List, Optional
@@ -14,6 +13,71 @@ _SPLIT_VERSION_FROM_COMMENT_PATTERN = compile(
 )
 
 SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME = "LUMIGO_SKIP_COMPATIBILITY_CHECKS"
+
+COMPATIBILITY_CHECKS_TO_SKIP = [
+    instrumentation_id.strip()
+    for instrumentation_id in getenv(
+        SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME, ""
+    ).split(",")
+]
+
+
+def _get_tested_version_files(instrumentation_id):
+    try:
+        from importlib.resources import files
+        tested_versions_resource_dir = (files("lumigo_opentelemetry")
+            .joinpath("instrumentations")
+            .joinpath(instrumentation_id)
+            .joinpath("tested_versions")
+        )
+
+        if tested_versions_resource_dir.is_dir():
+            return [
+                path.basename(file)
+                for file in tested_versions_resource_dir.iterdir()
+            ]
+    except ImportError:
+        # The importlib.resources.files API was introduced with Python 3.9
+        # and importlib 1.4
+        from pkg_resources import resource_isdir, resource_listdir
+        if resource_isdir("lumigo_opentelemetry", f"instrumentations/{instrumentation_id}/tested_versions"):
+            return resource_listdir(
+                "lumigo_opentelemetry",
+                f"instrumentations/{instrumentation_id}/tested_versions"
+            )
+
+
+def _assert_compatibility(instrumentation_id, package_name):
+    distribution: DistInfoDistribution = None
+    try:
+        distribution = get_distribution(package_name)
+    except Exception as e:
+        raise MissingDependencyException(package_name) from e
+
+    with resource_stream(
+        __name__,
+        f"{instrumentation_id}/tested_versions/{package_name}",
+    ) as f:
+        supported_versions = [
+            search(
+                _SPLIT_VERSION_FROM_COMMENT_PATTERN,
+                version_line.decode('utf-8').strip(),
+            ).group()
+            for version_line in f.readlines()
+            if not version_line.decode('utf-8').startswith("!")
+        ]
+
+        if distribution.version not in supported_versions:
+            raise UnsupportedDependencyVersionException(
+                package_name, distribution.version, supported_versions
+            )
+
+        logger.debug(
+            "Package %s v %s supported for the %s instrumentation",
+            package_name,
+            distribution.version,
+            instrumentation_id,
+        )
 
 
 class AbstractInstrumentor(ABC):
@@ -50,73 +114,29 @@ class AbstractInstrumentor(ABC):
         # We have now the OpenTelemetry instrumentor. If our instrumentation has
         # specialized 'tested_versions' data, let's compare it with what is in
         # the application.
-        compatibility_checks_to_skip = [
-            instrumentation_id.strip()
-            for instrumentation_id in getenv(
-                SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME, ""
-            ).split(",")
-        ]
+        compatibility_already_checked = self.instrumentation_id in COMPATIBILITY_CHECKS_TO_SKIP
 
-        tested_versions_resource_dir = path.join(
-            resources.files("lumigo_opentelemetry"),
-            "instrumentations",
-            self.instrumentation_id,
-            "tested_versions",
-        )
-
-        compatibility_already_checked = False
-        if self.instrumentation_id in compatibility_checks_to_skip:
+        if compatibility_already_checked:
             logger.debug(
                 "Skipping compatibility check for the '%s' instrumentation: it is listed in the value of the '%s' environment variable",
                 self.instrumentation_id,
                 SKIP_COMPATIBILITY_CHECKS_ENV_VAR_NAME,
             )
-            # Skip also built-in checks of the upstream OpenTelemetry instrumentor
-            compatibility_already_checked = True
-        elif not path.isdir(tested_versions_resource_dir):
-            logger.debug(
-                "No tested_versions data found for the '%s' instrumentation at",
-                self.instrumentation_id,
-            )
-            # No tested_versions found, will rely on the built-in OpenTelemetry instrumentor checks
         else:
-            # Check the actual compatibility
-            for tested_versions_file in listdir(tested_versions_resource_dir):
-                package_name = str(tested_versions_file)
+            tested_versions_files = _get_tested_version_files(self.instrumentation_id)
 
-                distribution: DistInfoDistribution = None
-                try:
-                    distribution = get_distribution(package_name)
-                except Exception as e:
-                    raise MissingDependencyException(package_name) from e
+            if not tested_versions_files:
+                logger.debug(
+                    "No tested_versions data found for the '%s' instrumentation",
+                    self.instrumentation_id,
+                )
+            else:
+                # Check the actual compatibility
+                for tested_versions_file in tested_versions_files:
+                    _assert_compatibility(self.instrumentation_id, tested_versions_file)
 
-                with resource_stream(
-                    __name__,
-                    f"{self.instrumentation_id}/tested_versions/{package_name}",
-                ) as f:
-                    supported_versions = [
-                        search(
-                            _SPLIT_VERSION_FROM_COMMENT_PATTERN,
-                            version_line.decode('utf-8').strip(),
-                        ).group()
-                        for version_line in f.readlines()
-                        if not version_line.decode('utf-8').startswith("!")
-                    ]
-
-                    if distribution.version not in supported_versions:
-                        raise UnsupportedDependencyVersionException(
-                            package_name, distribution.version, supported_versions
-                        )
-                    else:
-                        logger.debug(
-                            "Package %s v %s supported for the %s instrumentation",
-                            package_name,
-                            distribution.version,
-                            self.instrumentation_id,
-                        )
-
-            # Mark that we will suppress the upstream compatibility check
-            compatibility_already_checked = True
+                # Mark that we will suppress the upstream compatibility check
+                compatibility_already_checked = True
 
         # Implementations of BaseInstrumentor have the very bad
         # habit of hard-requiring with 'import' clauses the
