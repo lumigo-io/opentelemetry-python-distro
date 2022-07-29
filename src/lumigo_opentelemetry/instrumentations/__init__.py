@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from os import getenv, path
-from pkg_resources import get_distribution, resource_stream, DistInfoDistribution
+from pkg_resources import get_distribution, resource_stream, Distribution
 from re import compile, search
 from typing import List, Optional
 from wrapt import patch_function_wrapper
@@ -53,7 +53,7 @@ def _get_tested_version_filenames(instrumentation_id):
 
 
 def _assert_compatibility(instrumentation_id, package_name):
-    distribution: DistInfoDistribution = None
+    distribution: Distribution = None
     try:
         distribution = get_distribution(package_name)
     except Exception as e:
