@@ -78,7 +78,7 @@ def dependency_versions_to_be_tested(
     # logic on major, minor and patch.
     supported_versions: List[Union[SemanticVersion, NonSemanticVersion]] = list(
         filter(
-            lambda tested_version: tested_version.supported or True,
+            lambda tested_version: tested_version.supported,
             tested_versions.versions,
         )
     )
@@ -135,6 +135,66 @@ def python_versions() -> Union[List[str], bool]:
         return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
             "strategy"
         ]["matrix"]["python-version"]
+
+
+# @nox.session(python=python_versions())
+# def integration_tests_boto3_broken(session):
+#     boto3_version = "1.17.22"
+#     with TestedVersions.save_tests_result("boto3", "boto3", boto3_version):
+#         install_package("boto3", boto3_version, session)
+
+#         install(session, ".")
+
+#         abs_path = os.path.abspath("src/test/integration/boto3/")
+#         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+#             full_path = f"{temp_file}.txt"
+
+#             with session.chdir("src/test/integration/boto3"):
+#                 install(session, "-r", "requirements_others.txt")
+
+#                 try:
+#                     session.run(
+#                         "sh",
+#                         "./scripts/start_uvicorn",
+#                         env={
+#                             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+#                             "LUMIGO_DEBUG_SPANDUMP": full_path,
+#                             "OTEL_SERVICE_NAME": "app",
+#                             "OTEL_RESOURCE_ATTRIBUTES": "K0=V0,K1=V1",  # for testing OTELResourceDetector
+#                         },
+#                         external=True,
+#                     )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+#                     # TODO Make this deterministic
+#                     # Wait 1s to give time for app to start
+#                     time.sleep(8)
+
+#                     session.run(
+#                         "pytest",
+#                         "--tb",
+#                         "native",
+#                         "--log-cli-level=INFO",
+#                         "--color=yes",
+#                         "-v",
+#                         "./tests/test_boto3.py",
+#                         env={
+#                             "LUMIGO_DEBUG_SPANDUMP": full_path,
+#                         },
+#                     )
+#                 finally:
+#                     import psutil
+
+#                     # Kill all uvicorn processes
+#                     for proc in psutil.process_iter():
+#                         # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+#                         if proc.name() == "uvicorn":
+#                             proc.kill()
+#                         elif proc.name().lower() == "python":
+#                             cmdline = proc.cmdline()
+#                             if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+#                                 proc.kill()
+
+#                     session.run("rm", "-f", full_path, external=True)
 
 
 @nox.session(python=python_versions())
