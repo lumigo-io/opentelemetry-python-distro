@@ -102,13 +102,21 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
 
 def get_resource(attributes: dict) -> "Resource":
     return get_aggregated_resources(
-        detectors=[
-            OTELResourceDetector(),
-            EnvVarsDetector(),
-            ProcessResourceDetector(),
-            LumigoDistroDetector(),
-            AwsEcsResourceDetector(),
-            LumigoAwsEcsResourceDetector(),
-        ],
+        detectors=_get_detector_list(),
         initial_resource=Resource.create(attributes=attributes),
     )
+
+
+def _get_detector_list():
+    detectors = [
+        OTELResourceDetector(),
+        EnvVarsDetector(),
+        ProcessResourceDetector(),
+        LumigoDistroDetector(),
+        LumigoAwsEcsResourceDetector(),
+    ]
+    if os.environ.get("ECS_CONTAINER_METADATA_URI_V4") or os.environ.get(
+        "ECS_CONTAINER_METADATA_URI"
+    ):
+        detectors.append(AwsEcsResourceDetector())
+    return detectors
