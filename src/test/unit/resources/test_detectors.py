@@ -13,6 +13,8 @@ from lumigo_opentelemetry.resources.detectors import (
     get_resource,
 )
 
+from lumigo_opentelemetry import _setup_logger
+
 
 def test_process_detector():
     initial_resource = resources.Resource({"foo": "bar"})
@@ -116,6 +118,7 @@ def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
 
 
 def test_get_resource_aws_ecs_resource_detector_not_ecs_container(caplog):
+    _setup_logger()
     resource = get_resource({})
 
     assert len(caplog.records) == 0

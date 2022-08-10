@@ -23,7 +23,7 @@ def _setup_logger(logger_name="lumigo-opentelemetry"):
         _logger.setLevel(logging.INFO)
     _logger.addHandler(handler)
 
-    # Suppress AwsEcsResourceDetector noncritical logs
+    # Suppress spurious warnings when the application is not running on ECS
     logging.getLogger("opentelemetry.sdk.extension.aws.resource.ecs").setLevel(
         logging.CRITICAL
     )
