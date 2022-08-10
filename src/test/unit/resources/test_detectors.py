@@ -113,3 +113,16 @@ def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
             caplog.records,
         )
     )
+
+
+def test_get_resource_aws_ecs_resource_detector_not_ecs_container(
+    caplog
+):
+    resource = get_resource({})
+
+    assert len(caplog.records) == 0
+
+    assert ResourceAttributes.CLOUD_PLATFORM not in resource.attributes
+    assert ResourceAttributes.CLOUD_PLATFORM not in resource.attributes
+    assert ResourceAttributes.CONTAINER_NAME not in resource.attributes
+    assert ResourceAttributes.CONTAINER_ID not in resource.attributes

@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import urllib.request
+import logging
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.resources import (
@@ -108,15 +109,12 @@ def get_resource(attributes: dict) -> "Resource":
 
 
 def _get_detector_list():
-    detectors = [
+    logging.getLogger("opentelemetry.sdk.extension.aws.resource.ecs").setLevel(logging.CRITICAL)
+    return [
         OTELResourceDetector(),
         EnvVarsDetector(),
         ProcessResourceDetector(),
         LumigoDistroDetector(),
         LumigoAwsEcsResourceDetector(),
+        AwsEcsResourceDetector()
     ]
-    if os.environ.get("ECS_CONTAINER_METADATA_URI_V4") or os.environ.get(
-        "ECS_CONTAINER_METADATA_URI"
-    ):
-        detectors.append(AwsEcsResourceDetector())
-    return detectors
