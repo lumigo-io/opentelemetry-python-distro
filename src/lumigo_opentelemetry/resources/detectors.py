@@ -2,7 +2,6 @@ import json
 import os
 import sys
 import urllib.request
-import logging
 from typing import List
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
@@ -110,9 +109,6 @@ def get_resource(attributes: dict) -> "Resource":
 
 
 def _get_detector_list() -> List[ResourceDetector]:
-    logging.getLogger("opentelemetry.sdk.extension.aws.resource.ecs").setLevel(
-        logging.CRITICAL
-    )
     return [
         OTELResourceDetector(),
         EnvVarsDetector(),
