@@ -115,9 +115,7 @@ def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
     )
 
 
-def test_get_resource_aws_ecs_resource_detector_not_ecs_container(
-    caplog
-):
+def test_get_resource_aws_ecs_resource_detector_not_ecs_container(caplog):
     resource = get_resource({})
 
     assert len(caplog.records) == 0

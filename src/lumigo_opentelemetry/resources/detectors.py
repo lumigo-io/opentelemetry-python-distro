@@ -109,12 +109,14 @@ def get_resource(attributes: dict) -> "Resource":
 
 
 def _get_detector_list():
-    logging.getLogger("opentelemetry.sdk.extension.aws.resource.ecs").setLevel(logging.CRITICAL)
+    logging.getLogger("opentelemetry.sdk.extension.aws.resource.ecs").setLevel(
+        logging.CRITICAL
+    )
     return [
         OTELResourceDetector(),
         EnvVarsDetector(),
         ProcessResourceDetector(),
         LumigoDistroDetector(),
         LumigoAwsEcsResourceDetector(),
-        AwsEcsResourceDetector()
+        AwsEcsResourceDetector(),
     ]
