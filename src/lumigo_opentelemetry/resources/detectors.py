@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import urllib.request
+from typing import List
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.resources import (
@@ -102,13 +103,17 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
 
 def get_resource(attributes: dict) -> "Resource":
     return get_aggregated_resources(
-        detectors=[
-            OTELResourceDetector(),
-            EnvVarsDetector(),
-            ProcessResourceDetector(),
-            LumigoDistroDetector(),
-            AwsEcsResourceDetector(),
-            LumigoAwsEcsResourceDetector(),
-        ],
+        detectors=_get_detector_list(),
         initial_resource=Resource.create(attributes=attributes),
     )
+
+
+def _get_detector_list() -> List[ResourceDetector]:
+    return [
+        OTELResourceDetector(),
+        EnvVarsDetector(),
+        ProcessResourceDetector(),
+        LumigoDistroDetector(),
+        LumigoAwsEcsResourceDetector(),
+        AwsEcsResourceDetector(),
+    ]
