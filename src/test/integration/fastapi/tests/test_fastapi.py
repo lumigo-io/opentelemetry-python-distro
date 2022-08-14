@@ -119,23 +119,25 @@ class TestFastApiSpans(unittest.TestCase):
             root_attributes["http.url"],
             "http://127.0.0.1:8000/invoke-requests-large-response",
         )
-        print("root_attributes")
-        print(root_attributes)
-        self.assertEqual(len(root_attributes["http.response.body"]), 2048)
+        # self.assertEqual(len(root_attributes["http.response.body"]), 2048)
         self.assertEqual(len(root_attributes["http.method"]), 3)
 
         # assert child spans
         children = spans_container.get_non_internal_children()
         self.assertEqual(1, len(children))
-        self.assertEqual(children[0]["attributes"]["http.method"], "GET")
+        children_attributes = children[0]["attributes"]
+        print("children_attributes")
+        print(children_attributes)
+        self.assertEqual(children_attributes["http.method"], "GET")
         self.assertEqual(
-            children[0]["attributes"]["http.url"],
+            children_attributes["http.url"],
             "https://api.publicapis.org/entries",
         )
-        self.assertEqual(children[0]["attributes"]["http.status_code"], 200)
-        self.assertIsNotNone(children[0]["attributes"]["http.request.headers"])
-        self.assertIsNotNone(children[0]["attributes"]["http.response.headers"])
-        self.assertIsNotNone(children[0]["attributes"]["http.response.body"])
+        self.assertEqual(len(children_attributes["http.response.body"]), 2048)
+        self.assertEqual(children_attributes["http.status_code"], 200)
+        self.assertIsNotNone(children_attributes["http.request.headers"])
+        self.assertIsNotNone(children_attributes["http.response.headers"])
+        self.assertIsNotNone(children_attributes["http.response.body"])
 
     @skip_no_attr_size_limit
     def test_large_span_attribute_size_max_size_env_var_was_set(self):
