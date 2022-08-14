@@ -97,21 +97,16 @@ def init():
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
     from lumigo_opentelemetry.resources.detectors import get_resource
+    from lumigo_opentelemetry.libs.json_utils import DEFAULT_MAX_ENTRY_SIZE
 
     tracer_resource = get_resource(attributes={"framework": framework})
 
-    span_limits = SpanLimits(
-        max_span_attribute_length=int(
-            os.environ.get(
-                OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
-                "2048",
-            )
-        )
+    span_attr_limit = int(
+        os.environ.get(OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, DEFAULT_MAX_ENTRY_SIZE)
     )
-
     tracer_provider = TracerProvider(
         resource=tracer_resource,
-        span_limits=span_limits,
+        span_limits=(SpanLimits(max_span_attribute_length=span_attr_limit)),
     )
 
     if lumigo_token:

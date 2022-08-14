@@ -14,7 +14,9 @@ Container = TypeVar("Container", dict, list)
 EXECUTION_TAGS_KEY = "lumigo_execution_tags_no_scrub"
 SKIP_SCRUBBING_KEYS = [EXECUTION_TAGS_KEY]
 DEFAULT_MAX_ENTRY_SIZE = 2048
-MAX_SIZE = int(os.environ.get("LUMIGO_MAX_ENTRY_SIZE", DEFAULT_MAX_ENTRY_SIZE))
+MAX_SIZE = int(
+    os.environ.get("OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT", DEFAULT_MAX_ENTRY_SIZE)
+)
 OMITTING_KEYS_REGEXES = [
     ".*pass.*",
     ".*key.*",

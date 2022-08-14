@@ -299,6 +299,51 @@ def integration_tests_fastapi(
 
                 session.run("rm", "-f", full_path, external=True)
 
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        "OTEL_SERVICE_NAME": "app",
+                        "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_fastapi.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
+                    },
+                )
+            finally:
+                import psutil
+
+                # Kill all uvicorn processes
+                for proc in psutil.process_iter():
+                    # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+                    if proc.name() == "uvicorn":
+                        proc.kill()
+                    elif proc.name().lower() == "python":
+                        cmdline = proc.cmdline()
+                        if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
+                            proc.kill()
+
+                session.run("rm", "-f", full_path, external=True)
+
 
 @nox.session(python=python_versions())
 @nox.parametrize(
