@@ -276,9 +276,9 @@ def integration_tests_fastapi(
                     "pytest",
                     "--tb",
                     "native",
-                    "--log-cli-level=DEBUG",
+                    "--log-cli-level=INFO",
                     "--color=yes",
-                    "-vs",
+                    "-v",
                     "./tests/test_fastapi.py",
                     env={
                         "LUMIGO_DEBUG_SPANDUMP": full_path,
@@ -320,9 +320,9 @@ def integration_tests_fastapi(
                     "pytest",
                     "--tb",
                     "native",
-                    "--log-cli-level=DEBUG",
+                    "--log-cli-level=INFO",
                     "--color=yes",
-                    "-vs",
+                    "-v",
                     "./tests/test_fastapi.py",
                     env={
                         "LUMIGO_DEBUG_SPANDUMP": full_path,
