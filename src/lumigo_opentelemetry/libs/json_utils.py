@@ -7,6 +7,11 @@ from decimal import Decimal
 from functools import lru_cache, reduce
 from typing import Any, Optional, List, TypeVar, Pattern, Dict, Tuple
 
+from opentelemetry.sdk.environment_variables import (
+    OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+)
+
 
 TRUNCATE_SUFFIX = "...[too long]"
 LUMIGO_SECRET_MASKING_REGEX = "LUMIGO_SECRET_MASKING_REGEX"
@@ -14,9 +19,8 @@ Container = TypeVar("Container", dict, list)
 EXECUTION_TAGS_KEY = "lumigo_execution_tags_no_scrub"
 SKIP_SCRUBBING_KEYS = [EXECUTION_TAGS_KEY]
 DEFAULT_MAX_ENTRY_SIZE = 2048
-MAX_SIZE = int(
-    os.environ.get("OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT", DEFAULT_MAX_ENTRY_SIZE)
-)
+
+
 OMITTING_KEYS_REGEXES = [
     ".*pass.*",
     ".*key.*",
@@ -127,7 +131,7 @@ def omit_keys(
     * if the value is dictionary, then we omit values by keys (recursively)
     """
     regexes = regexes or get_omitting_regex()
-    max_size = in_max_size or MAX_SIZE
+    max_size = in_max_size or _get_max_size()
     omitted, size = reduce(  # type: ignore
         lambda p, i: _recursive_omitting(
             prev_result=p,  # type: ignore
@@ -150,7 +154,7 @@ def dump(
     max_size: Optional[int] = None,
     enforce_jsonify: bool = False,
 ) -> str:
-    max_size = max_size or MAX_SIZE
+    max_size = max_size or _get_max_size()
     is_truncated = False
 
     if isinstance(to_dump, bytes):
@@ -213,3 +217,12 @@ def safe_convert_bytes_to_string(value: Any) -> Any:
         return value.decode("utf-8")
     except Exception:
         return value
+
+
+def _get_max_size():
+    return int(
+        os.environ.get(
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            os.environ.get(OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT, DEFAULT_MAX_ENTRY_SIZE),
+        )
+    )

@@ -84,6 +84,7 @@ def init():
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
     from opentelemetry.sdk.environment_variables import (
         OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+        OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     )
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -102,7 +103,10 @@ def init():
     tracer_resource = get_resource(attributes={"framework": framework})
 
     span_attr_limit = int(
-        os.environ.get(OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT, DEFAULT_MAX_ENTRY_SIZE)
+        os.environ.get(
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            os.environ.get(OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT, DEFAULT_MAX_ENTRY_SIZE),
+        )
     )
     tracer_provider = TracerProvider(
         resource=tracer_resource,
