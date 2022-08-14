@@ -113,13 +113,16 @@ class TestFastApiSpans(unittest.TestCase):
         # assert root
         root = spans_container.get_root()
         self.assertIsNotNone(root)
-        self.assertEqual(root["attributes"]["http.status_code"], 200)
+        root_attributes = root["attributes"]
+        self.assertEqual(root_attributes["http.status_code"], 200)
         self.assertEqual(
-            root["attributes"]["http.url"],
+            root_attributes["http.url"],
             "http://127.0.0.1:8000/invoke-requests-large-response",
         )
-        self.assertEqual(len(root["attributes"]["http.response.body"]), 2048)
-        self.assertEqual(len(root["attributes"]["http.method"]), 3)
+        print("root_attributes")
+        print(root_attributes)
+        self.assertEqual(len(root_attributes["http.response.body"]), 2048)
+        self.assertEqual(len(root_attributes["http.method"]), 3)
 
         # assert child spans
         children = spans_container.get_non_internal_children()
