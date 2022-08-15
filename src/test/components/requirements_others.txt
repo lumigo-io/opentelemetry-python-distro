@@ -1,0 +1,7 @@
+pytest
+json-stream
+requests
+psutil
+testcontainers
+sqlalchemy
+cryptography

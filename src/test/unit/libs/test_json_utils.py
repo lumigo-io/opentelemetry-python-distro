@@ -128,7 +128,7 @@ def test_lumigo_dumps_max_size_otel_attr_env_var_is_set(monkeypatch):
 
 
 def test_lumigo_dumps_default_max_size(monkeypatch):
-    assert dump({"key": "b"}) == '{"key": "****"}'
+    assert dump({"name": "test_1"}) == '{"name": "test_1"}'
 
 
 def test_lumigo_dumps_enforce_jsonify_raise_error():

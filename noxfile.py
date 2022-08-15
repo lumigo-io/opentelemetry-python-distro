@@ -182,19 +182,7 @@ def integration_tests_boto3(
                         },
                     )
                 finally:
-                    import psutil
-
-                    # Kill all uvicorn processes
-                    for proc in psutil.process_iter():
-                        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                        if proc.name() == "uvicorn":
-                            proc.kill()
-                        elif proc.name().lower() == "python":
-                            cmdline = proc.cmdline()
-                            if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
-                                proc.kill()
-
-                    session.run("rm", "-f", full_path, external=True)
+                    kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -285,19 +273,34 @@ def integration_tests_fastapi(
                     },
                 )
             finally:
-                import psutil
+                kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
-                # Kill all uvicorn processes
-                for proc in psutil.process_iter():
-                    # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                    if proc.name() == "uvicorn":
-                        proc.kill()
-                    elif proc.name().lower() == "python":
-                        cmdline = proc.cmdline()
-                        if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
-                            proc.kill()
 
-                session.run("rm", "-f", full_path, external=True)
+@nox.session(python=python_versions())
+def component_tests(session):
+    component_tests_attr_max_size(
+        session=session,
+        fastapi_version="0.78.0",  # arbitrary version
+        uvicorn_version="0.16.0",  # arbitrary version
+    )
+
+
+def component_tests_attr_max_size(
+    session,
+    fastapi_version,
+    uvicorn_version,
+):
+    install_package("uvicorn", uvicorn_version, session)
+    install_package("fastapi", fastapi_version, session)
+
+    install(session, ".")
+
+    abs_path = os.path.abspath("src/test/components/")
+    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        full_path = f"{temp_file}.txt"
+
+        with session.chdir("src/test/components"):
+            install(session, "-r", "requirements_others.txt")
 
             try:
                 session.run(
@@ -323,26 +326,14 @@ def integration_tests_fastapi(
                     "--log-cli-level=INFO",
                     "--color=yes",
                     "-v",
-                    "./tests/test_fastapi.py",
+                    "./tests/test_attr_max_size.py",
                     env={
                         "LUMIGO_DEBUG_SPANDUMP": full_path,
                         "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
                     },
                 )
             finally:
-                import psutil
-
-                # Kill all uvicorn processes
-                for proc in psutil.process_iter():
-                    # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                    if proc.name() == "uvicorn":
-                        proc.kill()
-                    elif proc.name().lower() == "python":
-                        cmdline = proc.cmdline()
-                        if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
-                            proc.kill()
-
-                session.run("rm", "-f", full_path, external=True)
+                kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -396,19 +387,7 @@ def integration_tests_flask(session, flask_version):
                         },
                     )
                 finally:
-                    import psutil
-
-                    # Kill all uvicorn processes
-                    for proc in psutil.process_iter():
-                        # The python process is names "Python" os OS X and "flask" on CircleCI
-                        if proc.name() == "flask":
-                            proc.kill()
-                        elif proc.name().lower() == "python":
-                            cmdline = proc.cmdline()
-                            if len(cmdline) > 1 and cmdline[1].endswith("/flask"):
-                                proc.kill()
-
-                    session.run("rm", "-f", full_path, external=True)
+                    kill_process_and_clean_outputs(full_path, "flask", session)
 
 
 @nox.session(python=python_versions())
@@ -465,19 +444,7 @@ def integration_tests_pymongo(
                         },
                     )
                 finally:
-                    import psutil
-
-                    # Kill all uvicorn processes
-                    for proc in psutil.process_iter():
-                        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                        if proc.name() == "uvicorn":
-                            proc.kill()
-                        elif proc.name().lower() == "python":
-                            cmdline = proc.cmdline()
-                            if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
-                                proc.kill()
-
-                    session.run("rm", "-f", full_path, external=True)
+                    kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -534,16 +501,19 @@ def integration_tests_pymysql(
                         },
                     )
                 finally:
-                    import psutil
+                    kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
-                    # Kill all uvicorn processes
-                    for proc in psutil.process_iter():
-                        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-                        if proc.name() == "uvicorn":
-                            proc.kill()
-                        elif proc.name().lower() == "python":
-                            cmdline = proc.cmdline()
-                            if len(cmdline) > 1 and cmdline[1].endswith("/uvicorn"):
-                                proc.kill()
 
-                    session.run("rm", "-f", full_path, external=True)
+def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
+    import psutil
+
+    # Kill all uvicorn processes
+    for proc in psutil.process_iter():
+        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+        if proc.name() == process_name:
+            proc.kill()
+        elif proc.name().lower() == "python":
+            cmdline = proc.cmdline()
+            if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
+                proc.kill()
+    session.run("rm", "-f", full_path, external=True)
