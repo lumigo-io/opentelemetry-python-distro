@@ -98,10 +98,9 @@ def init():
 
     tracer_resource = get_resource(attributes={"framework": framework})
 
-    span_attr_limit = get_max_size()
     tracer_provider = TracerProvider(
         resource=tracer_resource,
-        span_limits=(SpanLimits(max_span_attribute_length=span_attr_limit)),
+        span_limits=(SpanLimits(max_span_attribute_length=(get_max_size()))),
     )
 
     if lumigo_token:

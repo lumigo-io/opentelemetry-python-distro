@@ -6,6 +6,7 @@ except ImportError:
 
 from contextlib import contextmanager
 from typing import Union
+import os
 
 from lumigo_opentelemetry import logger
 
@@ -13,8 +14,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
 )
-
-import os
 
 DEFAULT_MAX_ENTRY_SIZE = 2048
 
