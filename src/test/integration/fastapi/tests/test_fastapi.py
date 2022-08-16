@@ -77,3 +77,45 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertIsNotNone(children[0]["attributes"]["http.request.headers"])
         self.assertIsNotNone(children[0]["attributes"]["http.response.headers"])
         self.assertIsNotNone(children[0]["attributes"]["http.response.body"])
+
+    def test_large_span_attribute_size_default_max_size(self):
+        response = requests.get("http://localhost:8000/invoke-requests-large-response")
+        response.raise_for_status()
+
+        body = response.json()
+
+        assert body is not None
+
+        # TODO Do something deterministic
+        time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
+
+        spans_container = SpansContainer.get_spans_from_file()
+        self.assertEqual(4, len(spans_container.spans))
+
+        # assert root
+        root = spans_container.get_root()
+        self.assertIsNotNone(root)
+        root_attributes = root["attributes"]
+        self.assertEqual(root_attributes["http.status_code"], 200)
+        self.assertEqual(
+            root_attributes["http.url"],
+            "http://127.0.0.1:8000/invoke-requests-large-response",
+        )
+        self.assertEqual(root_attributes["http.method"], "GET")
+
+        # assert child spans
+        children = spans_container.get_non_internal_children()
+        self.assertEqual(1, len(children))
+        children_attributes = children[0]["attributes"]
+        print("children_attributes")
+        print(children_attributes)
+        self.assertEqual(children_attributes["http.method"], "GET")
+        self.assertEqual(
+            children_attributes["http.url"],
+            "https://api.publicapis.org/entries",
+        )
+        self.assertEqual(len(children_attributes["http.response.body"]), 2048)
+        self.assertEqual(children_attributes["http.status_code"], 200)
+        self.assertIsNotNone(children_attributes["http.request.headers"])
+        self.assertIsNotNone(children_attributes["http.response.headers"])
+        self.assertIsNotNone(children_attributes["http.response.body"])

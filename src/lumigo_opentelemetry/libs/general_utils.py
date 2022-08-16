@@ -6,8 +6,16 @@ except ImportError:
 
 from contextlib import contextmanager
 from typing import Union
+import os
 
 from lumigo_opentelemetry import logger
+
+from opentelemetry.sdk.environment_variables import (
+    OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+)
+
+DEFAULT_MAX_ENTRY_SIZE = 2048
 
 
 @contextmanager
@@ -43,3 +51,16 @@ def safe_get_list(lst: list, index: Union[int, str], default=None):
     if not isinstance(lst, Iterable):
         return default
     return lst[index] if len(lst) > index else default
+
+
+def get_max_size() -> int:
+    """
+    This function return the max size by environment variables.
+    If this values doesn't exist, return default size.
+    """
+    return int(
+        os.environ.get(
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            os.environ.get(OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT, DEFAULT_MAX_ENTRY_SIZE),
+        )
+    )
