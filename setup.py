@@ -15,7 +15,6 @@ setup(
     install_requires=[
         "asgiref~=3.0",
         "autowrapt>=1.0",
-        "packaging>=21.3",
         "protobuf>=3.13.0, <4.0.0",
         "wrapt>=1.11.0",
         "opentelemetry-api==1.9.1",
