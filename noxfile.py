@@ -42,22 +42,6 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
     return [i.text for i in xml_tree.findall("channel/item/title") if i.text]
 
 
-def python_versions() -> Union[List[str], bool]:
-    # On Github, just run the current Python version without
-    # creating a venv.
-    # In local, try all supported python versions building venvs.
-    if os.getenv("CI", str(False)).lower() == "true":
-        return False
-
-    with open(
-        os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
-    ) as f:
-        github_workflow = yaml.load(f, Loader=yaml.FullLoader)
-        return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
-            "strategy"
-        ]["matrix"]["python-version"]
-
-
 def get_new_version_from_pypi(
     dependency_name: str, tested_versions: TestedVersions
 ) -> List[str]:
@@ -127,7 +111,7 @@ def dependency_versions_to_be_tested(
     ]
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
     "boto3_version",
     dependency_versions_to_be_tested(
@@ -185,7 +169,7 @@ def integration_tests_boto3(
                     kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
     "fastapi_version",
     dependency_versions_to_be_tested(
@@ -206,7 +190,7 @@ def integration_tests_fastapi_fastapi(
         )
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
     "uvicorn_version",
     dependency_versions_to_be_tested(
@@ -276,7 +260,7 @@ def integration_tests_fastapi(
                 kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 def component_tests(session):
     component_tests_attr_max_size(
         session=session,
@@ -336,7 +320,7 @@ def component_tests_attr_max_size(
                 kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
     "flask_version",
     dependency_versions_to_be_tested(
@@ -390,7 +374,7 @@ def integration_tests_flask(session, flask_version):
                     kill_process_and_clean_outputs(full_path, "flask", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
     "pymongo_version",
     dependency_versions_to_be_tested(
@@ -447,7 +431,7 @@ def integration_tests_pymongo(
                     kill_process_and_clean_outputs(full_path, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
     "pymysql_version",
     dependency_versions_to_be_tested(

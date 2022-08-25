@@ -1,0 +1,55 @@
+name: Run integration tests
+on:
+  workflow_call:
+    inputs:
+      only-untested-versions:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  calculate-test-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      nox-sessions: ${{ steps.list-nox-sessions.outputs.nox-sessions }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1  # We do not need the git history
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'  # Does not matter which python version we run nox --list with
+        architecture: x64
+    - name: Install depenendencies
+      run: pip3 install -r requirements.txt
+    - id: list-nox-sessions
+      name: List nox sessions
+      run: |
+        nox_sessions=$(python3 -m nox --list --nocolor 2>&1 | grep '^* ' | awk '{ print $2 }' | jq -c --raw-input --slurp 'split("\n") | map(select(. != ""))')
+        echo "::set-output name=nox-sessions::${nox_sessions}"
+
+        echo 'Nox sessions:'
+        jq . <<< "${nox_sessions}"
+      env:
+        TEST_ONLY_UNTESTED_NEW_VERSIONS: ${{ inputs.only-untested-versions }}
+
+  version-testing:
+    needs: ["calculate-test-matrix"]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nox-sessions: ${{ fromJson(needs.calculate-test-matrix.outputs.nox-sessions) }}
+        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+      fail-fast: false
+    name: 'Python ${{ matrix.python-version }} / ${{ matrix.nox-sessions }}'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - run: pip3 install -r requirements.txt
+      - run: python3 -m nox -e "${{ matrix.nox-sessions }}"
