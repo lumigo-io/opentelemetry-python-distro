@@ -10,6 +10,7 @@ defaults: &defaults
 orbs:
   lumigo-orb: lumigo/lumigo-orb@volatile
 
+
 workflows:
   test-deploy:
     jobs:
