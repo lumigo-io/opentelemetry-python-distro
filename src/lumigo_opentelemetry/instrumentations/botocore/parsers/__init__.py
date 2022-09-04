@@ -133,8 +133,10 @@ class LambdaParser(AwsParser):
     def parse_request(
         span: Span, service_name: str, operation_name: str, api_params: dict
     ) -> None:
+        resource_name = api_params.get("FunctionName")
         attributes = {
             "http.request.body": dump(api_params.get("Payload", api_params or {})),
+            "aws.resource.name": resource_name or "",
             "aws.service": service_name,
             "http.method": operation_name,
         }
