@@ -82,6 +82,7 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
 
         task_arn = metadata_task["TaskARN"]
         base_arn = task_arn[0 : task_arn.rindex(":")]  # noqa
+
         cluster: str = metadata_task["Cluster"]
         cluster_arn = (
             cluster if cluster.startswith("arn:") else f"{base_arn}:cluster/{cluster}"
