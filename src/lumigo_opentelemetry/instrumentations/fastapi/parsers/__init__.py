@@ -1,10 +1,13 @@
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import dump, safe_convert_bytes_to_string
 
 from opentelemetry.trace import Span
+
+if TYPE_CHECKING:
+    from opentelemetry.util import types as otl_types
 
 
 class FastAPIParser:
@@ -17,14 +20,14 @@ class FastAPIParser:
         return {}
 
     @staticmethod
-    def server_request_hook(span: Span, scope: dict):
+    def server_request_hook(span: Span, scope: Dict[str, Any]) -> None:
         with lumigo_safe_execute("FastAPIParser: server_request_hook"):
             headers = FastAPIParser.safe_extract_headers_bytes(
                 headers=scope.get("headers", [])
             )
             query_string = scope.get("query_string", "")
             path = scope.get("path", "")
-            attributes = {
+            attributes: Dict[str, "otl_types.AttributeValue"] = {
                 "http.request.headers": dump(headers),
                 "http.request.query_string": dump(query_string),
                 "http.request.path": dump(path),
@@ -32,12 +35,12 @@ class FastAPIParser:
             span.set_attributes(attributes)
 
     @staticmethod
-    def client_request_hook(span: Span, scope: dict):
+    def client_request_hook(span: Span, scope: Dict[Any, Any]) -> None:
         with lumigo_safe_execute("FastAPIParser: client_request_hook"):
             logger.debug(f"client_request_hook span: {span}, scope: {scope}")
 
     @staticmethod
-    def client_response_hook(span: Span, message: dict):
+    def client_response_hook(span: Span, message: Dict[str, Any]) -> None:
         with lumigo_safe_execute("FastAPIParser: client_response_hook"):
             body = safe_convert_bytes_to_string(message.get("body"))
             if body:

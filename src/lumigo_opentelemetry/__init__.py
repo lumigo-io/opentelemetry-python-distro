@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import logging
 import os
-
+from typing import Any, Callable, TypeVar, Dict, List
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
+T = TypeVar("T")
 
-def _setup_logger(logger_name="lumigo-opentelemetry"):
+
+def _setup_logger(logger_name: str = "lumigo-opentelemetry") -> logging.Logger:
     """
     This function returns Lumigo's logger. The Lumigo logger prints to stderr.
     The Lumigo logger is set to INFO by default. If the environment variable
@@ -46,7 +48,7 @@ def _get_lumigo_opentelemetry_version() -> str:
 __version__ = _get_lumigo_opentelemetry_version()
 
 
-def auto_load(_):
+def auto_load(_: Any) -> None:
     """
     Called when injection performed over `AUTOWRAPT_BOOTSTRAP`.
     """
@@ -61,7 +63,7 @@ def auto_load(_):
     # to the init() call at the end of this file.
 
 
-def init():
+def init() -> None:
     if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
         logger.info(
             "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
@@ -132,7 +134,7 @@ def init():
                     # Print one span per line for ease of parsing, as the
                     # file itself will not be valid JSON, it will be just a
                     # sequence of JSON objects, not a list
-                    formatter=lambda span: span.to_json(indent=None) + "\n",
+                    formatter=lambda span: span.to_json(indent=None) + "\n",  # type: ignore
                 )
             )
         )
@@ -142,14 +144,14 @@ def init():
     trace.set_tracer_provider(tracer_provider)
 
 
-def lumigo_wrapped(func):
+def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
     CONTEXT_NAME = "lumigo"
     PARENT_IDENTICATOR = "LumigoRoot"
 
     from opentelemetry import trace
     from lumigo_opentelemetry.libs.json_utils import dump
 
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: List[Any], **kwargs: Dict[Any, Any]) -> T:
         tracer = trace.get_tracer_provider().get_tracer(CONTEXT_NAME)
         with tracer.start_as_current_span(PARENT_IDENTICATOR) as span:
             span.set_attribute("input_args", dump(args))

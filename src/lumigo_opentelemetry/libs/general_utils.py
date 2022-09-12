@@ -5,7 +5,7 @@ except ImportError:
     from collections.abc import Iterable
 
 from contextlib import contextmanager
-from typing import Union
+from typing import Union, Generator, Optional, TypeVar, List
 import os
 
 from lumigo_opentelemetry import logger
@@ -17,9 +17,11 @@ from opentelemetry.sdk.environment_variables import (
 
 DEFAULT_MAX_ENTRY_SIZE = 2048
 
+T = TypeVar("T")
+
 
 @contextmanager
-def lumigo_safe_execute(part_name=""):
+def lumigo_safe_execute(part_name: str = "") -> Generator[None, None, None]:
     try:
         yield
     except Exception as e:
@@ -28,7 +30,9 @@ def lumigo_safe_execute(part_name=""):
         )
 
 
-def safe_split_get(string: str, sep: str, index: int, default=None) -> str:
+def safe_split_get(
+    string: str, sep: str, index: int, default: Optional[str] = None
+) -> Optional[str]:
     """
     This function splits the given string using the sep, and returns the organ in the `index` place.
     If such index doesn't exist, returns default.
@@ -38,7 +42,9 @@ def safe_split_get(string: str, sep: str, index: int, default=None) -> str:
     return safe_get_list(string.split(sep), index, default)
 
 
-def safe_get_list(lst: list, index: Union[int, str], default=None):
+def safe_get_list(
+    lst: List[T], index: Union[int, str], default: Optional[T] = None
+) -> Optional[T]:
     """
     This function return the organ in the `index` place from the given list.
     If this values doesn't exist, return default.

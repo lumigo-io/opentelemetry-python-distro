@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import urllib.request
-from typing import List
+from typing import List, Dict, Any
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.resources import (
@@ -64,9 +64,9 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
     """Implements the lookup of the `aws.ecs` resource attributes using the Metadata v4 endpoint."""
 
     @staticmethod
-    def _http_get(url: str) -> dict:
+    def _http_get(url: str) -> Dict[Any, Any]:
         with urllib.request.urlopen(url, timeout=1) as response:
-            return json.loads(response.read().decode())
+            return json.loads(response.read().decode())  # type: ignore
 
     def detect(self) -> "Resource":
         metadata_endpoint = os.environ.get("ECS_CONTAINER_METADATA_URI_V4")
@@ -101,7 +101,7 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
         )
 
 
-def get_resource(attributes: dict) -> "Resource":
+def get_resource(attributes: Dict[str, Any]) -> "Resource":
     return get_aggregated_resources(
         detectors=_get_detector_list(),
         initial_resource=Resource.create(attributes=attributes),
