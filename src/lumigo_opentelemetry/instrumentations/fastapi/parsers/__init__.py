@@ -1,13 +1,10 @@
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, Any
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import dump, safe_convert_bytes_to_string
 
 from opentelemetry.trace import Span
-
-if TYPE_CHECKING:
-    from opentelemetry.util import types as otl_types
 
 
 class FastAPIParser:
@@ -27,7 +24,7 @@ class FastAPIParser:
             )
             query_string = scope.get("query_string", "")
             path = scope.get("path", "")
-            attributes: Dict[str, "otl_types.AttributeValue"] = {
+            attributes = {
                 "http.request.headers": dump(headers),
                 "http.request.query_string": dump(query_string),
                 "http.request.path": dump(path),

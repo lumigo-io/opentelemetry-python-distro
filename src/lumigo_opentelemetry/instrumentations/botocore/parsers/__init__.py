@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from typing import Optional, Type, Dict, Any, TYPE_CHECKING
+from typing import Optional, Type, Dict, Any
 
 from opentelemetry.trace import Span
-
-if TYPE_CHECKING:
-    from opentelemetry.util import types as otl_types
 
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import dump
@@ -32,7 +29,7 @@ class AwsParser:
     def parse_request(
         span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
-        attributes: Dict[str, "otl_types.AttributeValue"] = {
+        attributes = {
             "http.request.body": dump(api_params),
             "aws.service": service_name,
             "http.method": operation_name,
@@ -95,7 +92,7 @@ class SnsParser(AwsParser):
         arn = SnsParser.safe_extract_arn(api_params=api_params)
         region = extract_region_from_arn(arn=arn) if arn else None
 
-        attributes: Dict[str, "otl_types.AttributeValue"] = {
+        attributes = {
             "http.request.body": dump(api_params.get("Message", api_params or {})),
             "aws.service": service_name,
             "region": region or "",

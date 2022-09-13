@@ -11,8 +11,10 @@ repos:
     hooks:
     -   id: mypy
         entry: venv/bin/mypy
-        exclude: 'src/test/|noxfile\.py|src/ci/'
-        args: ['--namespace-packages', '--disallow-any-generics', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs', '--no-implicit-optional', '--warn-redundant-casts', '--warn-unused-ignores', '--warn-return-any', '--no-implicit-reexport', '--strict-equality', '--ignore-missing-imports']
+        exclude: 'src/test/|noxfile\.py'
+        args: ['--explicit-package-bases',  # Needed for src/ci
+               '--namespace-packages',  # Needed for opentelemetry package
+               '--disallow-any-generics', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs', '--no-implicit-optional', '--warn-redundant-casts', '--warn-unused-ignores', '--warn-return-any', '--no-implicit-reexport', '--strict-equality', '--ignore-missing-imports']
 
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.1
