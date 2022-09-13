@@ -63,12 +63,12 @@ def auto_load(_: Any) -> None:
     # to the init() call at the end of this file.
 
 
-def init() -> None:
+def init() -> Dict:
     if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
         logger.info(
             "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
         )
-        return
+        return {}
 
     # Multiple packages are passed to autowrapt in comma-separated form
     if "lumigo_opentelemetry" in os.getenv("AUTOWRAPT_BOOTSTRAP", "").split(","):
@@ -143,6 +143,8 @@ def init() -> None:
 
     trace.set_tracer_provider(tracer_provider)
 
+    return {"tracer_provider": tracer_provider}
+
 
 def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
     CONTEXT_NAME = "lumigo"
@@ -163,7 +165,9 @@ def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-__all__ = ["auto_load", "init", "lumigo_wrapped", "logger"]
-
 # Load the package on import
-init()
+init_data = init()
+
+tracer_provider = init_data.get("tracer_provider")
+
+__all__ = ["auto_load", "init", "lumigo_wrapped", "logger", "tracer_provider"]
