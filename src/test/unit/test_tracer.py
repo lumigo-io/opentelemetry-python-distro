@@ -7,5 +7,5 @@ class TestDistroInit(unittest.TestCase):
 
         self.assertIsNotNone(tracer_provider)
 
-        self.assertTrue(hasattr(tracer_provider, 'force_flush'))
-        self.assertTrue(hasattr(tracer_provider, 'shutdown'))
+        self.assertTrue(hasattr(tracer_provider, "force_flush"))
+        self.assertTrue(hasattr(tracer_provider, "shutdown"))
