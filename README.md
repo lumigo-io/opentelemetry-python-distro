@@ -166,3 +166,30 @@ If the ECS task uses the ECS agent v1.4.0, and has therefore access to the [Task
   * `OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`
 
   ** If the `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` environment variable is not set, the span attribute size limit will be taken from `OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` environment variable. The default size limit when both are not set is 2048.  
+
+## Advanced use cases
+
+### Access to the TracerProvider
+
+The Lumigo OpenTelemetry Distro provides access to the `TracerProvider` it configures (see the [Baseline setup](#baseline_setup) section for more information) through the `tracer_provider` attribute of the `lumigo_opentelemetry` package:
+
+```python
+from lumigo_opentelemetry import tracer_provider
+
+# Do here stuff like adding span processors
+```
+
+### Ensure spans are flushed to Lumigo before shutdown
+
+For short-running processes, the `BatchProcessor` configured by the Lumigo OpenTelemetry Distro may not ensure that the tracing data are sent to Lumigo (see the [Baseline setup](#baseline_setup) section for more information).
+Through the access to the `tracer_provider`, however, it is possible to ensure that all spans are flushed to Lumigo as follows:
+
+```python
+from lumigo_opentelemetry import tracer_provider
+
+# Do some logic
+
+tracer_provider.force_flush()
+
+# Now the Python process can terminate, with all the spans closed so far sent to Lumigo
+```
