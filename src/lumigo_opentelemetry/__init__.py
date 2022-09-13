@@ -63,7 +63,7 @@ def auto_load(_: Any) -> None:
     # to the init() call at the end of this file.
 
 
-def init() -> Dict:
+def init() -> Dict[str, Any]:
     if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
         logger.info(
             "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
