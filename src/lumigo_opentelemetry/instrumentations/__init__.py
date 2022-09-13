@@ -13,12 +13,12 @@ class AbstractInstrumentor(ABC):
         self._instrumentation_id = instrumentation_id
 
     @abstractmethod
-    def check_if_applicable(self):
+    def check_if_applicable(self) -> None:
         # TODO Implement version lookup per instrumented package, and check that the version is supported
         raise Exception("'check_if_applicable' method not implemented!")
 
     @abstractmethod
-    def install_instrumentation(self):
+    def install_instrumentation(self) -> None:
         raise Exception("'apply_instrumentation' method not implemented!")
 
     @property

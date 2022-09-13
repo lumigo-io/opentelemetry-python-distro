@@ -5,7 +5,7 @@ import os
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import List, Optional, Union, cast
+from typing import List, Optional, Union, cast, Any, Generator
 
 # This regexp splits the version line across three capture groups:
 # `(!)?` captures whether or not the version is supported (if supported, the `!` character is missing)
@@ -50,19 +50,19 @@ class NonSemanticVersion:
     version: str
     comment: str
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, NonSemanticVersion):
             return False
 
         return self.version == other.version
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any) -> bool:
         if not isinstance(other, NonSemanticVersion):
             return False
 
         return self.version < other.version
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{'' if self.supported else '!'}{self.version}{' # ' + self.comment if self.comment else ''}"
 
 
@@ -76,7 +76,7 @@ class SemanticVersion:
     suffix: str
     comment: str
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, SemanticVersion):
             return False
 
@@ -87,7 +87,7 @@ class SemanticVersion:
             and self.suffix == other.suffix
         )
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any) -> bool:
         if not isinstance(other, SemanticVersion):
             return True
 
@@ -117,7 +117,7 @@ class SemanticVersion:
 
         return self.suffix < other.suffix
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{'' if self.supported else '!'}{self.version}{' # ' + self.comment if self.comment else ''}"
 
 
@@ -159,14 +159,14 @@ class TestedVersions:
     @staticmethod
     def _add_version_to_file(
         directory: str, dependency_name: str, dependency_version: str, supported: bool
-    ):
+    ) -> None:
         dependency_file_path = TestedVersions.get_file_path(directory, dependency_name)
         TestedVersions.add_version_to_file(
             dependency_file_path, dependency_version, supported
         )
 
     @staticmethod
-    def add_version_to_file(path: str, version: str, supported: bool):
+    def add_version_to_file(path: str, version: str, supported: bool) -> None:
         tested_versions = TestedVersions.from_file(path)
 
         parsed_version = parse_version(("" if supported else "!") + version)
@@ -214,7 +214,7 @@ class TestedVersions:
     @contextmanager
     def save_tests_result(
         directory: str, dependency_name: str, dependency_version: str
-    ):
+    ) -> Generator[None, None, None]:
         if should_test_only_untested_versions():
             try:
                 yield
@@ -271,7 +271,8 @@ def should_test_only_untested_versions() -> bool:
 
 
 def generate_support_matrix_markdown(
-    src_root=None, package_url_template="https://pypi.org/project/{}"
+    src_root: Optional[str] = None,
+    package_url_template: str = "https://pypi.org/project/{}",
 ) -> List[str]:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
@@ -297,7 +298,7 @@ def generate_support_matrix_markdown(
 
 
 def _generate_support_matrix_markdown_row(
-    tested_versions_directory, package_url_template
+    tested_versions_directory: str, package_url_template: str
 ) -> List[str]:
     """Generate the markdown row for an instrumentation"""
 

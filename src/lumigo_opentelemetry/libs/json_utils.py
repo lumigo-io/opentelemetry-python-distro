@@ -12,7 +12,7 @@ from lumigo_opentelemetry.libs.general_utils import get_max_size
 
 TRUNCATE_SUFFIX = "...[too long]"
 LUMIGO_SECRET_MASKING_REGEX = "LUMIGO_SECRET_MASKING_REGEX"
-Container = TypeVar("Container", dict, list)
+Container = TypeVar("Container", Dict[Any, Any], List[Any])
 EXECUTION_TAGS_KEY = "lumigo_execution_tags_no_scrub"
 SKIP_SCRUBBING_KEYS = [EXECUTION_TAGS_KEY]
 
@@ -114,13 +114,13 @@ def _recursive_omitting(
 
 
 def omit_keys(
-    value: Dict,
+    value: Dict[Any, Any],
     in_max_size: Optional[int] = None,
     regexes: Optional[Pattern[str]] = None,
     enforce_jsonify: bool = False,
     decimal_safe: bool = False,
     omit_skip_path: Optional[List[str]] = None,
-) -> Tuple[Dict, bool]:
+) -> Tuple[Dict[Any, Any], bool]:
     """
     This function omit problematic keys from the given value.
     We do so in the following cases:
@@ -130,7 +130,7 @@ def omit_keys(
     max_size = in_max_size or get_max_size()
     omitted, size = reduce(  # type: ignore
         lambda p, i: _recursive_omitting(
-            prev_result=p,  # type: ignore
+            prev_result=p,
             item=i,
             regex=regexes,
             enforce_jsonify=enforce_jsonify,
@@ -145,7 +145,7 @@ def omit_keys(
 
 def dump(
     to_dump: Any,
-    decimal_safe=False,
+    decimal_safe: bool = False,
     omit_skip_path: Optional[List[str]] = None,
     max_size: Optional[int] = None,
     enforce_jsonify: bool = False,
@@ -192,7 +192,7 @@ def dump(
     )
 
 
-def aws_dump(d: Any, decimal_safe=False, **kwargs) -> str:
+def aws_dump(d: Any, decimal_safe: bool = False, **kwargs) -> str:  # type: ignore
     if decimal_safe:
         return json.dumps(d, cls=DecimalEncoder, **kwargs)
     return json.dumps(d, **kwargs)
@@ -200,7 +200,7 @@ def aws_dump(d: Any, decimal_safe=False, **kwargs) -> str:
 
 class DecimalEncoder(json.JSONEncoder):
     # copied from python's runtime: runtime/lambda_runtime_marshaller.py:7-11
-    def default(self, o):
+    def default(self, o: Any) -> float:
         if isinstance(o, Decimal):
             return float(o)
         raise TypeError(

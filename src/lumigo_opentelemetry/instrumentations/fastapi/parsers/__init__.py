@@ -17,7 +17,7 @@ class FastAPIParser:
         return {}
 
     @staticmethod
-    def server_request_hook(span: Span, scope: dict):
+    def server_request_hook(span: Span, scope: Dict[str, Any]) -> None:
         with lumigo_safe_execute("FastAPIParser: server_request_hook"):
             headers = FastAPIParser.safe_extract_headers_bytes(
                 headers=scope.get("headers", [])
@@ -32,12 +32,12 @@ class FastAPIParser:
             span.set_attributes(attributes)
 
     @staticmethod
-    def client_request_hook(span: Span, scope: dict):
+    def client_request_hook(span: Span, scope: Dict[Any, Any]) -> None:
         with lumigo_safe_execute("FastAPIParser: client_request_hook"):
             logger.debug(f"client_request_hook span: {span}, scope: {scope}")
 
     @staticmethod
-    def client_response_hook(span: Span, message: dict):
+    def client_response_hook(span: Span, message: Dict[str, Any]) -> None:
         with lumigo_safe_execute("FastAPIParser: client_response_hook"):
             body = safe_convert_bytes_to_string(message.get("body"))
             if body:

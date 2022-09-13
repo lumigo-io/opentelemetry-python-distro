@@ -3,19 +3,19 @@ from .parsers import FastAPIParser
 
 
 class FastApiInstrumentorWrapper(AbstractInstrumentor):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("fast-api")
 
-    def check_if_applicable(self):
+    def check_if_applicable(self) -> None:
         import fastapi  # noqa
 
-    def install_instrumentation(self):
+    def install_instrumentation(self) -> None:
         import wrapt
 
         from lumigo_opentelemetry import logger
 
         @wrapt.patch_function_wrapper("fastapi", "FastAPI.__init__")
-        def init_otel_middleware(wrapped, instance, args, kwargs):
+        def init_otel_middleware(wrapped, instance, args, kwargs):  # type: ignore
             try:
                 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 

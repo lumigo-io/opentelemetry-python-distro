@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Any
 
 from opentelemetry.trace import Span
 
@@ -27,7 +27,7 @@ class AwsParser:
 
     @staticmethod
     def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: dict
+        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         attributes = {
             "http.request.body": dump(api_params),
@@ -38,7 +38,7 @@ class AwsParser:
 
     @staticmethod
     def request_hook(
-        span: Span, service_name: str, operation_name: str, api_params: dict
+        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         with lumigo_safe_execute("aws: request_hook"):
             parser = AwsParser.get_parser(service_name=service_name)
@@ -51,7 +51,7 @@ class AwsParser:
 
     @staticmethod
     def parse_response(
-        span: Span, service_name: str, operation_name: str, result: dict
+        span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
         headers = result.get("ResponseMetadata", {}).get("HTTPHeaders", {})
         attributes = {
@@ -68,7 +68,7 @@ class AwsParser:
 
     @staticmethod
     def response_hook(
-        span: Span, service_name: str, operation_name: str, result: dict
+        span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
         with lumigo_safe_execute("aws: response_hook"):
             parser = AwsParser.get_parser(service_name=service_name)
@@ -82,12 +82,12 @@ class AwsParser:
 
 class SnsParser(AwsParser):
     @staticmethod
-    def safe_extract_arn(api_params: dict) -> Optional[str]:
+    def safe_extract_arn(api_params: Dict[Any, Any]) -> Optional[str]:
         return api_params.get("TargetArn")
 
     @staticmethod
     def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: dict
+        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         arn = SnsParser.safe_extract_arn(api_params=api_params)
         region = extract_region_from_arn(arn=arn) if arn else None
@@ -110,7 +110,7 @@ class SqsParser(AwsParser):
 
     @staticmethod
     def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: dict
+        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         queue_url = api_params.get("QueueUrl")
         resource_name = (
@@ -131,7 +131,7 @@ class SqsParser(AwsParser):
 class LambdaParser(AwsParser):
     @staticmethod
     def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: dict
+        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         resource_name = api_params.get("FunctionName")
         attributes = {
@@ -146,7 +146,7 @@ class LambdaParser(AwsParser):
 class DynamoParser(AwsParser):
     @staticmethod
     def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: dict
+        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         attributes = {
             "http.request.body": dump(api_params),
