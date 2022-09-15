@@ -512,7 +512,7 @@ def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -
         # The python process is names "Python" os OS X and "uvicorn" on CircleCI
         if proc.name() == process_name:
             proc.kill()
-        elif proc.name().lower() == "python":
+        elif proc.name().lower().startswith("python"):
             cmdline = proc.cmdline()
             if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
                 proc.kill()
