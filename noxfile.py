@@ -72,6 +72,9 @@ def dependency_versions_to_be_tested(
 ) -> List[str]:
     """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
+    if dependency_name != "uvicorn":
+        return []
+    print("directory:", directory, "dependency_name:", dependency_name)
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, dependency_name)
     )
