@@ -28,6 +28,7 @@ setup(
         "opentelemetry-instrumentation-asgi==0.28b1",
         "opentelemetry-instrumentation-asyncpg==0.28b1",
         "opentelemetry-instrumentation-boto==0.28b1",
+        "opentelemetry-instrumentation-boto3sqs==0.33b0",
         "opentelemetry-instrumentation-botocore==0.28b1",
         "opentelemetry-instrumentation-django==0.28b1",
         "opentelemetry-instrumentation-elasticsearch==0.28b1",
