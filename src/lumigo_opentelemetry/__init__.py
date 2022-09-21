@@ -77,7 +77,7 @@ def init() -> Dict[str, Any]:
         activation_mode = "import"
 
     logger.info(
-        "Loading the Lumigo OpenTelemetry distribution (injection mode: %s)",
+        f"Loading the Lumigo OpenTelemetry distribution v{__version__} (injection mode: %s)",
         activation_mode,
     )
 
