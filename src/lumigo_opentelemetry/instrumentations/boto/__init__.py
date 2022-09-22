@@ -6,7 +6,7 @@ class BotoInstrumentorWrapper(AbstractInstrumentor):
         super().__init__("boto")
 
     def check_if_applicable(self) -> None:
-        import boto3  # noqa
+        import boto  # noqa
 
     def install_instrumentation(self) -> None:
         from opentelemetry.instrumentation.boto import BotoInstrumentor
