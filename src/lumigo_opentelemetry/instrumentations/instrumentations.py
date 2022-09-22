@@ -7,7 +7,6 @@ from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
 from .boto import instrumentor as boto_instrumentor
-from .boto3sqs import instrumentor as boto3sqs_instrumentor
 from .botocore import instrumentor as botocore_instrumentor
 from .fastapi import instrumentor as fastapi_instrumentor
 from .flask import instrumentor as flask_instrumentor
@@ -19,7 +18,6 @@ from .requests import instrumentor as requests_instrumentor
 installed_instrumentations: List[str] = []
 instrumentors: List[AbstractInstrumentor] = [
     boto_instrumentor,
-    boto3sqs_instrumentor,
     botocore_instrumentor,
     fastapi_instrumentor,
     flask_instrumentor,
