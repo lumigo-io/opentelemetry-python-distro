@@ -128,7 +128,7 @@ def dependency_versions_to_be_tested(
     ]
 
 
-@nox.session(python=python_versions())
+@nox.session(python=python_versions(), reuse_venv=False)
 @nox.parametrize(
     "uvicorn_version",
     dependency_versions_to_be_tested(
