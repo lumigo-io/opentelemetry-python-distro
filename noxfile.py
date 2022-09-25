@@ -141,6 +141,7 @@ def integration_tests_fastapi_uvicorn(
     session,
     uvicorn_version,
 ):
+    session.log(nox.options)
     session.run("pip", "-V")
     session.run("pip", "freeze")
     with TestedVersions.save_tests_result("fastapi", "uvicorn", uvicorn_version):
