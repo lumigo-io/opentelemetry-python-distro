@@ -154,10 +154,16 @@ def integration_tests_fastapi(
     fastapi_version,
     uvicorn_version,
 ):
+    session.run("pip", "-V")
+    session.run("pip", "freeze")
     install_package("uvicorn", uvicorn_version, session)
     install_package("fastapi", fastapi_version, session)
+    session.run("pip", "-V")
+    session.run("pip", "freeze")
 
     install(session, ".")
+    session.run("pip", "-V")
+    session.run("pip", "freeze")
 
     abs_path = os.path.abspath("src/test/integration/fastapi/")
     with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
@@ -165,6 +171,8 @@ def integration_tests_fastapi(
 
         with session.chdir("src/test/integration/fastapi"):
             install(session, "-r", "requirements_others.txt")
+            session.run("pip", "-V")
+            session.run("pip", "freeze")
 
             try:
                 session.run(
