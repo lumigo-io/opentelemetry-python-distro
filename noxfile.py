@@ -3,7 +3,7 @@ import os
 import tempfile
 from xml.etree import ElementTree
 import time
-from typing import List, Union
+from typing import List, Union, Optional
 
 import nox
 import requests
@@ -42,12 +42,12 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
     return [i.text for i in xml_tree.findall("channel/item/title") if i.text]
 
 
-def python_versions() -> Union[List[str], bool]:
-    # On Github, just run the current Python version without
-    # creating a venv.
-    # In local, try all supported python versions building venvs.
+def python_versions() -> Optional[List[str]]:
+    # On Github, just run the current Python version.
+    # In local, try all supported python versions.
+    # Anyway create a venv.
     if os.getenv("CI", str(False)).lower() == "true":
-        return False
+        return None
 
     with open(
         os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
