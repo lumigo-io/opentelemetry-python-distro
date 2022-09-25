@@ -128,7 +128,7 @@ def dependency_versions_to_be_tested(
     ]
 
 
-@nox.session(python=python_versions(), reuse_venv=False)
+@nox.session(python=python_versions())
 @nox.parametrize(
     "uvicorn_version",
     dependency_versions_to_be_tested(
@@ -141,6 +141,8 @@ def integration_tests_fastapi_uvicorn(
     session,
     uvicorn_version,
 ):
+    session.run("pip", "-V")
+    session.run("pip", "freeze")
     with TestedVersions.save_tests_result("fastapi", "uvicorn", uvicorn_version):
         integration_tests_fastapi(
             session=session,
