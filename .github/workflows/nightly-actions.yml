@@ -1,7 +1,5 @@
 name: Version Testing
-on:
-  schedule:
-    - cron: "0 7 * * *"
+on: [push]
 jobs:
   # If this key gets renamed, nox.py needs to be adjusted
   check-new-versions-of-instrumented-packages:
