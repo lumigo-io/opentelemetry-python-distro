@@ -3,7 +3,7 @@ import os
 import tempfile
 from xml.etree import ElementTree
 import time
-from typing import List, Union
+from typing import List, Union, Optional
 
 import nox
 import requests
@@ -17,19 +17,9 @@ from src.ci.tested_versions_utils import (
 )
 
 
-def install(session, *args) -> None:
-    """
-    When running in CI we don't use venv and without venv `session.install` is deprecated.
-    """
-    if session.python is False:  # this means no venv
-        session.run("pip", "install", *args)
-    else:
-        session.install(*args)
-
-
 def install_package(package_name: str, package_version: str, session) -> None:
     try:
-        install(session, f"{package_name}=={package_version}")
+        session.install(f"{package_name}=={package_version}")
     except Exception:
         session.log(f"Cannot install '{package_name}' version '{package_version}'")
         raise
@@ -42,12 +32,12 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
     return [i.text for i in xml_tree.findall("channel/item/title") if i.text]
 
 
-def python_versions() -> Union[List[str], bool]:
-    # On Github, just run the current Python version without
-    # creating a venv.
-    # In local, try all supported python versions building venvs.
+def python_versions() -> Optional[List[str]]:
+    # On Github, just run the current Python version.
+    # In local, try all supported python versions.
+    # Anyway create a venv.
     if os.getenv("CI", str(False)).lower() == "true":
-        return False
+        return None
 
     with open(
         os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
@@ -143,14 +133,14 @@ def integration_tests_boto3(
     with TestedVersions.save_tests_result("botocore", "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
-        install(session, ".")
+        session.install(".")
 
         abs_path = os.path.abspath("src/test/integration/boto3/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/boto3"):
-                install(session, "-r", "requirements_others.txt")
+                session.install("-r", "requirements_others.txt")
 
                 try:
                     session.run(
@@ -235,14 +225,14 @@ def integration_tests_fastapi(
     install_package("uvicorn", uvicorn_version, session)
     install_package("fastapi", fastapi_version, session)
 
-    install(session, ".")
+    session.install(".")
 
     abs_path = os.path.abspath("src/test/integration/fastapi/")
     with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/integration/fastapi"):
-            install(session, "-r", "requirements_others.txt")
+            session.install("-r", "requirements_others.txt")
 
             try:
                 session.run(
@@ -293,14 +283,14 @@ def component_tests_attr_max_size(
     install_package("uvicorn", uvicorn_version, session)
     install_package("fastapi", fastapi_version, session)
 
-    install(session, ".")
+    session.install(".")
 
     abs_path = os.path.abspath("src/test/components/")
     with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/components"):
-            install(session, "-r", "requirements_others.txt")
+            session.install("-r", "requirements_others.txt")
 
             try:
                 session.run(
@@ -349,14 +339,14 @@ def integration_tests_flask(session, flask_version):
     with TestedVersions.save_tests_result("flask", "flask", flask_version):
         install_package("flask", flask_version, session)
 
-        install(session, ".")
+        session.install(".")
 
         abs_path = os.path.abspath("src/test/integration/flask/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/flask"):
-                install(session, "-r", "requirements_others.txt")
+                session.install("-r", "requirements_others.txt")
 
                 try:
                     session.run(
@@ -406,14 +396,14 @@ def integration_tests_pymongo(
     with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
         install_package("pymongo", pymongo_version, session)
 
-        install(session, ".")
+        session.install(".")
 
         abs_path = os.path.abspath("src/test/integration/pymongo/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymongo"):
-                install(session, "-r", "requirements_others.txt")
+                session.install("-r", "requirements_others.txt")
 
                 try:
                     session.run(
@@ -463,14 +453,14 @@ def integration_tests_pymysql(
     with TestedVersions.save_tests_result("pymysql", "pymysql", pymysql_version):
         install_package("PyMySQL", pymysql_version, session)
 
-        install(session, ".")
+        session.install(".")
 
         abs_path = os.path.abspath("src/test/integration/pymysql/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymysql"):
-                install(session, "-r", "requirements_others.txt")
+                session.install("-r", "requirements_others.txt")
 
                 try:
                     session.run(
