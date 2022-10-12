@@ -83,22 +83,37 @@ def init() -> Dict[str, Any]:
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
     )
+    DEFAULT_DEPENDENCIES_ENDPOINT = (
+        "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/dependencies"
+    )
     lumigo_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
+    lumigo_report_dependencies = os.getenv("LUMIGO_REPORT_DEPENDENCIES", "true").lower()
 
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
-    from lumigo_opentelemetry.resources.detectors import get_resource
+    from lumigo_opentelemetry.resources.detectors import (
+        get_infrastructure_resource,
+        get_process_resource,
+    )
     from lumigo_opentelemetry.libs.general_utils import get_max_size
 
-    tracer_resource = get_resource(attributes={"framework": framework})
+    infrastructure_resource = get_infrastructure_resource()
+    process_resource = get_process_resource()
+
+    tracer_resource = (
+        Resource.create(attributes={"framework": framework})
+        .merge(process_resource)
+        .merge(infrastructure_resource)
+    )
 
     tracer_provider = TracerProvider(
         resource=tracer_resource,
@@ -114,6 +129,24 @@ def init() -> Dict[str, Any]:
                 ),
             )
         )
+
+        if (
+            lumigo_report_dependencies == "true"
+            and lumigo_endpoint == DEFAULT_LUMIGO_ENDPOINT
+        ):
+            from lumigo_opentelemetry.dependencies import report
+
+            try:
+                # TODO Avoid sending the process env and non-infrastructure resource attributes
+                report(
+                    DEFAULT_DEPENDENCIES_ENDPOINT,
+                    lumigo_token,
+                    infrastructure_resource.attributes,
+                )
+            except Exception as e:
+                logger.debug("Cannot report dependencies to Lumigo", e)
+        else:
+            logger.debug("Dependency reporting is turned off")
     else:
         logger.warning(
             "Lumigo token not provided (env var 'LUMIGO_TRACER_TOKEN' not set); "

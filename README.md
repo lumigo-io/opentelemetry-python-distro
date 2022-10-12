@@ -92,10 +92,11 @@ The Lumigo OpenTelemetry Distro for Python is made of several upstream OpenTelem
 The `lumigo_opentelemetry` package additionally supports the following configuration options as environment variables:
 
 * `LUMIGO_TRACER_TOKEN`: [Required] Required configuration to send data to Lumigo; you will find the right value in Lumigo under `Settings -> Tracing -> Manual tracing`.
-* `LUMIGO_DEBUG=TRUE`: Enables debug logging
+* `LUMIGO_DEBUG=true`: Enables debug logging
 * `LUMIGO_DEBUG_SPANDUMP`: path to a local file where to write a local copy of the spans that will be sent to Lumigo; this option handy for local testing but **should not be used in production** unless you are instructed to do so by Lumigo support.
 * `LUMIGO_SECRET_MASKING_REGEX=["regex1", "regex2"]`: Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`.
-* `LUMIGO_SWITCH_OFF=TRUE`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected. 
+* `LUMIGO_SWITCH_OFF=true`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected. 
+* `LUMIGO_REPORT_DEPENDENCIES=false`: This option disables the built-in dependency reporting to Lumigo SaaS. For more information, refer to the [Automated dependency reporting](#automated-dependency-reporting) section.
 
 ## Supported runtimes
 
@@ -112,6 +113,18 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.12.3 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
 | | | 1.0.0~1.0.2 |
+
+## Automated dependency reporting
+
+To provide better support and better data-driven product decisions with respect to which packages to support next, the Lumigo OpenTelemetry Distro for Python will report to Lumigo SaaS on startup the packages and their versions used in this application, together with the OpenTelemetry resource data to enable analytics in terms of which platforms use which dependencies.
+
+The data uploaded to Lumigo is a set of key-value pairs with package name and version.
+Similar is available through the tracing data sent to Lumigo, except that this aims at covering dependencies for which the Lumigo OpenTelemetry Distro for Python does not have instrumentation (yet?).
+Lumigo's only goal for these analytics data is to be able to give you the instrumentations you need without you needing to tell us!
+
+This behavior is opt-out using the `LUMIGO_REPORT_DEPENDENCIES=false` environment variable.
+Additionally, the dependencies data is sent only when the Lumigo endpoint is the default one (as to avoid issues when tracing data is sent through proxies like OpenTelemetry collectors), and it active only when a `LUMIGO_TRACER_TOKEN` is present in the process environment.
+If you are using the Lumigo OpenTelemetry Distro for Python with another OpenTelemetry-compatible backend, no dependency data will be transmitted (as this is not a standard OpenTelemetry Protocol functionality).
 
 ## Baseline setup
 
