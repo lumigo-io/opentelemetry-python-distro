@@ -14,7 +14,7 @@ next_section_start_index = None
 for count, line in enumerate(
     readme_content[supported_packages_start_index + 2 :]  # noqa: E203
 ):
-    if line.startswith("#"): # Stop at the first next header
+    if line.startswith("#"):  # Stop at the first next header
         next_section_start_index = supported_packages_start_index + 2 + count
         break
 

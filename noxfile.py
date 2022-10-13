@@ -11,7 +11,7 @@ import sys
 import yaml
 
 # Ensure that nox can use the ci scripts
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 from ci.tested_versions_utils import (
     NonSemanticVersion,
@@ -39,7 +39,7 @@ def get_versions_from_pypi(package_name: str) -> List[str]:
 def python_versions() -> Optional[List[str]]:
     # On Github, just run the current Python version.
     # In local, try all supported python versions.
-    # Anyway create a venv.
+    # Always create a venv.
     if os.getenv("CI", str(False)).lower() == "true":
         return None
 
@@ -97,11 +97,15 @@ def dependency_versions_to_be_tested(
         if isinstance(previous_version, NonSemanticVersion):
             # There is no concept of 'minor' and 'patch' in non-semantic version,
             # so we gotta test 'em all
-            supported_versions_to_test.append(cast(NonSemanticVersion, previous_version))
+            supported_versions_to_test.append(
+                cast(NonSemanticVersion, previous_version)
+            )
         elif isinstance(current_version, NonSemanticVersion):
             # The 'next' version is non-semantic, so we are guaranteed
             # that the last version is the last in its series
-            supported_versions_to_test.append(cast(NonSemanticVersion, previous_version))
+            supported_versions_to_test.append(
+                cast(NonSemanticVersion, previous_version)
+            )
         else:
             # Both previous and current are semantic versions
             if (
@@ -119,22 +123,6 @@ def dependency_versions_to_be_tested(
         supported_version_to_test.version
         for supported_version_to_test in supported_versions_to_test
     ]
-
-
-def python_versions() -> Union[List[str], bool]:
-    # On Github, just run the current Python version without
-    # creating a venv.
-    # In local, try all supported python versions building venvs.
-    if os.getenv("CI", str(False)).lower() == "true":
-        return False
-
-    with open(
-        os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
-    ) as f:
-        github_workflow = yaml.load(f, Loader=yaml.FullLoader)
-        return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
-            "strategy"
-        ]["matrix"]["python-version"]
 
 
 # @nox.session(python=python_versions())

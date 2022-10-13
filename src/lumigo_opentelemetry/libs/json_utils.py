@@ -37,7 +37,7 @@ def get_omitting_regex() -> Optional[Pattern[str]]:
         given_regexes = OMITTING_KEYS_REGEXES
     if not given_regexes:
         return None
-    return re.compile(fr"({'|'.join(given_regexes)})", re.IGNORECASE)
+    return re.compile(rf"({'|'.join(given_regexes)})", re.IGNORECASE)
 
 
 def _recursive_omitting(

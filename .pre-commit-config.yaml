@@ -10,7 +10,7 @@ repos:
     rev: v0.971
     hooks:
     -   id: mypy
-        entry: venv/bin/mypy
+        entry: mypy
         exclude: 'src/test/|noxfile\.py'
         args: ['--explicit-package-bases',  # Needed for src/ci
                '--namespace-packages',  # Needed for opentelemetry package

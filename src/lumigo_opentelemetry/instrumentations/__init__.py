@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from os import getenv, path
 from pkg_resources import get_distribution, resource_stream, Distribution
 from re import compile, search
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from wrapt import patch_function_wrapper
 
 from lumigo_opentelemetry import logger
@@ -22,7 +22,7 @@ COMPATIBILITY_CHECKS_TO_SKIP = [
 ]
 
 
-def _get_tested_version_filenames(instrumentation_id):
+def _get_tested_version_filenames(instrumentation_id: str) -> List[str]:
     try:
         from importlib.resources import files
 
@@ -37,6 +37,7 @@ def _get_tested_version_filenames(instrumentation_id):
             return [
                 path.basename(file) for file in tested_versions_resource_dir.iterdir()
             ]
+
     except ImportError:
         # The importlib.resources.files API was introduced with Python 3.9
         # and importlib 1.4
@@ -51,8 +52,10 @@ def _get_tested_version_filenames(instrumentation_id):
                 f"instrumentations/{instrumentation_id}/tested_versions",
             )
 
+    return []
 
-def _assert_compatibility(instrumentation_id, package_name):
+
+def _assert_compatibility(instrumentation_id: str, package_name: str) -> None:
     distribution: Distribution = None
     try:
         distribution = get_distribution(package_name)
@@ -91,7 +94,7 @@ class AbstractInstrumentor(ABC):
     """
 
     @abstractmethod
-    def __init__(self, instrumentation_id: str):
+    def __init__(self, instrumentation_id: str) -> None:
         self._instrumentation_id = instrumentation_id
 
     @property
@@ -115,7 +118,7 @@ class AbstractInstrumentor(ABC):
         """
         raise Exception("'get_otel_instrumentor' method not implemented!")
 
-    def install_instrumentation(self):
+    def install_instrumentation(self) -> None:
         # We have now the OpenTelemetry instrumentor. If our instrumentation has
         # specialized 'tested_versions' data, let's compare it with what is in
         # the application.
@@ -160,7 +163,7 @@ class AbstractInstrumentor(ABC):
         except ModuleNotFoundError as e:
             # This happens when the instrumentor imports directly a dependency
             # without guarding the import
-            raise MissingDependencyException(e.name) from e
+            raise MissingDependencyException(e.name or "unknown") from e
         except Exception as e:
             raise CannotInstantiateOpenTelemetryInstrumentor(
                 "Cannot instantiate the OpenTelemetry instrumentor"
@@ -173,18 +176,25 @@ class AbstractInstrumentor(ABC):
                 instrumentor.__module__,
                 f"{instrumentor.__class__.__name__}._check_dependency_conflicts",
             )
-            def suppress_check_dependency_conflicts(wrapped, instance, args, kwargs):
+            def suppress_check_dependency_conflicts(
+                wrapped: Any,
+                instance: Any,
+                args: Optional[List[Any]],
+                kwargs: Optional[Dict[str, Any]],
+            ) -> None:
                 pass
 
         self._do_instrument(instrumentor)
 
-    def _do_instrument(self, instrumentor: BaseInstrumentor, **kwargs):
-        """Apply the instrumentation. May be subclasses to parse additionap parameters"""
+    def _do_instrument(
+        self, instrumentor: BaseInstrumentor, **kwargs: Optional[Dict[str, Any]]
+    ) -> None:
+        """Apply the instrumentation. May be subclasses to parse additional parameters"""
         instrumentor.instrument()
 
 
 class CannotInstantiateOpenTelemetryInstrumentor(Exception):
-    def __init__(self, *args):
+    def __init__(self, *args: Optional[List[Any]]) -> None:
         super().__init__(args)
 
 
@@ -192,7 +202,7 @@ class MissingDependencyException(Exception):
 
     package_name: Optional[str] = None
 
-    def __init__(self, package_name, *args):
+    def __init__(self, package_name: str, *args: Optional[List[Any]]) -> None:
         super().__init__(f"Package {package_name} not found", *args)
         self.package_name = package_name
 
@@ -203,7 +213,13 @@ class UnsupportedDependencyVersionException(Exception):
     version_found: Optional[str] = None
     supported_versions: Optional[List[str]] = None
 
-    def __init__(self, package_name, version_found, supported_versions, *args):
+    def __init__(
+        self,
+        package_name: str,
+        version_found: str,
+        supported_versions: List[str],
+        *args: Optional[List[Any]],
+    ) -> None:
         super().__init__(
             f"Incompatible version {version_found} found for the package {package_name}",
             *args,
