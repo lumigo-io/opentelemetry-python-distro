@@ -1,13 +1,3 @@
-# To provide better support and better data-driven product decisions
-# with respect to which packages to support next, the Lumigo
-# OpenTelemetry Distro for Python will report to Lumigo on startup the
-# packages and their versions used in this application, together with the
-# OpenTelemetry resource data to enable analytics in terms of which platforms
-# use which dependencies.
-#
-# This behavior is opt-out using the `LUMIGO_REPORT_DEPENDENCIES=false`
-# environment variable.
-
 from http.client import HTTPSConnection
 from json import dumps
 from os import environ
