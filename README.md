@@ -116,15 +116,13 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 
 ## Automated dependency reporting
 
-To provide better support and better data-driven product decisions with respect to which packages to support next, the Lumigo OpenTelemetry Distro for Python will report to Lumigo SaaS on startup the packages and their versions used in this application, together with the OpenTelemetry resource data to enable analytics in terms of which platforms use which dependencies.
+To enable Lumigo to provide better and faster support, the Lumigo OpenTelemetry Distro for Python reports to Lumigo the packages and their versions used by the traced application.
+This will enable Lumigo support to troubleshoot reports of “missing tracing data”, which is commonly due to the usage by the application of packages and versions unsupported by the Lumigo OpenTelemetry Distro.
 
-The data uploaded to Lumigo is a set of key-value pairs with package name and version.
-Similar is available through the tracing data sent to Lumigo, except that this aims at covering dependencies for which the Lumigo OpenTelemetry Distro for Python does not have instrumentation (yet?).
-Lumigo's only goal for these analytics data is to be able to give you the instrumentations you need without you needing to tell us!
+Package and version data is sent only when 1) the tracer is configured to send data to the Lumigo backend, and 2) the `LUMIGO_TRACER_TOKEN` environment variable is present in the process environment.
+(If you are using the Lumigo OpenTelemetry Distro for Python with another OpenTelemetry-compatible backend, no dependency data will be transmitted.)
 
-This behavior is opt-out using the `LUMIGO_REPORT_DEPENDENCIES=false` environment variable.
-Additionally, the dependencies data is sent only when the Lumigo endpoint is the default one (as to avoid issues when tracing data is sent through proxies like OpenTelemetry collectors), and it active only when a `LUMIGO_TRACER_TOKEN` is present in the process environment.
-If you are using the Lumigo OpenTelemetry Distro for Python with another OpenTelemetry-compatible backend, no dependency data will be transmitted (as this is not a standard OpenTelemetry Protocol functionality).
+Package and version data reporting is opt-out using the `LUMIGO_REPORT_DEPENDENCIES=false` environment variable.
 
 ## Baseline setup
 
