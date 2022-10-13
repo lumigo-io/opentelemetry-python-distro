@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from .parsers import FastAPIParser
@@ -20,7 +20,7 @@ class FastApiInstrumentor(AbstractInstrumentor):
         from lumigo_opentelemetry import logger
 
         @wrapt.patch_function_wrapper("fastapi", "FastAPI.__init__")
-        def init_otel_middleware(wrapped, instance: Any, args: Optional[List[Any]], kwargs: Optional[Dict[str, Any]]):  # type: ignore
+        def init_otel_middleware(wrapped, instance: Any, *args, **kwargs):  # type: ignore[no-untyped-def]
             try:
                 return_value = wrapped(*args, **kwargs)
                 instrumentor.instrument_app(

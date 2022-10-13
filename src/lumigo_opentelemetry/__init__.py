@@ -134,7 +134,7 @@ def init() -> Dict[str, Any]:
                     # Print one span per line for ease of parsing, as the
                     # file itself will not be valid JSON, it will be just a
                     # sequence of JSON objects, not a list
-                    formatter=lambda span: span.to_json(indent=None) + "\n",  # type: ignore
+                    formatter=lambda span: span.to_json(indent=None) + "\n",
                 )
             )
         )

@@ -14,5 +14,5 @@ class RequestsInstrumentor(AbstractInstrumentor):
 
         return UpstreamInstrumentor()
 
-    def _do_instrument(self, instrumentor):
+    def _do_instrument(self, instrumentor: BaseInstrumentor) -> None:
         instrumentor.instrument(span_callback=HttpParser.request_callback)

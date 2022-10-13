@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from os import getenv, path
 from pkg_resources import get_distribution, resource_stream, Distribution
 from re import compile, search
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 from wrapt import patch_function_wrapper
 
 from lumigo_opentelemetry import logger
@@ -176,25 +176,25 @@ class AbstractInstrumentor(ABC):
                 instrumentor.__module__,
                 f"{instrumentor.__class__.__name__}._check_dependency_conflicts",
             )
-            def suppress_check_dependency_conflicts(
+            def suppress_check_dependency_conflicts(  # type: ignore[no-untyped-def]
                 wrapped: Any,
                 instance: Any,
-                args: Optional[List[Any]],
-                kwargs: Optional[Dict[str, Any]],
+                args,
+                kwargs,
             ) -> None:
                 pass
 
         self._do_instrument(instrumentor)
 
-    def _do_instrument(
-        self, instrumentor: BaseInstrumentor, **kwargs: Optional[Dict[str, Any]]
+    def _do_instrument(  # type: ignore[no-untyped-def]
+        self, instrumentor: BaseInstrumentor, **kwargs
     ) -> None:
         """Apply the instrumentation. May be subclasses to parse additional parameters"""
         instrumentor.instrument()
 
 
 class CannotInstantiateOpenTelemetryInstrumentor(Exception):
-    def __init__(self, *args: Optional[List[Any]]) -> None:
+    def __init__(self, *args) -> None:  # type: ignore[no-untyped-def]
         super().__init__(args)
 
 
@@ -202,7 +202,7 @@ class MissingDependencyException(Exception):
 
     package_name: Optional[str] = None
 
-    def __init__(self, package_name: str, *args: Optional[List[Any]]) -> None:
+    def __init__(self, package_name: str, *args) -> None:  # type: ignore[no-untyped-def]
         super().__init__(f"Package {package_name} not found", *args)
         self.package_name = package_name
 
@@ -213,12 +213,12 @@ class UnsupportedDependencyVersionException(Exception):
     version_found: Optional[str] = None
     supported_versions: Optional[List[str]] = None
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         package_name: str,
         version_found: str,
         supported_versions: List[str],
-        *args: Optional[List[Any]],
+        *args,
     ) -> None:
         super().__init__(
             f"Incompatible version {version_found} found for the package {package_name}",

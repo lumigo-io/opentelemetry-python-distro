@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 
@@ -19,7 +19,7 @@ class FlaskInstrumentor(AbstractInstrumentor):
         from lumigo_opentelemetry import logger
 
         @wrapt.patch_function_wrapper("flask", "Flask.__init__")
-        def init_otel_flask_instrumentation(wrapped: Any, instance: Any, args: Optional[List[Any]], kwargs: Optional[Dict[str, Any]]):  # type: ignore
+        def init_otel_flask_instrumentation(wrapped: Any, instance: Any, *args, **kwargs):  # type: ignore[no-untyped-def]
             try:
                 return_value = wrapped(*args, **kwargs)
                 instrumentor.instrument_app(instance)
