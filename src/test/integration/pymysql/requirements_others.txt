@@ -1,9 +1,9 @@
-pytest
+pytest==7.1.1
 uvicorn[standard]==0.16.0
 fastapi==0.70.1
-json-stream
-requests
-psutil
-testcontainers
-sqlalchemy
-cryptography
+json-stream==1.4.2
+requests==2.27.1
+psutil==5.9.1
+testcontainers==3.7.0
+sqlalchemy==1.4.41
+cryptography==38.0.1
