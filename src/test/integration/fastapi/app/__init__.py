@@ -27,4 +27,5 @@ def invoke_requests_big_response():
             pass
 
     response = requests.get("https://api.publicapis.org/entries")
+    response.raise_for_status()
     return response.json()
