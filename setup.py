@@ -12,6 +12,7 @@ setup(
     entry_points={
         "lumigo_opentelemetry": ["string = lumigo_opentelemetry:auto_load"],
     },
+    dependency_links=['https://github.com/lumigo-io/opentelemetry-python-contrib@c8314a87802aa1942d3f970fc5cedcf72fa8ee33#egg=opentelemetry-instrumentation-botocore&subdirectory=instrumentation/opentelemetry-instrumentation-botocore'],
     install_requires=[
         "asgiref~=3.0",
         "autowrapt>=1.0",
@@ -28,7 +29,7 @@ setup(
         "opentelemetry-instrumentation-asgi==0.28b1",
         "opentelemetry-instrumentation-asyncpg==0.28b1",
         "opentelemetry-instrumentation-boto==0.28b1",
-        "opentelemetry-instrumentation-botocore==0.28b1 @ git+https://github.com/lumigo-io/opentelemetry-python-contrib@c8314a87802aa1942d3f970fc5cedcf72fa8ee33#egg=opentelemetry-instrumentation-botocore&subdirectory=instrumentation/opentelemetry-instrumentation-botocore",
+        "opentelemetry-instrumentation-botocore==0.28b1",
         "opentelemetry-instrumentation-django==0.28b1",
         "opentelemetry-instrumentation-elasticsearch==0.28b1",
         "opentelemetry-instrumentation-falcon==0.28b1",
