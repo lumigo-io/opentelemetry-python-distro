@@ -1,3 +1,5 @@
+from time import sleep
+
 import requests
 from fastapi import FastAPI
 
@@ -24,6 +26,7 @@ def invoke_requests_big_response():
             r.raise_for_status()
             break
         except Exception:
+            sleep(2)
             pass
 
     response = requests.get("https://api.publicapis.org/entries")
