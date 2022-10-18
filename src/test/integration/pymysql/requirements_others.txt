@@ -7,3 +7,5 @@ psutil==5.9.1
 testcontainers==3.7.0
 sqlalchemy==1.4.41
 cryptography==38.0.1
+attrs==21.4.0
+certifi==2022.9.14
