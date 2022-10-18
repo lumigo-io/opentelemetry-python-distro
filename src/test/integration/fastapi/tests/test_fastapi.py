@@ -90,7 +90,7 @@ class TestFastApiSpans(unittest.TestCase):
         time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
 
         spans_container = SpansContainer.get_spans_from_file()
-        self.assertGreaterEqual(4, len(spans_container.spans))
+        self.assertGreaterEqual(len(spans_container.spans), 4)
 
         # assert root
         root = spans_container.get_root()
@@ -105,7 +105,7 @@ class TestFastApiSpans(unittest.TestCase):
 
         # assert child spans
         children = spans_container.get_non_internal_children()
-        self.assertGreaterEqual(1, len(children))
+        self.assertGreaterEqual(len(children), 1)
         entries_child = list(
             filter(lambda item: "entries" in item["attributes"]["http.url"], children)
         )[0]
