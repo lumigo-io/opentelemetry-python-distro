@@ -2,7 +2,7 @@ from time import sleep
 
 import requests
 from fastapi import FastAPI
-
+from requests import HTTPError
 
 app = FastAPI()
 
@@ -25,9 +25,10 @@ def invoke_requests_big_response():
             r = requests.get("https://api.publicapis.org/health")
             r.raise_for_status()
             break
-        except Exception:
+        except HTTPError as e:
+            print(e.response)
+            print("got exception, retrying")
             sleep(2)
-            pass
 
     response = requests.get("https://api.publicapis.org/entries")
     response.raise_for_status()
