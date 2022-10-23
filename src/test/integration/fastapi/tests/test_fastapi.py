@@ -107,14 +107,13 @@ class TestFastApiSpans(unittest.TestCase):
         children = spans_container.get_non_internal_children()
         self.assertEqual(1, len(children))
         children_attributes = children[0]["attributes"]
-        entries_attributes = children_attributes["attributes"]
-        self.assertEqual(entries_attributes["http.method"], "GET")
+        self.assertEqual(children_attributes["http.method"], "GET")
         self.assertEqual(
-            entries_attributes["http.url"],
+            children_attributes["http.url"],
             "http://universities.hipolabs.com/search",
         )
-        self.assertEqual(len(entries_attributes["http.response.body"]), 2048)
-        self.assertEqual(entries_attributes["http.status_code"], 200)
-        self.assertIsNotNone(entries_attributes["http.request.headers"])
-        self.assertIsNotNone(entries_attributes["http.response.headers"])
-        self.assertIsNotNone(entries_attributes["http.response.body"])
+        self.assertEqual(len(children_attributes["http.response.body"]), 2048)
+        self.assertEqual(children_attributes["http.status_code"], 200)
+        self.assertIsNotNone(children_attributes["http.request.headers"])
+        self.assertIsNotNone(children_attributes["http.response.headers"])
+        self.assertIsNotNone(children_attributes["http.response.body"])
