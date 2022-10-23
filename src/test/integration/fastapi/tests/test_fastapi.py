@@ -110,7 +110,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(children_attributes["http.method"], "GET")
         self.assertEqual(
             children_attributes["http.url"],
-            "http://universities.hipolabs.com/search",
+            "http://universities.hipolabs.com/search?country=United+States",
         )
         self.assertEqual(len(children_attributes["http.response.body"]), 2048)
         self.assertEqual(children_attributes["http.status_code"], 200)
