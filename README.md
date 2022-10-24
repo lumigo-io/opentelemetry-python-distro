@@ -107,7 +107,7 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 | --- | --- | --- |
 | botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.24.35 |
 | fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.85.0 |
-| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.18.3 |
+| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.19.0 |
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.2 |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.12.3 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
