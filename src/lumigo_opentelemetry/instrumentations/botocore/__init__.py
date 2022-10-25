@@ -16,6 +16,7 @@ class BotoCoreInstrumentorWrapper(AbstractInstrumentor):
         # https://github.com/open-telemetry/opentelemetry-python-contrib/pull/1350
         # After the merge, delete the following line and uncomment the next line
         from lumigo_opentelemetry.external.botocore import BotocoreInstrumentor
+
         # from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 
         BotocoreInstrumentor().instrument(
