@@ -87,12 +87,12 @@ from botocore.exceptions import ClientError
 from wrapt import wrap_function_wrapper
 
 from opentelemetry import context as context_api
-from opentelemetry.instrumentation.botocore.extensions import _find_extension
-from opentelemetry.instrumentation.botocore.extensions.types import (
+from lumigo_opentelemetry.external.botocore.extensions import _find_extension
+from lumigo_opentelemetry.external.botocore.extensions.types import (
     _AwsSdkCallContext,
 )
-from opentelemetry.instrumentation.botocore.package import _instruments
-from opentelemetry.instrumentation.botocore.version import __version__
+from lumigo_opentelemetry.external.botocore.package import _instruments
+from lumigo_opentelemetry.external.botocore.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import (
     _SUPPRESS_INSTRUMENTATION_KEY,

@@ -18,7 +18,7 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlparse
 
-from opentelemetry.instrumentation.botocore.extensions.types import (
+from lumigo_opentelemetry.external.botocore.extensions.types import (
     _AttributeMapT,
     _AwsSdkCallContext,
     _AwsSdkExtension,

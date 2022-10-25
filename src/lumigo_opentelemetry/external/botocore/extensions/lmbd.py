@@ -18,7 +18,7 @@ import json
 import re
 from typing import Dict
 
-from opentelemetry.instrumentation.botocore.extensions.types import (
+from lumigo_opentelemetry.external.botocore.extensions.types import (
     _AttributeMapT,
     _AwsSdkCallContext,
     _AwsSdkExtension,

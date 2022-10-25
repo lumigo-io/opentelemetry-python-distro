@@ -15,7 +15,7 @@
 import importlib
 import logging
 
-from opentelemetry.instrumentation.botocore.extensions.types import (
+from lumigo_opentelemetry.external.botocore.extensions.types import (
     _AwsSdkCallContext,
     _AwsSdkExtension,
 )

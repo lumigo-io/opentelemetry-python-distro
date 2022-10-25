@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry.instrumentation.botocore.extensions.types import (
+from lumigo_opentelemetry.external.botocore.extensions.types import (
     _AttributeMapT,
     _AwsSdkExtension,
     _BotoResultT,
