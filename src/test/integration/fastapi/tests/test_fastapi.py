@@ -107,12 +107,10 @@ class TestFastApiSpans(unittest.TestCase):
         children = spans_container.get_non_internal_children()
         self.assertEqual(1, len(children))
         children_attributes = children[0]["attributes"]
-        print("children_attributes")
-        print(children_attributes)
         self.assertEqual(children_attributes["http.method"], "GET")
         self.assertEqual(
             children_attributes["http.url"],
-            "https://api.publicapis.org/entries",
+            "http://universities.hipolabs.com/search?country=United+States",
         )
         self.assertEqual(len(children_attributes["http.response.body"]), 2048)
         self.assertEqual(children_attributes["http.status_code"], 200)
