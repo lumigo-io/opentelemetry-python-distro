@@ -28,7 +28,6 @@ setup(
         "opentelemetry-instrumentation-asgi==0.28b1",
         "opentelemetry-instrumentation-asyncpg==0.28b1",
         "opentelemetry-instrumentation-boto==0.28b1",
-        "opentelemetry-instrumentation-botocore @ git+https://github.com/lumigo-io/opentelemetry-python-contrib@c8314a87802aa1942d3f970fc5cedcf72fa8ee33#egg=opentelemetry-instrumentation-botocore&subdirectory=instrumentation/opentelemetry-instrumentation-botocore",
         "opentelemetry-instrumentation-django==0.28b1",
         "opentelemetry-instrumentation-elasticsearch==0.28b1",
         "opentelemetry-instrumentation-falcon==0.28b1",
