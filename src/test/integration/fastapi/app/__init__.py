@@ -1,7 +1,6 @@
 import requests
 from fastapi import FastAPI
 
-
 app = FastAPI()
 
 
@@ -18,5 +17,8 @@ def invoke_requests():
 
 @app.get("/invoke-requests-large-response")
 def invoke_requests_big_response():
-    response = requests.get("https://api.publicapis.org/entries")
+    response = requests.get(
+        "http://universities.hipolabs.com/search?country=United+States"
+    )
+    response.raise_for_status()
     return response.json()
