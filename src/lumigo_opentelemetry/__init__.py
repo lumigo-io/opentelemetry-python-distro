@@ -137,7 +137,6 @@ def init() -> Dict[str, Any]:
             from lumigo_opentelemetry.dependencies import report
 
             try:
-                # TODO Avoid sending the process env and non-infrastructure resource attributes
                 report(
                     DEFAULT_DEPENDENCIES_ENDPOINT,
                     lumigo_token,
