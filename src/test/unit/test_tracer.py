@@ -81,4 +81,4 @@ class TestDependencyReport(TestCase):
 
         assert resource_attributes and resource_attributes["lumigo.distro.version"]
         assert "process.environ" not in resource_attributes.keys()
-        assert dependencies and len(dependencies) > 0
+        assert dependencies
