@@ -61,6 +61,23 @@ class TestDependencyReport(TestCase):
     @patch.dict(
         environ, {"LUMIGO_TRACER_TOKEN": "abcdef", "LUMIGO_REPORT_DEPENDENCIES": "true"}
     )
+    def test_dependency_report_fails(self):
+        httpretty.register_uri(
+            HTTPretty.POST,
+            "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/dependencies",
+            headers={"Authentication": "LumigoToken abcdef"},
+            status_code=500,
+        )
+
+        init()
+
+        # Check we did call the endpoint, it failed, and init() didn't
+        assert httpretty.latest_requests()
+
+    @httpretty.activate(allow_net_connect=False)
+    @patch.dict(
+        environ, {"LUMIGO_TRACER_TOKEN": "abcdef", "LUMIGO_REPORT_DEPENDENCIES": "true"}
+    )
     def test_dependency_report_called(self):
         httpretty.register_uri(
             HTTPretty.POST,
