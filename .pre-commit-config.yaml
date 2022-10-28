@@ -8,26 +8,36 @@ repos:
       additional_dependencies: ['click==8.0.4']
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.971
+    rev: v0.982
     hooks:
-    -   id: mypy
-        entry: mypy
-        exclude: '(src/test/|noxfile\.py)|(src/lumigo_opentelemetry/external/.*)'
-        args: ['--explicit-package-bases',  # Needed for src/ci
-               '--namespace-packages',  # Needed for opentelemetry package
-               '--disallow-any-generics', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs', '--no-implicit-optional', '--warn-redundant-casts', '--warn-unused-ignores', '--warn-return-any', '--no-implicit-reexport', '--strict-equality', '--ignore-missing-imports']
+    - id: mypy
+      entry: mypy
+      additional_dependencies:
+      - types-attrs==19.1.0
+      - types-boto==2.49.17
+      - types-PyMySQL==1.0.19
+      - types-PyYAML==6.0.11
+      - types-redis==4.3.20
+      - types-requests==2.28.11.2
+      - types-setuptools==65.5.0.2
+      - types-urllib3<1.27
+      exclude: '(src/test/|noxfile\.py)|(src/lumigo_opentelemetry/external/.*)'
+      args: ['--install-types',  # Ensure the types stubs are installed
+             '--explicit-package-bases',  # Needed for src/ci
+             '--namespace-packages',  # Needed for opentelemetry package
+             '--disallow-any-generics', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs', '--no-implicit-optional', '--warn-redundant-casts', '--warn-unused-ignores', '--warn-return-any', '--no-implicit-reexport', '--strict-equality', '--ignore-missing-imports']
 
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 5.0.4
     hooks:
-    -   id: flake8
-        args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*"]
-        additional_dependencies: ['importlib-metadata==4.2.0']
+    - id: flake8
+      args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*"]
+      additional_dependencies: ['importlib-metadata==4.2.0']
 
 -   repo: https://github.com/PyCQA/bandit
     rev: '1.7.0'
     hooks:
-    -   id: bandit
-        exclude: ^src/test/
-        args: ["-lll"]
-        additional_dependencies: ['importlib-metadata==4.2.0']
+    - id: bandit
+      exclude: ^src/test/
+      args: ["-lll"]
+      additional_dependencies: ['importlib-metadata==4.2.0']
