@@ -9,6 +9,7 @@ pytest-cov==3.0.0
 capturer==3.0
 attrs==21.4.0
 requests==2.27.1
+httpretty==1.1.4
 moto==3.1.5
 itsdangerous==2.0.1
 Jinja2==3.0.3
