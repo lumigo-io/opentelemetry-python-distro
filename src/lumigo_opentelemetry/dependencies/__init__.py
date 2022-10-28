@@ -20,7 +20,7 @@ from opentelemetry.attributes import BoundedAttributes
 DEFAULT_CONNECTION_TIMEOUT = 3
 
 
-def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes):
+def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes) -> None:
     dependencies = [
         {
             "name": distribution_name,
@@ -50,11 +50,11 @@ def _prepare_resource_attributes_for_marshalling(
     }
 
 
-def _report_to_saas(url: str, lumigo_token: str, data: str):
+def _report_to_saas(url: str, lumigo_token: str, data: str) -> None:
     parsed_url = urlparse(url)
     timeout = environ.get("LUMIGO_CONNECTION_TIMEOUT", DEFAULT_CONNECTION_TIMEOUT)
 
-    connection = HTTPSConnection(parsed_url.hostname, timeout=timeout)
+    connection = HTTPSConnection(parsed_url.hostname or "", timeout=float(timeout))
     connection.request(
         "POST",
         parsed_url.path,
