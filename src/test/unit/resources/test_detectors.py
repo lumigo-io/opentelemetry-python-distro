@@ -127,3 +127,7 @@ def test_get_resource_aws_ecs_resource_detector_not_ecs_container(caplog):
     assert ResourceAttributes.CLOUD_PLATFORM not in resource.attributes
     assert ResourceAttributes.CONTAINER_NAME not in resource.attributes
     assert ResourceAttributes.CONTAINER_ID not in resource.attributes
+
+
+def test_eks_detector():
+    pass
