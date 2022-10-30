@@ -15,7 +15,7 @@ from lumigo_opentelemetry.resources.detectors import (
 )
 
 from lumigo_opentelemetry import _setup_logger
-from .eks_utils import container_id_text, get_cluster_info
+from .eks_utils import CONTAINER_ID_TEXT, GET_CLUSTER_INFO
 
 
 def test_process_detector():
@@ -141,12 +141,12 @@ def test_get_resource_aws_ecs_resource_detector_not_ecs_container(caplog):
 )
 @patch(
     "opentelemetry.sdk.extension.aws.resource.eks._get_cluster_info",
-    return_value=get_cluster_info,
+    return_value=GET_CLUSTER_INFO,
 )
 @patch(
     "builtins.open",
     new_callable=mock_open,
-    read_data=container_id_text,
+    read_data=CONTAINER_ID_TEXT,
 )
 def test_get_resource_aws_eks_resource_detector(
     mock_open_function,
@@ -161,3 +161,4 @@ def test_get_resource_aws_eks_resource_detector(
     assert isinstance(resource.attributes[ResourceAttributes.K8S_CLUSTER_NAME], str)
     assert len(resource.attributes[ResourceAttributes.K8S_CLUSTER_NAME]) > 1
     assert isinstance(resource.attributes[ResourceAttributes.CONTAINER_ID], str)
+    assert len(resource.attributes[ResourceAttributes.CONTAINER_ID]) > 1

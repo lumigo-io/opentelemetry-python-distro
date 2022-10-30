@@ -12,7 +12,7 @@ MockEksResourceAttributes = {
 }
 
 
-get_cluster_info = f"""{{
+GET_CLUSTER_INFO = f"""{{
   "kind": "ConfigMap",
   "apiVersion": "v1",
   "metadata": {{
@@ -33,7 +33,7 @@ get_cluster_info = f"""{{
 }}
 """
 
-container_id_text = f"""14:name=systemd:/docker/{MockEksResourceAttributes[ResourceAttributes.CONTAINER_ID]}
+CONTAINER_ID_TEXT = f"""14:name=systemd:/docker/{MockEksResourceAttributes[ResourceAttributes.CONTAINER_ID]}
 13:rdma:/
 12:pids:/docker/bogusContainerIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
 11:hugetlb:/docker/bogusContainerIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
