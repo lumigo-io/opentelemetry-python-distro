@@ -1,15 +1,20 @@
 from __future__ import annotations
 import os
+import sys
 import tempfile
-from xml.etree import ElementTree
 import time
 from typing import List, Union, Optional
+from xml.etree import ElementTree
 
 import nox
 import requests
 import yaml
 
-from src.ci.tested_versions_utils import (
+repo_dir = os.path.dirname(__file__)
+if repo_dir not in sys.path:
+    sys.path.append(repo_dir)
+
+from src.ci.tested_versions_utils import (  # noqa: E402
     NonSemanticVersion,
     SemanticVersion,
     TestedVersions,
@@ -115,6 +120,61 @@ def dependency_versions_to_be_tested(
         supported_version_to_test.version
         for supported_version_to_test in supported_versions_to_test
     ]
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
+    "boto3_version",
+    dependency_versions_to_be_tested(
+        directory="boto3",
+        dependency_name="boto3",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_boto3_sqs(
+    session,
+    boto3_version,
+):
+    with TestedVersions.save_tests_result("botocore", "boto3", boto3_version):
+        install_package("boto3", boto3_version, session)
+
+        session.install(".")
+
+        abs_path = os.path.abspath("src/test/integration/boto3-sqs/")
+        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+            full_path = f"{temp_file}.txt"
+
+            with session.chdir("src/test/integration/boto3-sqs"):
+                session.install("-r", "requirements_others.txt")
+
+                try:
+                    session.run(
+                        "sh",
+                        "./scripts/run_app",
+                        env={
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        },
+                        external=True,
+                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                    # TODO Make this deterministic
+                    # Give time for app to start
+                    time.sleep(8)
+
+                    session.run(
+                        "pytest",
+                        "--tb",
+                        "native",
+                        "--log-cli-level=INFO",
+                        "--color=yes",
+                        "-v",
+                        "./tests/test_boto3_sqs.py",
+                        env={
+                            "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        },
+                    )
+                finally:
+                    kill_process_and_clean_outputs(full_path, "run_app", session)
 
 
 @nox.session(python=python_versions())
