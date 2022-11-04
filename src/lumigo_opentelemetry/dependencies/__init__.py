@@ -69,4 +69,6 @@ def _report_to_saas(url: str, lumigo_token: str, data: str) -> None:
     response_status = response.status
 
     if response_status != 200:
-        raise Exception(f"Dependency report failed with status code {response_status}")
+        raise Exception(
+            f"Dependency report failed with status code {response_status}; response body: {str(response.read())}"
+        )
