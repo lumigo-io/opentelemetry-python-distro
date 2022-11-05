@@ -203,7 +203,7 @@ Consider the following scenario, which is supported by the `boto3` SQS `receive_
 ```python
 response = client.receive_message(...)  # Instrumentation creates a `span_0` span
 
-for message in response["Messages"]:
+for message in response.get("Messages", []):
   # The SQS.ReceiveMessage span is active in this scope
   with trace.start_as_current_span("span_1"):  # span_0 is the parent of span_1
     do_something()
