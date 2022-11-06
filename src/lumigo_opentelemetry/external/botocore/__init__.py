@@ -111,9 +111,6 @@ logger = logging.getLogger(__name__)
 _SUPPRESS_HTTP_INSTRUMENTATION_KEY = context_api.create_key(
     "suppress_http_instrumentation"
 )
-_SQS_RECEIVE_MESSAGE_SPAN = context_api.create_key(
-    "sqs_receive_message_span"
-)
 
 
 # pylint: disable=unused-argument
