@@ -63,6 +63,14 @@ class TestBoto3SqsSpans(unittest.TestCase):
 
         self.assertEqual(iterator_on_copy_span["name"], "iterator_on_copy")
         self.assertIsNone(iterator_on_copy_span["parent_id"])
+        self.assertNotEquals(
+            iterator_on_copy_span["context"]["trace_id"],
+            receive_message_2_span["context"]["trace_id"],
+        )
 
         self.assertEqual(after_iterator_break_span["name"], "after_iterator_break")
         self.assertIsNone(after_iterator_break_span["parent_id"])
+        self.assertNotEquals(
+            after_iterator_break_span["context"]["trace_id"],
+            iterator_on_copy_span["context"]["trace_id"],
+        )
