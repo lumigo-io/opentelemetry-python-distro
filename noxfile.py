@@ -10,6 +10,7 @@ import nox
 import requests
 import yaml
 
+# Ensure nox can load local packages
 repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
