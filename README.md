@@ -193,3 +193,4 @@ tracer_provider.force_flush()
 
 # Now the Python process can terminate, with all the spans closed so far sent to Lumigo
 ```
+
