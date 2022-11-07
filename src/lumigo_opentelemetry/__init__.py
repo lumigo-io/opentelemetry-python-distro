@@ -137,7 +137,6 @@ def init() -> Dict[str, Any]:
             from lumigo_opentelemetry.dependencies import report
 
             try:
-                # TODO Avoid sending the process env and non-infrastructure resource attributes
                 report(
                     DEFAULT_DEPENDENCIES_ENDPOINT,
                     lumigo_token,
@@ -167,7 +166,7 @@ def init() -> Dict[str, Any]:
                     # Print one span per line for ease of parsing, as the
                     # file itself will not be valid JSON, it will be just a
                     # sequence of JSON objects, not a list
-                    formatter=lambda span: span.to_json(indent=None) + "\n",  # type: ignore
+                    formatter=lambda span: span.to_json(indent=None) + "\n",
                 )
             )
         )
