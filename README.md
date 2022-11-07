@@ -106,10 +106,10 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 | Instrumentation | Package | Supported Versions |
 | --- | --- | --- |
 | botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.24.35 |
-| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.85.0 |
-| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.18.3 |
+| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.86.0 |
+| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.19.0 |
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.2 |
-| pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.12.3 |
+| pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.13.0 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
 | | | 1.0.0~1.0.2 |
 
@@ -194,3 +194,19 @@ tracer_provider.force_flush()
 # Now the Python process can terminate, with all the spans closed so far sent to Lumigo
 ```
 
+### Consuming SQS messages with Boto3 receive_message
+
+Messaging instrumentations that retrieve messages from queues tend to be counter-intuitive for end-users: when retrivieng one of more messages from the queue, one would natutally expect that all calls done _using data from those messages_, e.g., sending their content to a database or another queue, would result in spans that are children of the describing the retrivieng of those messages.
+
+Consider the following scenario, which is supported by the `boto3` SQS `receive_message` instrumentation of the Lumigo OpenTelemetry Distro for Python:
+
+```python
+response = client.receive_message(...)  # Instrumentation creates a `span_0` span
+
+for message in response.get("Messages", []):
+  # The SQS.ReceiveMessage span is active in this scope
+  with trace.start_as_current_span("span_1"):  # span_0 is the parent of span_1
+    do_something()
+```
+
+Without the scope provided by the iterator over `response["Messages"]`, `span_1` would be without a parent span, and that would result in a separate invocation and a separate transaction in Lumigo.
