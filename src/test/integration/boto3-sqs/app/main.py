@@ -21,6 +21,10 @@ def run():
         QueueUrl=queue["QueueUrl"],
         MessageBody="Message_2",
     )
+    client.send_message(
+        QueueUrl=queue["QueueUrl"],
+        MessageBody="Message_3",
+    )
 
     messages_copy = None
 
@@ -48,9 +52,9 @@ def run():
         ) as span:
             span.set_attribute("foo", "bar")
 
-    response = client.receive_message(QueueUrl=queue["QueueUrl"], MaxNumberOfMessages=1)
+    response = client.receive_message(QueueUrl=queue["QueueUrl"], MaxNumberOfMessages=2)
     if response:
-        for message in response["Messages"]:
+        for message in response.get("Messages", []):
             # In the iterator, we must restore the span for client.receive_message
             break  # Here we are supposed to lose the trace context
 

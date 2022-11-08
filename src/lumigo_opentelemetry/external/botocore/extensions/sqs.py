@@ -12,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
+
 from lumigo_opentelemetry.external.botocore.extensions.types import (
     _AttributeMapT,
     _AwsSdkExtension,
     _BotoResultT,
 )
 from opentelemetry import context as context_api
+from opentelemetry.propagate import extract, inject
+from opentelemetry.propagators.textmap import CarrierT, Getter, Setter
 from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.trace import get_current_span
+from opentelemetry.trace import get_current_span, get_tracer, Link, set_span_in_context
 from opentelemetry.trace.propagation import _SPAN_KEY
 from opentelemetry.trace.span import NonRecordingSpan, Span
-from typing import Generator
+from typing import Any, Generator
+
 
 _SUPPORTED_OPERATIONS = ["SendMessage", "SendMessageBatch", "ReceiveMessage"]
 
@@ -40,6 +45,39 @@ class _SqsExtension(_AwsSdkExtension):
                 "/"
             )[-1]
 
+    def before_service_call(self, span: Span):
+        operation = self._call_context.operation
+        params = self._call_context.params
+
+        if operation == "SendMessage":
+            if "MessageAttributes" not in params:
+                params["MessageAttributes"] = {}
+
+            inject(
+                params["MessageAttributes"],
+                context_api.get_current(),
+                _SqsExtension.SqsMetadataContextSetter(),
+            )
+
+        elif operation == "SendMessageBatch":
+            for entry in params["Entries"]:
+                params["MessageAttributes"] = {}
+
+                inject(
+                    entry["MessageAttributes"],
+                    context_api.get_current(),
+                    _SqsExtension.SqsMetadataContextSetter(),
+                )
+
+        elif operation == "ReceiveMessage":
+            params = self._call_context.params
+
+            if "MessageAttributeNames" not in params:
+                params["MessageAttributeNames"] = []
+
+            # TODO find expected headers based on propagator
+            params["MessageAttributeNames"].append("traceparent")
+
     def on_success(self, span: Span, result: _BotoResultT):
         operation = self._call_context.operation
         if operation in _SUPPORTED_OPERATIONS:
@@ -48,21 +86,52 @@ class _SqsExtension(_AwsSdkExtension):
                     SpanAttributes.MESSAGING_MESSAGE_ID,
                     result.get("MessageId"),
                 )
+
             elif operation == "SendMessageBatch" and result.get("Successful"):
                 span.set_attribute(
                     SpanAttributes.MESSAGING_MESSAGE_ID,
                     result["Successful"][0]["MessageId"],
                 )
             elif operation == "ReceiveMessage" and result.get("Messages"):
+                messages = result["Messages"]
+
                 span.set_attribute(
                     SpanAttributes.MESSAGING_MESSAGE_ID,
-                    result["Messages"][0]["MessageId"],
+                    messages[0]["MessageId"],
                 )
 
                 # Replace the 'Messages' list with a list that restores `span` as trace
                 # context over iterations.
                 ctx = _SqsExtension.ScopeContext(span)
+
+                if len(messages) > 1:
+                    # TODO Change this to something sensible?
+                    tracer = get_tracer(__name__)
+                    now = time.time()
+
+                    for message in messages:
+                        message_id = message["MessageId"]
+                        links = []
+                        if "MessageAttributes" in message and "traceparent" in message["MessageAttributes"]:
+                            # This apparently is the "best" way to go from context to the span inside
+                            # without attaching the context...
+                            for item in extract(message["MessageAttributes"], getter=_SqsExtension.SqsMetadataContextGetter()).values():
+                                if isinstance(item, Span):
+                                    links.append(Link(context=item.get_span_context(), attributes={
+                                        SpanAttributes.MESSAGING_MESSAGE_ID: message_id,
+                                    }))
+
+                        context = set_span_in_context(span)
+                        tracer.start_span(
+                            f"Message {message_id}",
+                            context=context,
+                            attributes={SpanAttributes.MESSAGING_MESSAGE_ID: message_id},
+                            links=links,
+                            start_time=now
+                        ).end(now)
+
                 result["Messages"] = _SqsExtension.ContextableList(result["Messages"], ctx)
+
 
     class ScopeContext:
         def __init__(self, span: Span):
@@ -122,3 +191,25 @@ class _SqsExtension(_AwsSdkExtension):
                     index = index + 1
             finally:
                 self._scopeContext._exit()
+
+
+    class SqsMetadataContextSetter(Setter):
+
+        def set(self, message_attributes: CarrierT, key: str, value: Any):  # pylint: disable=no-self-use
+            message_attributes[key] = {
+                "StringValue": str(value),
+                "DataType": "String",
+            }
+
+
+    class SqsMetadataContextGetter(Getter):
+
+        def get(self, message_attributes: CarrierT, key: str):
+            if key in message_attributes:
+                if val := message_attributes[key]:
+                    # TODO Implement other datatypes?
+                    if "DataType" in val and val["DataType"] == "String":
+                        return [str(val["StringValue"])]
+
+        def keys(self, message_attributes: CarrierT):
+            return message_attributes.keys()
