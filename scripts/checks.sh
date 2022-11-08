@@ -3,6 +3,12 @@ set -eo pipefail
 
 pre-commit run -a
 
+# run u.t
+pushd src/test/
+pytest ci
+pytest unit
+popd
+
 if [[ -n "$CIRCLECI" ]]
 then
     # Check if branch contains RD ticket value.

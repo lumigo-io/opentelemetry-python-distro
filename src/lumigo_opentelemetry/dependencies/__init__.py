@@ -10,14 +10,13 @@
 
 from http.client import HTTPSConnection
 from json import dumps
-from os import environ
 from pkg_resources import Environment, get_distribution
 from typing import Any, Dict
 from urllib.parse import urlparse
 
 from opentelemetry.attributes import BoundedAttributes
 
-DEFAULT_CONNECTION_TIMEOUT = 3
+from lumigo_opentelemetry.utils.config import get_connection_timeout
 
 
 def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes) -> None:
@@ -52,9 +51,10 @@ def _prepare_resource_attributes_for_marshalling(
 
 def _report_to_saas(url: str, lumigo_token: str, data: str) -> None:
     parsed_url = urlparse(url)
-    timeout = environ.get("LUMIGO_CONNECTION_TIMEOUT", DEFAULT_CONNECTION_TIMEOUT)
 
-    connection = HTTPSConnection(parsed_url.hostname or "", timeout=float(timeout))
+    connection = HTTPSConnection(
+        parsed_url.hostname or "", timeout=get_connection_timeout()
+    )
     connection.request(
         "POST",
         parsed_url.path,

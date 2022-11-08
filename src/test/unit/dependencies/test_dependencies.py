@@ -56,7 +56,7 @@ class TestDependencyReport(TestCase):
 
         assert report_to_saas_mock.call_count == 1
 
-        [url, lumigo_token, data] = report_to_saas_mock.call_args.args
+        [url, lumigo_token, data] = report_to_saas_mock.call_args[0]
 
         assert url == "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/dependencies"
         assert lumigo_token == "abcdef"

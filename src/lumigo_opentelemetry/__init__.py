@@ -83,7 +83,6 @@ def init() -> Dict[str, Any]:
 
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -100,6 +99,7 @@ def init() -> Dict[str, Any]:
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
+    from lumigo_opentelemetry.resources.detectors import get_resource
     from lumigo_opentelemetry.resources.detectors import (
         get_infrastructure_resource,
         get_process_resource,
@@ -109,10 +109,8 @@ def init() -> Dict[str, Any]:
     infrastructure_resource = get_infrastructure_resource()
     process_resource = get_process_resource()
 
-    tracer_resource = (
-        Resource.create(attributes={"framework": framework})
-        .merge(process_resource)
-        .merge(infrastructure_resource)
+    tracer_resource = get_resource(
+        infrastructure_resource, process_resource, {"framework": framework}
     )
 
     tracer_provider = TracerProvider(

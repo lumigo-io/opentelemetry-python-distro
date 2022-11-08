@@ -119,3 +119,15 @@ def get_process_resource() -> "Resource":
             ProcessResourceDetector(),
         ],
     )
+
+
+def get_resource(
+    infrastructure_resource: "Resource",
+    process_resource: "Resource",
+    attributes: Dict[str, Any],
+) -> "Resource":
+    return (
+        Resource.create(attributes=attributes)
+        .merge(process_resource)
+        .merge(infrastructure_resource)
+    )
