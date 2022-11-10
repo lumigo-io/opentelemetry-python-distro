@@ -8,15 +8,14 @@
 # This behavior is opt-out using the `LUMIGO_REPORT_DEPENDENCIES=false`
 # environment variable.
 
-from http.client import HTTPSConnection
 from json import dumps
 from pkg_resources import Environment, get_distribution
 from typing import Any, Dict
-from urllib.parse import urlparse
 
 from opentelemetry.attributes import BoundedAttributes
+import requests
 
-from lumigo_opentelemetry.utils.config import get_connection_timeout
+from lumigo_opentelemetry.utils.config import get_connection_timeout_seconds
 
 
 def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes) -> None:
@@ -50,25 +49,19 @@ def _prepare_resource_attributes_for_marshalling(
 
 
 def _report_to_saas(url: str, lumigo_token: str, data: str) -> None:
-    parsed_url = urlparse(url)
-
-    connection = HTTPSConnection(
-        parsed_url.hostname or "", timeout=get_connection_timeout()
-    )
-    connection.request(
-        "POST",
-        parsed_url.path,
-        data,
-        {
+    response = requests.post(
+        url,
+        data=data,
+        headers={
             "Authorization": f"LumigoToken {lumigo_token}",
             "Content-type": "application/json",
         },
+        timeout=get_connection_timeout_seconds(),
     )
 
-    response = connection.getresponse()
-    response_status = response.status
+    response_status = response.status_code
 
     if response_status != 200:
         raise Exception(
-            f"Dependency report failed with status code {response_status}; response body: {str(response.read())}"
+            f"Dependency report failed with status code {response_status}; response body: {response.text}"
         )
