@@ -141,7 +141,7 @@ def init() -> Dict[str, Any]:
                     infrastructure_resource.attributes,
                 )
             except Exception as e:
-                logger.debug("Cannot report dependencies to Lumigo", e)
+                logger.debug("Cannot report dependencies to Lumigo", exc_info=e)
         else:
             logger.debug("Dependency reporting is turned off")
     else:
