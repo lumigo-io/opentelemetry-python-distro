@@ -334,6 +334,10 @@ def component_tests(session):
         fastapi_version="0.78.0",  # arbitrary version
         uvicorn_version="0.16.0",  # arbitrary version
     )
+
+
+@nox.session(python=python_versions())
+def component_tests2(session):
     component_tests_execution_tags(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
