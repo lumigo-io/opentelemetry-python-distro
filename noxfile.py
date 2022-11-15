@@ -334,6 +334,11 @@ def component_tests(session):
         fastapi_version="0.78.0",  # arbitrary version
         uvicorn_version="0.16.0",  # arbitrary version
     )
+    component_tests_execution_tags(
+        session=session,
+        fastapi_version="0.78.0",  # arbitrary version
+        uvicorn_version="0.16.0",  # arbitrary version
+    )
 
 
 def component_tests_attr_max_size(
@@ -381,6 +386,55 @@ def component_tests_attr_max_size(
                     env={
                         "LUMIGO_DEBUG_SPANDUMP": full_path,
                         "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(full_path, "uvicorn", session)
+
+
+def component_tests_execution_tags(
+    session,
+    fastapi_version,
+    uvicorn_version,
+):
+    install_package("uvicorn", uvicorn_version, session)
+    install_package("fastapi", fastapi_version, session)
+
+    session.install(".")
+
+    abs_path = os.path.abspath("src/test/components/")
+    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        full_path = f"{temp_file}.txt"
+
+        with session.chdir("src/test/components"):
+            session.install("-r", "requirements_others.txt")
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": full_path,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_execution_tags.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": full_path,
                     },
                 )
             finally:

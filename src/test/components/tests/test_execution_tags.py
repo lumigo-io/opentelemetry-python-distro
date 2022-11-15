@@ -24,8 +24,12 @@ class TestExecutionTags(unittest.TestCase):
         root = spans_container.get_root()
         self.assertIsNotNone(root)
         root_attributes = root["attributes"]
-        self.assertEquals(type(root_attributes["lumigo.execution_tags.response_len"]), int)
-        self.assertEquals(type(root_attributes["lumigo.execution_tags.response"]), str)
-        self.assertEquals(root_attributes["lumigo.execution_tags.app"], True)
-        self.assertEquals(root_attributes["lumigo.execution_tags.app.response"], "success")
-        self.assertEquals(root_attributes["lumigo.execution_tags.foo"], ["bar", "baz"])
+        self.assertEqual(
+            type(root_attributes["lumigo.execution_tags.response_len"]), int
+        )
+        self.assertEqual(type(root_attributes["lumigo.execution_tags.response"]), str)
+        self.assertEqual(root_attributes["lumigo.execution_tags.app"], True)
+        self.assertEqual(
+            root_attributes["lumigo.execution_tags.app.response"], "success"
+        )
+        self.assertEqual(root_attributes["lumigo.execution_tags.foo"], ["bar", "baz"])
