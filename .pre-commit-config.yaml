@@ -26,8 +26,8 @@ repos:
                '--namespace-packages',  # Needed for opentelemetry package
                '--disallow-any-generics', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs', '--no-implicit-optional', '--warn-redundant-casts', '--warn-return-any', '--no-implicit-reexport', '--strict-equality', '--ignore-missing-imports']
 
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 5.0.4
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
     hooks:
     -   id: flake8
         args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*"]
