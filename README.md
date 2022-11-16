@@ -104,7 +104,7 @@ For example: in multi-tenanted systems, execution tags are often used to mark wi
 
 #### Creating Execution Tags
 
-In the Lumigo OpenTelemetry Distro for JS, execution tags are represented as [span attributes](https://opentelemetry.io/docs/reference/specification/common/#attribute) and, specifically, as span attributes with the `lumigo.execution_tags.` prefix.
+In the Lumigo OpenTelemetry Distro for Python, execution tags are represented as [span attributes](https://opentelemetry.io/docs/reference/specification/common/#attribute) and, specifically, as span attributes with the `lumigo.execution_tags.` prefix.
 For example, you could add an execution tag as follows:
 
 ```python
@@ -134,12 +134,13 @@ from opentelemetry.trace import get_current_span
 
 get_current_span().set_attribute('lumigo.execution_tags.foo',['bar', 'baz'])
 ```
-Or, by using `tuple`:
+
+Tuples are also supported to specify multiple values for an execution tag:
 
 ```python
 from opentelemetry.trace import get_current_span
 
-get_current_span().set_attribute('lumigo.execution_tags.bar',('baz','xyz'))
+get_current_span().set_attribute('lumigo.execution_tags.bar',('baz','xyz',))
 ```
 
 The snippets above will produce in Lumigo the `foo` tag having both `bar` and `baz` values.
@@ -157,7 +158,7 @@ trace.get_current_span().set_attribute('lumigo.execution_tags.foo','bar')
 
 tracer = trace.get_tracer(__name__)
 
-with tracer.start_as_current_span("child_span") as child_span:
+with tracer.start_as_current_span('child_span') as child_span:
     child_span.set_attribute('lumigo.execution_tags.foo','baz')
 ```
 
