@@ -118,7 +118,7 @@ Notice that, using OpenTelemetry's [`get_current_span()` API](https://openteleme
 In OpenTelemetry, span attributes can be `strings`, `numbers` (double precision floating point or signed 64 bit integer), `booleans` (a.k.a. "primitive types"), and arrays of one primitive type (e.g., an array of string, and array of numbers or an array of booleans).
 In Lumigo, booleans and numbers are transformed to strings.
 
-**IMPORTANT:** If you use the `Span.set_attribute` API multiple times _on the same span_ to set multiple values, or set the same key, you may instead override the previous one:
+**IMPORTANT:** If you use the `Span.set_attribute` API multiple times _on the same span_ to set values for the same key multiple values, you may override previous values rather than adding to them:
 
 ```python
 from opentelemetry.trace import get_current_span
