@@ -183,8 +183,8 @@ In case your execution tags on different spans appear on different invocations t
 | Instrumentation | Package | Supported Versions |
 | --- | --- | --- |
 | botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.24.35 |
-| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.86.0 |
-| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.19.0 |
+| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.87.0 |
+| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.20.0 |
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.2 |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.10.0~3.13.0 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
