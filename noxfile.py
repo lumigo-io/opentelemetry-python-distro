@@ -136,7 +136,7 @@ def integration_tests_boto3_sqs(
     session,
     boto3_version,
 ):
-    with TestedVersions.save_tests_result("botocore", "boto3", boto3_version):
+    with TestedVersions.save_tests_result("boto3-sqs", "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
         session.install(".")
@@ -191,7 +191,7 @@ def integration_tests_boto3(
     session,
     boto3_version,
 ):
-    with TestedVersions.save_tests_result("botocore", "boto3", boto3_version):
+    with TestedVersions.save_tests_result("boto3", "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
         session.install(".")

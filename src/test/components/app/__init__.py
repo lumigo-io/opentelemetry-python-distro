@@ -27,5 +27,5 @@ def invoke_request():
 
 @app.get("/invoke-requests-large-response")
 def invoke_requests_big_response():
-    response = requests.get("https://api.publicapis.org/entries")
+    response = requests.get("http://localhost:8021/big-response")
     return response.json()
