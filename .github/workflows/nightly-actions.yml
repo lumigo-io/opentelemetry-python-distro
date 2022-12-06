@@ -1,7 +1,5 @@
 name: Version Testing
-on:
-  schedule:
-    - cron: "0 7 * * *"
+on: [push]
 jobs:
   # If this key gets renamed, nox.py needs to be adjusted
   check-new-versions-of-instrumented-packages:
@@ -74,12 +72,12 @@ jobs:
           echo "new_versions<<EOF" >> $GITHUB_ENV
           echo "$new_versions" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          title: ${{steps.branch_name.outputs.branch_name}}
-          branch: ${{steps.branch_name.outputs.branch_name}}
-          commit-message: ${{ env.new_versions }}
-          body: ${{ env.new_versions }}
-          base: main
-          reviewers: nirLumigo,GuyMoses,saartochner,shanishiri,mmanciop
+#      - name: Create Pull Request
+#        uses: peter-evans/create-pull-request@v4
+#        with:
+#          title: ${{steps.branch_name.outputs.branch_name}}
+#          branch: ${{steps.branch_name.outputs.branch_name}}
+#          commit-message: ${{ env.new_versions }}
+#          body: ${{ env.new_versions }}
+#          base: main
+#          reviewers: nirLumigo,GuyMoses,saartochner,shanishiri,mmanciop
