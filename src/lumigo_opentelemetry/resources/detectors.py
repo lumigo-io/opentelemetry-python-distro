@@ -5,6 +5,7 @@ import urllib.request
 from typing import Dict, Any
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
+from opentelemetry.sdk.extension.aws.resource.eks import AwsEksResourceDetector
 from opentelemetry.sdk.resources import (
     ResourceDetector,
     Resource,
@@ -108,6 +109,7 @@ def get_infrastructure_resource() -> "Resource":
             LumigoDistroDetector(),
             LumigoAwsEcsResourceDetector(),
             AwsEcsResourceDetector(),
+            AwsEksResourceDetector(),
         ],
     )
 

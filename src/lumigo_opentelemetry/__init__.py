@@ -30,6 +30,11 @@ def _setup_logger(logger_name: str = "lumigo-opentelemetry") -> logging.Logger:
         logging.CRITICAL
     )
 
+    # Suppress spurious warnings when the application is not running on EKS
+    logging.getLogger("opentelemetry.sdk.extension.aws.resource.eks").setLevel(
+        logging.CRITICAL
+    )
+
     return _logger
 
 

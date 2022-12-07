@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
+# pre-commit
 pre-commit run -a
 
 # run u.t
@@ -9,6 +10,7 @@ pytest ci
 pytest unit
 popd
 
+# branch name validation
 if [[ -n "$CIRCLECI" ]]
 then
     # Check if branch contains RD ticket value.
