@@ -156,7 +156,7 @@ def test_get_resource_aws_eks_resource_detector(
     mock_is_eks,
     mock_get_k8_cred_value,
 ):
-    resource = get_resource({})
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
 
     assert resource.attributes[ResourceAttributes.CLOUD_PROVIDER] == "aws"
     assert resource.attributes[ResourceAttributes.CLOUD_PLATFORM] == "aws_eks"
