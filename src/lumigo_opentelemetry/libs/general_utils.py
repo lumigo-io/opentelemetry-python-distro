@@ -1,5 +1,5 @@
 try:
-    from collections import Iterable  # type: ignore
+    from collections import Iterable
 except ImportError:
     # collections.Iterables was removed in Python 3.10
     from collections.abc import Iterable

@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import urllib.request
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.extension.aws.resource.eks import AwsEksResourceDetector
@@ -102,20 +102,34 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
         )
 
 
-def get_resource(attributes: Dict[str, Any]) -> "Resource":
+def get_infrastructure_resource() -> "Resource":
     return get_aggregated_resources(
-        detectors=_get_detector_list(),
-        initial_resource=Resource.create(attributes=attributes),
+        detectors=[
+            OTELResourceDetector(),
+            LumigoDistroDetector(),
+            LumigoAwsEcsResourceDetector(),
+            AwsEcsResourceDetector(),
+            AwsEksResourceDetector(),
+        ],
     )
 
 
-def _get_detector_list() -> List[ResourceDetector]:
-    return [
-        OTELResourceDetector(),
-        EnvVarsDetector(),
-        ProcessResourceDetector(),
-        LumigoDistroDetector(),
-        LumigoAwsEcsResourceDetector(),
-        AwsEcsResourceDetector(),
-        AwsEksResourceDetector(),
-    ]
+def get_process_resource() -> "Resource":
+    return get_aggregated_resources(
+        detectors=[
+            EnvVarsDetector(),
+            ProcessResourceDetector(),
+        ],
+    )
+
+
+def get_resource(
+    infrastructure_resource: "Resource",
+    process_resource: "Resource",
+    attributes: Dict[str, Any],
+) -> "Resource":
+    return (
+        Resource.create(attributes=attributes)
+        .merge(process_resource)
+        .merge(infrastructure_resource)
+    )

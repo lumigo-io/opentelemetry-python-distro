@@ -9,7 +9,7 @@ class AsyncPGInstrumentorWrapper(AbstractInstrumentor):
         import asyncpg  # noqa
 
     def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.aiopg import AsyncPGInstrumentor  # type: ignore
+        from opentelemetry.instrumentation.aiopg import AsyncPGInstrumentor
 
         AsyncPGInstrumentor().instrument()
 

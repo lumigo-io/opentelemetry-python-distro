@@ -12,6 +12,8 @@ from lumigo_opentelemetry.resources.detectors import (
     LumigoDistroDetector,
     EnvVarsDetector,
     get_resource,
+    get_infrastructure_resource,
+    get_process_resource,
 )
 
 from lumigo_opentelemetry import _setup_logger
@@ -56,7 +58,7 @@ def test_env_vars_detector(monkeypatch):
 def test_get_resource_aws_ecs_resource_detector(monkeypatch):
     monkeypatch.setenv("ECS_CONTAINER_METADATA_URI", "mock-url")
 
-    resource = get_resource({})
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
 
     assert resource.attributes[ResourceAttributes.CLOUD_PROVIDER] == "aws"
     assert resource.attributes[ResourceAttributes.CLOUD_PLATFORM] == "aws_ecs"
@@ -81,7 +83,7 @@ def test_get_resource_lumigo_aws_ecs_resource_detector(monkeypatch, caplog):
     monkeypatch.setattr(urllib.request, "urlopen", mocked_urlopen)
     monkeypatch.setenv("ECS_CONTAINER_METADATA_URI_V4", aws_ecs_metadata_url)
 
-    resource = get_resource({})
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
 
     assert (
         resource.attributes[ResourceAttributes.AWS_ECS_CONTAINER_ARN]
@@ -106,7 +108,7 @@ def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
     monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: 1 / 0)
     monkeypatch.setenv("ECS_CONTAINER_METADATA_URI_V4", "http://test.uri.ecs")
 
-    resource = get_resource({})
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
 
     assert resource.attributes[resources.PROCESS_RUNTIME_NAME] == "cpython"
     assert ResourceAttributes.AWS_ECS_CONTAINER_ARN not in resource.attributes
@@ -121,7 +123,7 @@ def test_get_resource_lumigo_aws_ecs_resource_detector_with_exception(
 
 def test_get_resource_aws_ecs_resource_detector_not_ecs_container(caplog):
     _setup_logger()
-    resource = get_resource({})
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
 
     assert len(caplog.records) == 0
 
@@ -154,7 +156,7 @@ def test_get_resource_aws_eks_resource_detector(
     mock_is_eks,
     mock_get_k8_cred_value,
 ):
-    resource = get_resource({})
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
 
     assert resource.attributes[ResourceAttributes.CLOUD_PROVIDER] == "aws"
     assert resource.attributes[ResourceAttributes.CLOUD_PLATFORM] == "aws_eks"
