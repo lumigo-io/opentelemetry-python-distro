@@ -1,36 +1,50 @@
 version: 2.1
+
+orbs:
+  lumigo-orb: &lumigo_orb_version lumigo/lumigo-orb@volatile
+
 defaults: &defaults
-  working_directory: ~/opentelemetry-python-distro
   docker:
   - image: lumigo/ci:latest
     auth:
       username: lumigo
       password: $DOCKERHUB_PASSWORD
-
-orbs:
-  lumigo-orb: lumigo/lumigo-orb@volatile
+  working_directory: ~/opentelemetry-python-distro
 
 workflows:
   test-deploy:
     jobs:
+    - lumigo-orb/print_orb_versions:
+        lumigo_orb_version: *lumigo_orb_version
     - test:
         filters:
           branches:
             ignore: main
+    - lumigo-orb/is_environment_available:
+        filters:
+          branches:
+            ignore: main
     - lumigo-orb/be-deploy:
-        filters:
-          branches:
-            ignore: main
         requires:
-          - test
-    - lumigo-orb/integration-test:
+          - lumigo-orb/is_environment_available
+    - lumigo-orb/integration-test-prep:
         deploy_spec: python
-        tests_spec: testPython
-        filters:
-          branches:
-            ignore: main
         requires:
           - lumigo-orb/be-deploy
+    - lumigo-orb/integration-test-limited-flows:
+        requires:
+          - lumigo-orb/integration-test-prep
+    - lumigo-orb/integration-test-parallel:
+        requires:
+          - lumigo-orb/integration-test-limited-flows
+    - lumigo-orb/e2e-test:
+        requires:
+          - lumigo-orb/integration-test-parallel
+    - lumigo-orb/workflow-completed-successfully:
+        requires:
+          - test
+          - lumigo-orb/e2e-test
+
     - deploy:
         filters:
           branches:
