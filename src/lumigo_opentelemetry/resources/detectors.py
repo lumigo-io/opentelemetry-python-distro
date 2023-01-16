@@ -118,14 +118,14 @@ _CONTAINER_ID_LENGTH = 64
 def is_container_on_kubernetes() -> bool:
     # Kubernetes manages the /etc/hosts file inside the pods' containers,
     # using a distinctive header, see https://github.com/kubernetes/kubernetes/commit/fd72938dd569bd041f11a76eecfe9b8b4bcf5ae8
-    with open("/etc/hosts", encoding="utf8") as hosts_file:
+    with open("/etc/hosts", "r", encoding="utf8") as hosts_file:
         first_line = hosts_file.readline()
         return first_line.startswith("# Kubernetes-managed hosts file")
 
 
 def get_kubenertes_pod_uid_v1() -> Optional[str]:
     pod_id = None
-    with open("/proc/self/mountinfo", encoding="utf8") as container_info_file:
+    with open("/proc/self/mountinfo", "r", encoding="utf8") as container_info_file:
         for raw_line in container_info_file.readlines():
             line = raw_line.strip()
             # Subsequent IDs should be the same, exit if found one
@@ -137,7 +137,7 @@ def get_kubenertes_pod_uid_v1() -> Optional[str]:
 
 def get_kubenertes_pod_uid_v2() -> Optional[str]:
     pod_id = None
-    with open("/proc/self/cgroup", encoding="utf8") as container_info_file:
+    with open("/proc/self/cgroup", "r", encoding="utf8") as container_info_file:
         for raw_line in container_info_file.readlines():
             line = raw_line.strip()
             # Subsequent IDs should be the same, exit if found one
