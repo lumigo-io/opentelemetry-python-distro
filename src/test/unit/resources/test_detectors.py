@@ -10,6 +10,7 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
     LumigoDistroDetector,
+    LumigoKubernetesResourceDetector,
     EnvVarsDetector,
     get_resource,
     get_infrastructure_resource,
@@ -164,3 +165,96 @@ def test_get_resource_aws_eks_resource_detector(
     assert len(resource.attributes[ResourceAttributes.K8S_CLUSTER_NAME]) > 1
     assert isinstance(resource.attributes[ResourceAttributes.CONTAINER_ID], str)
     assert len(resource.attributes[ResourceAttributes.CONTAINER_ID]) > 1
+
+
+K8S_POD_ID = "6189e731-8c9a-4c3a-ba6f-9796664788a8"
+
+
+@patch(
+    "builtins.open",
+    new_callable=mock_open,
+    read_data="""##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1       localhost
+255.255.255.255 broadcasthost
+""",
+)
+def test_kubernetes_detector_not_on_kubernetes():
+    assert not LumigoKubernetesResourceDetector().detect().attributes
+
+
+def test_kubernetes_detector_pod_uid_v1():
+    def mocked_open_function(file_path):
+        if "/etc/hosts" == file_path:
+            return """# Kubernetes-managed hosts file.
+127.0.0.1       localhost
+255.255.255.255 broadcasthost
+"""
+
+        if "/proc/self/mountinfo" == file_path:
+            return f"""564 446 0:164 / / rw,relatime master:190 - overlay overlay rw,lowerdir=/var/lib/docker/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+565 564 0:166 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw
+566 564 0:338 / /dev rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
+567 566 0:339 / /dev/pts rw,nosuid,noexec,relatime - devpts devpts rw,gid=5,mode=620,ptmxmode=666
+568 564 0:161 / /sys ro,nosuid,nodev,noexec,relatime - sysfs sysfs ro
+569 568 0:30 / /sys/fs/cgroup ro,nosuid,nodev,noexec,relatime - cgroup2 cgroup rw
+570 566 0:157 / /dev/mqueue rw,nosuid,nodev,noexec,relatime - mqueue mqueue rw
+571 566 254:1 /docker/volumes/minikube/_data/lib/kubelet/pods/{K8S_POD_ID}/containers/my-shell/0447d6c5 /dev/termination-log rw,relatime - ext4 /dev/vda1 rw
+572 564 254:1 /docker/volumes/minikube/_data/lib/docker/containers/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+573 564 254:1 /docker/volumes/minikube/_data/lib/docker/containers/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+574 564 254:1 /docker/volumes/minikube/_data/lib/kubelet/pods/{K8S_POD_ID}/etc-hosts /etc/hosts rw,relatime - ext4 /dev/vda1 rw
+575 566 0:156 / /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+576 564 0:153 / /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+447 566 0:339 /0 /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+448 565 0:166 /bus /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+450 565 0:166 /irq /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+451 565 0:166 /sys /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+452 565 0:166 /sysrq-trigger /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+"""
+
+    with patch("__builtin__.open", mocked_open_function):
+        assert (
+            LumigoKubernetesResourceDetector()
+            .detect()
+            .attributes[ResourceAttributes.K8S_POD_UID]
+            == K8S_POD_ID
+        )
+
+
+def test_kubernetes_detector_pod_uid_v2():
+    def mocked_open_function(file_path):
+        if "/etc/hosts" == file_path:
+            return """# Kubernetes-managed hosts file.
+127.0.0.1       localhost
+255.255.255.255 broadcasthost
+"""
+
+        if "/proc/self/cgroup" == file_path:
+            return f"""14:name=systemd:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+13:rdma:/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+12:pids:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+11:hugetlb:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+10:net_prio:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+9:perf_event:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+8:net_cls:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+7:freezer:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+6:devices:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+5:memory:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+4:blkio:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+3:cpuacct:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+2:cpu:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+1:cpuset:/docker/c24aa3879860ee981d29f0492aef1e39c45d7c7fcdff7bd2050047d0bd390311/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+0::/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
+"""
+
+    with patch("__builtin__.open", mocked_open_function):
+        assert (
+            LumigoKubernetesResourceDetector()
+            .detect()
+            .attributes[ResourceAttributes.K8S_POD_UID]
+            == K8S_POD_ID
+        )

@@ -1,8 +1,9 @@
 import json
+import logging
 import os
 import sys
 import urllib.request
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 
 from opentelemetry.sdk.extension.aws.resource.ecs import AwsEcsResourceDetector
 from opentelemetry.sdk.extension.aws.resource.eks import AwsEksResourceDetector
@@ -19,6 +20,10 @@ from opentelemetry.semconv.resource import ResourceAttributes
 
 import lumigo_opentelemetry
 from lumigo_opentelemetry.libs.json_utils import dump
+
+
+logger = logging.getLogger(__name__)
+
 
 LUMIGO_DISTRO_VERSION_ATTR_NAME = "lumigo.distro.version"
 ENV_ATTR_NAME = "process.environ"
@@ -102,12 +107,85 @@ class LumigoAwsEcsResourceDetector(ResourceDetector):
         )
 
 
+#
+# Kubernetes Pod UUID, based on https://github.com/open-telemetry/opentelemetry-python-contrib/pull/1489
+#
+
+_POD_ID_LENGTH = 36
+_CONTAINER_ID_LENGTH = 64
+
+
+def is_container_on_kubernetes() -> bool:
+    # Kubernetes manages the /etc/hosts file inside the pods' containers,
+    # using a distinctive header, see https://github.com/kubernetes/kubernetes/commit/fd72938dd569bd041f11a76eecfe9b8b4bcf5ae8
+    with open("/etc/hosts", encoding="utf8") as hosts_file:
+        first_line = hosts_file.readline()
+        return first_line.startswith("# Kubernetes-managed hosts file")
+
+
+def get_kubenertes_pod_uid_v1() -> Optional[str]:
+    pod_id = None
+    with open("/proc/self/mountinfo", encoding="utf8") as container_info_file:
+        for raw_line in container_info_file.readlines():
+            line = raw_line.strip()
+            # Subsequent IDs should be the same, exit if found one
+            if len(line) > _POD_ID_LENGTH and "/pods/" in line:
+                pod_id = line.split("/pods/")[1][:_POD_ID_LENGTH]
+                break
+    return pod_id
+
+
+def get_kubenertes_pod_uid_v2() -> Optional[str]:
+    pod_id = None
+    with open("/proc/self/cgroup", encoding="utf8") as container_info_file:
+        for raw_line in container_info_file.readlines():
+            line = raw_line.strip()
+            # Subsequent IDs should be the same, exit if found one
+            if len(line) > _CONTAINER_ID_LENGTH:
+                line_info = line.split("/")
+                if (
+                    len(line_info) > 2
+                    and line_info[-2][:3] == "pod"
+                    and len(line_info[-2]) == _POD_ID_LENGTH + 3
+                ):
+                    pod_id = line_info[-2][3 : 3 + _POD_ID_LENGTH]  # noqa: E203
+                else:
+                    pod_id = line_info[-2]
+                break
+    return pod_id
+
+
+class LumigoKubernetesResourceDetector(ResourceDetector):
+    """Detects attribute values only available when the app is running on kubernetes
+    container and returns a resource object.
+    """
+
+    def detect(self) -> "Resource":
+        if is_container_on_kubernetes():
+            try:
+                pod_uid = get_kubenertes_pod_uid_v1() or get_kubenertes_pod_uid_v2()
+                if pod_uid:
+                    return Resource(
+                        {
+                            ResourceAttributes.K8S_POD_UID: pod_uid,
+                        }
+                    )
+            except Exception as exception:
+                logger.warning(
+                    "Failed to get pod ID on kubernetes container: %s.",
+                    exception,
+                )
+
+        return Resource.get_empty()
+
+
 def get_infrastructure_resource() -> "Resource":
     return get_aggregated_resources(
         detectors=[
             OTELResourceDetector(),
             LumigoDistroDetector(),
             LumigoAwsEcsResourceDetector(),
+            LumigoKubernetesResourceDetector(),
             AwsEcsResourceDetector(),
             AwsEksResourceDetector(),
         ],
