@@ -188,7 +188,7 @@ def test_kubernetes_detector_not_on_kubernetes():
 
 
 def test_kubernetes_detector_pod_uid_v1():
-    def mocked_open_function(file_path):
+    def mocked_open_function(file_path, encoding):
         if "/etc/hosts" == file_path:
             return """# Kubernetes-managed hosts file.
 127.0.0.1       localhost
@@ -226,7 +226,7 @@ def test_kubernetes_detector_pod_uid_v1():
 
 
 def test_kubernetes_detector_pod_uid_v2():
-    def mocked_open_function(file_path):
+    def mocked_open_function(file_path, encoding):
         if "/etc/hosts" == file_path:
             return """# Kubernetes-managed hosts file.
 127.0.0.1       localhost
