@@ -1,11 +1,29 @@
 name: Tracer Testing
 on: [push]
 jobs:
+  list-instrumentations:
+    name: List supported instrumentations
+    runs-on: ubuntu-latest
+    outputs:
+      integration-tests-list: ${{ steps.discover_itests.outputs.integration_tests }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: x64
+      - name: Do arcane BASH stuff
+        id: discover_itests
+        run: |
+          echo "integration_tests=$(nox --list | grep 'integration_tests_' | awk '{ print $2 }' | sed -r 's|^integration_tests_(.*)-[[:digit:]].[[:digit:]]+.*$|\1|' | uniq | sort)" >> $GITHUB_OUTPUT
+
   version-testing:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+        integration-test-family: ${{ fromJson(needs.list-instrumentations.outputs.integration-tests-list) }}
     name: Python ${{ matrix.python-version }} sample
     steps:
       - uses: actions/checkout@v3
@@ -15,4 +33,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox
+      - run: python3 -m nox "${{ matrix.integration-test-family }}-${{ matrix.python-version }}"
