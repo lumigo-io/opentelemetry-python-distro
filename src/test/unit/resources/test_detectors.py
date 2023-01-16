@@ -216,7 +216,7 @@ def test_kubernetes_detector_pod_uid_v1():
 452 565 0:166 /sysrq-trigger /bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
 """
 
-    with patch("__builtin__.open", mocked_open_function):
+    with patch("builtins.open", mocked_open_function):
         assert (
             LumigoKubernetesResourceDetector()
             .detect()
@@ -251,7 +251,7 @@ def test_kubernetes_detector_pod_uid_v2():
 0::/kubepods/besteffort/pod{K8S_POD_ID}/bogusPodIdThatShouldNotBeOneSetBecauseTheFirstOneWasPicked
 """
 
-    with patch("__builtin__.open", mocked_open_function):
+    with patch("builtins.open", mocked_open_function):
         assert (
             LumigoKubernetesResourceDetector()
             .detect()
