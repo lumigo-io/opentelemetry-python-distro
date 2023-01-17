@@ -614,6 +614,11 @@ def integration_tests_pymysql(
 
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
+    kill_process(process_name)
+    clean_outputs(full_path, session)
+
+
+def kill_process(process_name: str) -> None:
     import psutil
 
     # Kill all uvicorn processes
@@ -625,4 +630,7 @@ def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -
             cmdline = proc.cmdline()
             if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
                 proc.kill()
+
+
+def clean_outputs(full_path: str, session) -> None:
     session.run("rm", "-f", full_path, external=True)

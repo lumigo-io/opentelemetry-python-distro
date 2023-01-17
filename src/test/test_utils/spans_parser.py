@@ -54,6 +54,12 @@ class SpansContainer:
             )
         )
 
+    def find_child_span(self, predicate):
+        for span in self.get_children():
+            if predicate(span):
+                yield span
+                break
+
     def get_non_internal_children(
         self, name_filter: Optional[str] = None
     ) -> List[Dict[str, Any]]:
