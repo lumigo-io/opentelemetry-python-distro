@@ -517,6 +517,11 @@ def integration_tests_pymongo(
 
         session.install(".")
 
+        # Some versions of PyMongo fail with older versions of wheel
+        session.run(
+            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
+        )
+
         abs_path = os.path.abspath("src/test/integration/pymongo/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
             full_path = f"{temp_file}.txt"
