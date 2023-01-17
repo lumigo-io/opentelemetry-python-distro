@@ -13,7 +13,8 @@ async def root():
 
 @app.get("/invoke-mongo")
 def invoke_mongo():
-    with MongoDbContainer() as mongo:
+    # Using MongoDB 4 as not to have issues with retired opscodes.
+    with MongoDbContainer("mongo:4") as mongo:
         mongo.get_connection_client().test  # Wait that is is connected
 
         db = MongoClient(mongo.get_connection_url()).test
