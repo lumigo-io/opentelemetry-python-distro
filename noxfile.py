@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import re
 import sys
 import tempfile
 import time
@@ -513,6 +514,18 @@ def integration_tests_pymongo(
     pymongo_version,
 ):
     with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
+        if (
+            pymongo_version.startswith("3.")  # is 3.x
+            and not re.match(r"3\.\d{2}.*", pymongo_version)  # not 3.10.x or above
+            # and on a Python version above 3.9
+            and sys.version_info.major == 3
+            and sys.version_info.minor > 9
+        ):
+            # PyMongo below '3.10.1' is broken on Python 3.10+
+            # because of the removal of the 'collections' package
+            # https://github.com/python/cpython/issues/81505
+            return
+
         install_package("pymongo", pymongo_version, session)
 
         session.install(".")
