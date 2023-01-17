@@ -19,7 +19,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -r requirements.txt
-      - name: Do arcane BASH stuff
+      - name: Generate list of integration tests
         id: discover_itests
         run: |
           echo "integration_tests=$(nox --list | grep 'integration_tests_' | awk '{ print $2 }' | sed -r 's|^integration_tests_([^-]*)(-[[:digit:]].[[:digit:]]+)?\(.*\)$|\1|' | uniq | sort | jq -Rnc '[inputs]')" | tee /dev/stderr >> $GITHUB_OUTPUT
@@ -27,6 +27,7 @@ jobs:
   version-testing:
     needs: [list-instrumentations]
     runs-on: ubuntu-latest
+    continue-on-error: true # Prevent a single failure in the matrix from stopping all other jobs
     strategy:
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10' ]
