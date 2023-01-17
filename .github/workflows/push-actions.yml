@@ -27,8 +27,8 @@ jobs:
   version-testing:
     needs: [list-instrumentations]
     runs-on: ubuntu-latest
-    continue-on-error: true # Prevent a single failure in the matrix from stopping all other jobs
     strategy:
+      fail-fast: false # Prevent a single failure in the matrix from stopping all other jobs
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10' ]
         integration-test-family: ${{ fromJson(needs.list-instrumentations.outputs.integration-tests) }}
