@@ -244,6 +244,10 @@ If the ECS task uses the ECS agent v1.4.0, and has therefore access to the [Task
   * `aws.ecs.task.family`
   * `aws.ecs.task.revision`
 
+#### Kubernetes resource attributes
+
+* `k8s.pod.uid`
+
 ### Span exporters
 
 * If the `LUMIGO_TRACER_TOKEN` environment variable is set: a [BatchSpanProcessor](https://github.com/open-telemetry/opentelemetry-python/blob/25771ecdac685a5bf7ada1da21092d2061dbfc02/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/__init__.py#L126), which uses an [`OTLPSpanExporter`](https://github.com/open-telemetry/opentelemetry-python/blob/50093f220f945ae38e769ab539c78c975e582bef/exporter/opentelemetry-exporter-otlp-proto-http/src/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py#L55) to push tracing data to Lumigo
