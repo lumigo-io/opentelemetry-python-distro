@@ -17,6 +17,7 @@ setup(
         "autowrapt>=1.0",
         "protobuf>=3.13.0, <4.0.0",
         "wrapt>=1.11.0",
+        "lumigo_tracer @ file:///Users/saart/source/python_tracer",
         "opentelemetry-api==1.9.1",
         "opentelemetry-sdk==1.9.1",
         "opentelemetry-sdk-extension-aws==2.0.1",

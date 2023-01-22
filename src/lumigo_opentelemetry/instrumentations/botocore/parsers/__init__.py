@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 from typing import Optional, Type, Dict, Any
 
 from opentelemetry.trace import Span
+from lumigo_tracer.event.event_trigger import parse_triggers
 
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import dump
@@ -126,6 +128,18 @@ class SqsParser(AwsParser):
             "aws.resource.name": resource_name or "",
         }
         span.set_attributes(attributes)
+
+    @staticmethod
+    def parse_response(
+        span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
+    ) -> None:
+        trigger_details = parse_triggers(
+            {"service_name": service_name, "operation_name": operation_name, **result}
+        )
+        if trigger_details:
+            span.set_attributes(
+                {"lumigoData": json.dumps({"trigger": trigger_details})}
+            )
 
 
 class LambdaParser(AwsParser):
