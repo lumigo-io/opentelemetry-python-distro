@@ -33,6 +33,7 @@ class TestBoto3SqsSpans(unittest.TestCase):
 
         self.assertEqual(receive_message_1_span["name"], "SQS.ReceiveMessage")
         self.assertIsNone(receive_message_1_span["parent_id"])
+        self.assertIsNotNone(receive_message_1_span.get("lumigoData"))
 
         self.assertEqual(consume_message_1_span["name"], "consuming_message_1")
         self.assertEqual(
@@ -60,6 +61,7 @@ class TestBoto3SqsSpans(unittest.TestCase):
         )
         self.assertEqual(receive_message_2_span["name"], "SQS.ReceiveMessage")
         self.assertIsNone(receive_message_2_span["parent_id"])
+        self.assertIsNotNone(receive_message_1_span.get("lumigoData"))
 
         self.assertEqual(iterator_on_copy_span["name"], "iterator_on_copy")
         self.assertIsNone(iterator_on_copy_span["parent_id"])
