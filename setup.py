@@ -17,6 +17,7 @@ setup(
         "autowrapt>=1.0",
         "protobuf>=3.13.0, <4.0.0",
         "wrapt>=1.11.0",
+        "lumigo_tracer==1.1.213",
         "opentelemetry-api==1.15.0",
         "opentelemetry-sdk==1.15.0",
         "opentelemetry-sdk-extension-aws==2.0.1",
