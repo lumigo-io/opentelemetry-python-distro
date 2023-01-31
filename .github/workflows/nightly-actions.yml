@@ -82,4 +82,4 @@ jobs:
           commit-message: ${{ env.new_versions }}
           body: ${{ env.new_versions }}
           base: main
-          reviewers: nirLumigo,GuyMoses,saartochner,shanishiri,mmanciop
+          reviewers: GuyMoses,saartochner,shanishiri,mmanciop
