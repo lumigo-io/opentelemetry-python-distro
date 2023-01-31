@@ -124,6 +124,18 @@ def dependency_versions_to_be_tested(
     ]
 
 
+@nox.session()
+def list_integration_tests_ci(session):
+    integration_tests = {
+        session_runner.name
+        for (session_runner, _) in session._runner.manifest.list_all_sessions()
+        if session_runner.name.startswith("integration_tests_")
+    }
+
+    for i in integration_tests:
+        print(i)
+
+
 @nox.session(python=python_versions())
 @nox.parametrize(
     "boto3_version",
