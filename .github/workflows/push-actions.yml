@@ -1,12 +1,42 @@
 name: Tracer Testing
 on: [push]
 jobs:
+  list-instrumentations:
+    name: List supported instrumentations
+    runs-on: ubuntu-latest
+    outputs:
+      integration-tests: ${{ steps.discover_itests.outputs.integration_tests }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: x64
+      - name: Install jq
+        run:
+          sudo apt-get update && sudo apt-get install -y jq
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Generate list of integration tests
+        id: discover_itests
+        run: |
+          # Use the `list_integration_tests_ci` nox task to list all the integration tests families.
+          # The task outputs the list of tasks on stdout, each entry separated by a `\n` character.
+          # The task output is piped into the `jq` command, that formats it as a JSON list, as the
+          # we need a JSON datastructure later on for dynamic matrixes.
+          echo "integration_tests=$(nox -e list_integration_tests_ci | jq -Rnc '[inputs]')" >> $GITHUB_OUTPUT
+
   version-testing:
+    needs: [list-instrumentations]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false # Prevent a single failure in the matrix from stopping all other jobs
       matrix:
         python-version: [ '3.7', '3.8', '3.9', '3.10' ]
-    name: Python ${{ matrix.python-version }} sample
+        integration-test-family: ${{ fromJson(needs.list-instrumentations.outputs.integration-tests) }}
+    name: ITest ${{ matrix.integration-test-family }} / Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -15,4 +45,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox
+      - run: python3 -m nox -e "${{ matrix.integration-test-family }}"

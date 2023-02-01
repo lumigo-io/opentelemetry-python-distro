@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import re
 import sys
 import tempfile
 import time
@@ -121,6 +122,18 @@ def dependency_versions_to_be_tested(
         supported_version_to_test.version
         for supported_version_to_test in supported_versions_to_test
     ]
+
+
+@nox.session()
+def list_integration_tests_ci(session):
+    integration_tests = {
+        session_runner.name
+        for (session_runner, _) in session._runner.manifest.list_all_sessions()
+        if session_runner.name.startswith("integration_tests_")
+    }
+
+    for i in integration_tests:
+        print(i)
 
 
 @nox.session(python=python_versions())
@@ -513,9 +526,26 @@ def integration_tests_pymongo(
     pymongo_version,
 ):
     with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
+        if (
+            pymongo_version.startswith("3.")  # is 3.x
+            and not re.match(r"3\.\d{2}.*", pymongo_version)  # not 3.10.x or above
+            # and on a Python version above 3.9
+            and sys.version_info.major == 3
+            and sys.version_info.minor > 9
+        ):
+            # PyMongo below '3.10.1' is broken on Python 3.10+
+            # because of the removal of the 'collections' package
+            # https://github.com/python/cpython/issues/81505
+            return
+
         install_package("pymongo", pymongo_version, session)
 
         session.install(".")
+
+        # Some versions of PyMongo fail with older versions of wheel
+        session.run(
+            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
+        )
 
         abs_path = os.path.abspath("src/test/integration/pymongo/")
         with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
@@ -614,6 +644,11 @@ def integration_tests_pymysql(
 
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
+    kill_process(process_name)
+    clean_outputs(full_path, session)
+
+
+def kill_process(process_name: str) -> None:
     import psutil
 
     # Kill all uvicorn processes
@@ -625,4 +660,7 @@ def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -
             cmdline = proc.cmdline()
             if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
                 proc.kill()
+
+
+def clean_outputs(full_path: str, session) -> None:
     session.run("rm", "-f", full_path, external=True)
