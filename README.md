@@ -246,7 +246,7 @@ If the ECS task uses the ECS agent v1.4.0, and has therefore access to the [Task
 
 #### Kubernetes resource attributes
 
-* `k8s.pod.uid`
+* `k8s.pod.uid` with the Pod identifier, supported for both cgroups v1 and v2
 
 ### Span exporters
 
