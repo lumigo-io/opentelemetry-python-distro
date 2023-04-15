@@ -2,7 +2,11 @@ from typing import Dict, Any
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
-from lumigo_opentelemetry.libs.json_utils import dump, safe_convert_bytes_to_string
+from lumigo_opentelemetry.libs.json_utils import (
+    dump,
+    safe_convert_bytes_to_string,
+    dump_with_context,
+)
 
 from opentelemetry.trace import Span
 
@@ -25,7 +29,7 @@ class FastAPIParser:
             query_string = scope.get("query_string", "")
             path = scope.get("path", "")
             attributes = {
-                "http.request.headers": dump(headers),
+                "http.request.headers": dump_with_context("requestHeaders", headers),
                 "http.request.query_string": dump(query_string),
                 "http.request.path": dump(path),
             }
@@ -41,9 +45,14 @@ class FastAPIParser:
         with lumigo_safe_execute("FastAPIParser: client_response_hook"):
             body = safe_convert_bytes_to_string(message.get("body"))
             if body:
-                span.set_attribute("http.response.body", dump(body))
+                span.set_attribute(
+                    "http.response.body", dump_with_context("responseBody", body)
+                )
             headers = FastAPIParser.safe_extract_headers_bytes(
                 headers=message.get("headers", [])
             )
             if headers:
-                span.set_attribute("http.response.headers", dump(headers))
+                span.set_attribute(
+                    "http.response.headers",
+                    dump_with_context("responseHeaders", headers),
+                )

@@ -4,10 +4,10 @@ import json
 from typing import Optional, Type, Dict, Any
 
 from opentelemetry.trace import Span
-from lumigo_tracer.event.event_trigger import parse_triggers
+from lumigo_core.triggers.event_trigger import parse_triggers
 
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
-from lumigo_opentelemetry.libs.json_utils import dump
+from lumigo_opentelemetry.libs.json_utils import dump_with_context
 from lumigo_opentelemetry.utils.aws_utils import (
     extract_region_from_arn,
     get_resource_fullname,
@@ -32,7 +32,7 @@ class AwsParser:
         span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         attributes = {
-            "http.request.body": dump(api_params),
+            "http.request.body": dump_with_context("requestBody", api_params),
             "aws.service": service_name,
             "http.method": operation_name,
         }
@@ -57,8 +57,8 @@ class AwsParser:
     ) -> None:
         headers = result.get("ResponseMetadata", {}).get("HTTPHeaders", {})
         attributes = {
-            "http.response.body": dump(result),
-            "http.response.headers": dump(headers),
+            "http.response.body": dump_with_context("responseBody", result),
+            "http.response.headers": dump_with_context("responseHeaders", headers),
             "http.status_code": result.get("ResponseMetadata", {}).get(
                 "HTTPStatusCode", ""
             ),
@@ -95,7 +95,9 @@ class SnsParser(AwsParser):
         region = extract_region_from_arn(arn=arn) if arn else None
 
         attributes = {
-            "http.request.body": dump(api_params.get("Message", api_params or {})),
+            "http.request.body": dump_with_context(
+                "requestBody", api_params.get("Message", api_params or {})
+            ),
             "aws.service": service_name,
             "region": region or "",
             "http.method": operation_name,
@@ -121,7 +123,9 @@ class SqsParser(AwsParser):
             else None
         )
         attributes = {
-            "http.request.body": dump(api_params.get("MessageBody", api_params or {})),
+            "http.request.body": dump_with_context(
+                "requestBody", api_params.get("MessageBody", api_params or {})
+            ),
             "aws.service": service_name,
             "http.method": operation_name,
             "http.url": queue_url or "",
@@ -149,7 +153,9 @@ class LambdaParser(AwsParser):
     ) -> None:
         resource_name = api_params.get("FunctionName")
         attributes = {
-            "http.request.body": dump(api_params.get("Payload", api_params or {})),
+            "http.request.body": dump_with_context(
+                "requestBody", api_params.get("Payload", api_params or {})
+            ),
             "aws.resource.name": resource_name or "",
             "aws.service": service_name,
             "http.method": operation_name,
@@ -163,7 +169,7 @@ class DynamoParser(AwsParser):
         span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
     ) -> None:
         attributes = {
-            "http.request.body": dump(api_params),
+            "http.request.body": dump_with_context("requestBody", api_params),
             "aws.service": service_name,
             "http.method": operation_name,
             "aws.resource.name": api_params.get("TableName", ""),

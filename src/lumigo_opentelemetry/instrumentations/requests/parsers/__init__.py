@@ -7,7 +7,7 @@ from requests import Response
 from opentelemetry.trace import Span
 
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
-from lumigo_opentelemetry.libs.json_utils import dump
+from lumigo_opentelemetry.libs.json_utils import dump_with_context
 
 
 @dataclass(frozen=True)
@@ -26,14 +26,18 @@ class HttpParser:
     def parse_request(self) -> Dict[str, Any]:
         request = self.response.request
         return {
-            "http.request.body": dump(request.body),
-            "http.request.headers": dump(request.headers),
+            "http.request.body": dump_with_context("requestBody", request.body),
+            "http.request.headers": dump_with_context(
+                "requestHeaders", request.headers
+            ),
         }
 
     def parse_response(self) -> Dict[str, Any]:
         return {
-            "http.response.body": dump(self.response.text),
-            "http.response.headers": dump(self.response.headers),
+            "http.response.body": dump_with_context("responseBody", self.response.text),
+            "http.response.headers": dump_with_context(
+                "responseHeaders", self.response.headers
+            ),
         }
 
     def extract_custom_attributes(self) -> Dict[str, Any]:

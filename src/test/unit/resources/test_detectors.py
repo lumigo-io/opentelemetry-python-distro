@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import urllib.request
 from contextlib import contextmanager
 
@@ -7,6 +8,7 @@ from mock_open import MockOpen
 from mock import patch
 from opentelemetry.sdk import resources
 from opentelemetry.semconv.resource import ResourceAttributes
+from lumigo_core.configuration import CoreConfiguration
 
 from lumigo_opentelemetry.resources.detectors import (
     ProcessResourceDetector,
@@ -53,6 +55,23 @@ def test_env_vars_detector(monkeypatch):
 
     assert resource.attributes["process.environ"] == json.dumps(
         {"a": "b", "k": "v", "secret": "****"}
+    )
+
+
+def test_env_vars_detector_specific_config(monkeypatch):
+    monkeypatch.setattr(
+        CoreConfiguration, "secret_masking_regex_environment", re.compile("specific.*")
+    )
+    for key in os.environ:
+        monkeypatch.delenv(key)
+    monkeypatch.setenv("a", "b")
+    monkeypatch.setenv("c", "d")
+    monkeypatch.setenv("specific_env_var", "value")
+
+    resource = EnvVarsDetector().detect()
+
+    assert resource.attributes["process.environ"] == json.dumps(
+        {"a": "b", "c": "d", "specific_env_var": "****"}
     )
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from lumigo_opentelemetry.libs.json_utils import get_omitting_regex
+from lumigo_core.scrubbing import get_omitting_regex
 
 
 @pytest.fixture(autouse=True)
