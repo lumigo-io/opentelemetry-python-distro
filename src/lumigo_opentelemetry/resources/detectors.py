@@ -19,8 +19,7 @@ from opentelemetry.sdk.resources import (
 from opentelemetry.semconv.resource import ResourceAttributes
 
 import lumigo_opentelemetry
-from lumigo_opentelemetry.libs.json_utils import dump
-
+from lumigo_opentelemetry.libs.json_utils import dump_with_context
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,9 @@ class LumigoDistroDetector(ResourceDetector):
 
 class EnvVarsDetector(ResourceDetector):
     def detect(self) -> "Resource":
-        return Resource({ENV_ATTR_NAME: dump(dict(os.environ))})
+        return Resource(
+            {ENV_ATTR_NAME: dump_with_context("environment", dict(os.environ))}
+        )
 
 
 class LumigoAwsEcsResourceDetector(ResourceDetector):
