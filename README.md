@@ -184,10 +184,10 @@ In case your execution tags on different spans appear on different invocations t
 
 | Instrumentation | Package | Supported Versions |
 | --- | --- | --- |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.26.95 |
-| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.95.0 |
-| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.21.1 |
-| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.3 |
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.26.122 |
+| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.95.1 |
+| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0 |
+| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.4 |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1 |
 | | | 3.5.0~3.13.0 |
 | | | 4.0.1~4.4.0b0 |
@@ -195,7 +195,7 @@ In case your execution tags on different spans appear on different invocations t
 | | | 3.2 |
 | | | 4.0 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
-| | | 1.0.0~1.0.2 |
+| | | 1.0.0~1.0.3 |
 
 ## Automated dependency reporting
 
