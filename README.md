@@ -176,6 +176,28 @@ In case your execution tags on different spans appear on different invocations t
 * Each execution tag key can be at most 50 characters long; the `lumigo.execution_tags.` prefix does _not_ count against the 50 characters limit.
 * Each execution tag value can be at most 70 characters long.
 
+
+### Programmatic Errors
+
+[Programmatic Errors](https://docs.lumigo.io/docs/programmatic-errors) allow you to customize errors, monitor and troubleshoot issues that should not necessarily interfere with the service.
+For example, an application tries to remove a user who doesn't exist. These custom errors can be handled by adding just a few lines of additional code to your application.
+
+Programmatic Errors are labeled as warnings indicating that a non-fatal error occurred, such as an application error. You can log programmatic errors, track custom error issues, and trigger [Alerts](https://docs.lumigo.io/docs/event-alert).
+
+
+#### Creating a Programmatic Error
+
+Programmatic errors are created by adding [span events](https://opentelemetry.io/docs/instrumentation/python/manual/#adding-events) by a custom event attribute with the key name `lumigo.type`.
+
+For example, you could add a programmatic error as follows:
+
+```python
+from opentelemetry.trace import get_current_span
+
+get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
+```
+
+
 ## Supported runtimes
 
 * cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x
