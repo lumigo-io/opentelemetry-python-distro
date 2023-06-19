@@ -18,6 +18,7 @@ from lumigo_opentelemetry.resources.detectors import (
     get_resource,
     get_infrastructure_resource,
     get_process_resource,
+    LumigoTagDetector,
 )
 
 from lumigo_opentelemetry import _setup_logger
@@ -42,6 +43,30 @@ def test_lumigo_distro_version_detect():
     assert major.isdigit()
     assert minor.isdigit()
     assert patch.isdigit()
+
+
+def test_lumigo_tag_detect_not_exist():
+    resource = LumigoTagDetector().detect()
+    lumigo_tag = resource.attributes.get("lumigo.tag")
+    assert not lumigo_tag
+
+
+def test_lumigo_tag_detect(monkeypatch):
+    monkeypatch.setenv("LUMIGO_TAG", "test1234")
+    resource = LumigoTagDetector().detect()
+    lumigo_tag = resource.attributes.get("lumigo.tag")
+    assert lumigo_tag == "test1234"
+
+
+def test_lumigo_tag_detect_semicolon(monkeypatch, caplog):
+    monkeypatch.setenv("LUMIGO_TAG", "test12;34")
+    resource = LumigoTagDetector().detect()
+    lumigo_tag = resource.attributes.get("lumigo.tag")
+    assert not lumigo_tag
+    assert (
+        caplog.records[0].message
+        == "LUMIGO_TAG contains a semicolon, which is not allowed."
+    )
 
 
 def test_env_vars_detector(monkeypatch):
