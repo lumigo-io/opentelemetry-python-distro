@@ -69,6 +69,14 @@ def test_lumigo_tag_detect_semicolon(monkeypatch, caplog):
     )
 
 
+def test_lumigo_tag_detect_override_otel_envvar(monkeypatch):
+    monkeypatch.setenv("OTEL_RESOURCE_ATTRIBUTES", "lumigo.tag=test9876")
+    monkeypatch.setenv("LUMIGO_TAG", "test9876_override")
+    resource = get_resource(get_infrastructure_resource(), get_process_resource(), {})
+    lumigo_tag = resource.attributes.get("lumigo.tag")
+    assert lumigo_tag == "test9876_override"
+
+
 def test_env_vars_detector(monkeypatch):
     for key in os.environ:
         monkeypatch.delenv(key)
