@@ -1,28 +1,27 @@
 from __future__ import annotations
-
 import os
 import re
 import sys
 import tempfile
 import time
-from typing import List, Optional, Union
+from typing import List, Union, Optional
 from xml.etree import ElementTree
 
 import nox
 import requests
 import yaml
 
-from src.ci.tested_versions_utils import NonSemanticVersion  # noqa: E402
-from src.ci.tested_versions_utils import (
-    SemanticVersion,
-    TestedVersions,
-    should_test_only_untested_versions,
-)
-
 # Ensure nox can load local packages
 repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
+
+from src.ci.tested_versions_utils import (  # noqa: E402
+    NonSemanticVersion,
+    SemanticVersion,
+    TestedVersions,
+    should_test_only_untested_versions,
+)
 
 
 def install_package(package_name: str, package_version: str, session) -> None:
@@ -69,8 +68,7 @@ def dependency_versions_to_be_tested(
     directory: str, dependency_name: str, test_untested_versions: bool
 ) -> List[str]:
     """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
-    packages, and symlinked under the relevant integration tests. There are also versions in pypi
-    """
+    packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, dependency_name)
     )
