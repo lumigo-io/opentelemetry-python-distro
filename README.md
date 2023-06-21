@@ -60,7 +60,7 @@ The [no-code activation](#no-code-activation) approach is the preferred one.
 
 #### No-code activation
 
-**Note:** The instructions in this section are mutually exclusive with those provided in the [Manual instrumentation](#manual-activation) section.
+**Note:** The instructions in this section are mutually exclusive with those provided in the [Manual activation](#manual-activation) section.
 
 Set the following environment variable:
 
