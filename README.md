@@ -6,7 +6,7 @@
 The Lumigo OpenTelemetry Distribution for Python is a package that provides no-code distributed tracing for containerized applications.
 
 The Lumigo OpenTelemetry Distribution for Python is made of several upstream OpenTelemetry packages, with additional automated quality-assurance and customizations that optimize for no-code injection, meaning that you should need to update exactly zero lines of code in your application in order to make use of the Lumigo OpenTelemetry Distribution.
-(See the [No-code instrumentation](#no-code-instrumentation) section for auto-instrumentation instructions)
+(See the [No-code instrumentation](#no-code-activation) section for auto-instrumentation instructions)
 
 **Note:** If you are looking for the Lumigo Python tracer for AWS Lambda functions, [`lumigo-tracer`](https://pypi.org/project/lumigo-tracer/) is the package you should use instead.
 
@@ -96,7 +96,7 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 * `LUMIGO_DEBUG_SPANDUMP`: path to a local file where to write a local copy of the spans that will be sent to Lumigo; this option handy for local testing but **should not be used in production** unless you are instructed to do so by Lumigo support.
 * `LUMIGO_SECRET_MASKING_REGEX=["regex1", "regex2"]`: Prevents Lumigo from sending keys that match the supplied regular expressions. All regular expressions are case-insensitive. By default, Lumigo applies the following regular expressions: `[".*pass.*", ".*key.*", ".*secret.*", ".*credential.*", ".*passphrase.*"]`.
   * We support more granular masking using the following parameters. If not given, the above configuration is the fallback: `LUMIGO_SECRET_MASKING_REGEX_HTTP_REQUEST_BODIES`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_REQUEST_HEADERS`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_RESPONSE_BODIES`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_RESPONSE_HEADERS`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_QUERY_PARAMS`, `LUMIGO_SECRET_MASKING_REGEX_ENVIRONMENT`.
-* `LUMIGO_SWITCH_OFF=true`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected. 
+* `LUMIGO_SWITCH_OFF=true`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected.
 * `LUMIGO_REPORT_DEPENDENCIES=false`: This option disables the built-in dependency reporting to Lumigo SaaS. For more information, refer to the [Automated dependency reporting](#automated-dependency-reporting) section.
 
 ### Execution Tags
@@ -128,6 +128,7 @@ from opentelemetry.trace import get_current_span
 get_current_span().set_attribute('lumigo.execution_tags.foo','bar')
 get_current_span().set_attribute('lumigo.execution_tags.foo','baz')
 ```
+
 In the snippets above, the `foo` execution tag will have in Lumigo only the `baz` value!
 Multiple values for an execution tag are supported as follows:
 
@@ -176,14 +177,12 @@ In case your execution tags on different spans appear on different invocations t
 * Each execution tag key can be at most 50 characters long; the `lumigo.execution_tags.` prefix does _not_ count against the 50 characters limit.
 * Each execution tag value can be at most 70 characters long.
 
-
 ### Programmatic Errors
 
 [Programmatic Errors](https://docs.lumigo.io/docs/programmatic-errors) allow you to customize errors, monitor and troubleshoot issues that should not necessarily interfere with the service.
 For example, an application tries to remove a user who doesn't exist. These custom errors can be captured by adding just a few lines of additional code to your application.
 
 Programmatic Errors indicating that a non-fatal error occurred, such as an application error. You can log programmatic errors, track custom error issues, and trigger [Alerts](https://docs.lumigo.io/docs/event-alert).
-
 
 #### Creating a Programmatic Error
 
@@ -196,7 +195,6 @@ from opentelemetry.trace import get_current_span
 
 get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 ```
-
 
 ## Supported runtimes
 
@@ -259,19 +257,20 @@ The Lumigo OpenTelemetry Distro will automatically create the following OpenTele
 #### Amazon ECS resource attributes
 
 If the instrumented Python application is running on the Amazon Elastic Container Service (ECS):
-  * `cloud.provider` attribute with value `aws`
-  * `cloud.platform` with value `aws_ecs`
-  * `container.name` with the hostname of the ECS Task container
-  * `container.id` with the ID of the Docker container (based on the cgroup id)
+
+* `cloud.provider` attribute with value `aws`
+* `cloud.platform` with value `aws_ecs`
+* `container.name` with the hostname of the ECS Task container
+* `container.id` with the ID of the Docker container (based on the cgroup id)
 
 If the ECS task uses the ECS agent v1.4.0, and has therefore access to the [Task metadata endpoint version 4](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v4.html), the following experimental attributes as specified in the [AWS ECS Resource Attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/42081e023b3827d824c45031e3ccd19318ff3411/specification/resource/semantic_conventions/cloud_provider/aws/ecs.md) specification:
 
-  * `aws.ecs.container.arn`
-  * `aws.ecs.cluster.arn`
-  * `aws.ecs.launchtype`
-  * `aws.ecs.task.arn`
-  * `aws.ecs.task.family`
-  * `aws.ecs.task.revision`
+* `aws.ecs.container.arn`
+* `aws.ecs.cluster.arn`
+* `aws.ecs.launchtype`
+* `aws.ecs.task.arn`
+* `aws.ecs.task.family`
+* `aws.ecs.task.revision`
 
 #### Kubernetes resource attributes
 
@@ -288,13 +287,13 @@ If the ECS task uses the ECS agent v1.4.0, and has therefore access to the [Task
   * `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT`
   * `OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`
 
-  ** If the `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` environment variable is not set, the span attribute size limit will be taken from `OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` environment variable. The default size limit when both are not set is 2048.  
+  ** If the `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` environment variable is not set, the span attribute size limit will be taken from `OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` environment variable. The default size limit when both are not set is 2048.
 
 ## Advanced use cases
 
 ### Access to the TracerProvider
 
-The Lumigo OpenTelemetry Distro provides access to the `TracerProvider` it configures (see the [Baseline setup](#baseline_setup) section for more information) through the `tracer_provider` attribute of the `lumigo_opentelemetry` package:
+The Lumigo OpenTelemetry Distro provides access to the `TracerProvider` it configures (see the [Baseline setup](#baseline-setup) section for more information) through the `tracer_provider` attribute of the `lumigo_opentelemetry` package:
 
 ```python
 from lumigo_opentelemetry import tracer_provider
@@ -304,7 +303,7 @@ from lumigo_opentelemetry import tracer_provider
 
 ### Ensure spans are flushed to Lumigo before shutdown
 
-For short-running processes, the `BatchProcessor` configured by the Lumigo OpenTelemetry Distro may not ensure that the tracing data are sent to Lumigo (see the [Baseline setup](#baseline_setup) section for more information).
+For short-running processes, the `BatchProcessor` configured by the Lumigo OpenTelemetry Distro may not ensure that the tracing data are sent to Lumigo (see the [Baseline setup](#baseline-setup) section for more information).
 Through the access to the `tracer_provider`, however, it is possible to ensure that all spans are flushed to Lumigo as follows:
 
 ```python
@@ -319,7 +318,7 @@ tracer_provider.force_flush()
 
 ### Consuming SQS messages with Boto3 receive_message
 
-Messaging instrumentations that retrieve messages from queues tend to be counter-intuitive for end-users: when retrivieng one of more messages from the queue, one would natutally expect that all calls done _using data from those messages_, e.g., sending their content to a database or another queue, would result in spans that are children of the describing the retrivieng of those messages.
+Messaging instrumentations that retrieve messages from queues tend to be counter-intuitive for end-users: when retrieving one of more messages from the queue, one would naturally expect that all calls done _using data from those messages_, e.g., sending their content to a database or another queue, would result in spans that are children of the describing the retrieving of those messages.
 
 Consider the following scenario, which is supported by the `boto3` SQS `receive_message` instrumentation of the Lumigo OpenTelemetry Distro for Python:
 
