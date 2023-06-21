@@ -6,7 +6,7 @@
 The Lumigo OpenTelemetry Distribution for Python is a package that provides no-code distributed tracing for containerized applications.
 
 The Lumigo OpenTelemetry Distribution for Python is made of several upstream OpenTelemetry packages, with additional automated quality-assurance and customizations that optimize for no-code injection, meaning that you should need to update exactly zero lines of code in your application in order to make use of the Lumigo OpenTelemetry Distribution.
-(See the [No-code instrumentation](#no-code-activation) section for auto-instrumentation instructions)
+(See the [No-code activation](#no-code-activation) section for auto-instrumentation instructions)
 
 **Note:** If you are looking for the Lumigo Python tracer for AWS Lambda functions, [`lumigo-tracer`](https://pypi.org/project/lumigo-tracer/) is the package you should use instead.
 
