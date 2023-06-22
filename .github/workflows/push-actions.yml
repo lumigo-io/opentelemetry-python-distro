@@ -46,3 +46,20 @@ jobs:
           architecture: x64
       - run: pip3 install -r requirements.txt
       - run: python3 -m nox -e "${{ matrix.integration-test-family }}"
+
+  component-testing:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Prevent a single failure in the matrix from stopping all other jobs
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+    name: Component Test for Python ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - run: pip3 install -r requirements.txt
+      - run: python3 -m nox -e "component_tests"

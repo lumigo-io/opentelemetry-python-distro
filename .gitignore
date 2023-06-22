@@ -133,3 +133,6 @@ dmypy.json
 
 # spans created by tox testing
 src/test/integration/*/spans.txt
+
+/**/*/*tempfile*
+/**/*/temp_*.txt
