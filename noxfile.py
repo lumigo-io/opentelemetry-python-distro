@@ -1,11 +1,10 @@
 from __future__ import annotations
-
 import os
 import re
 import sys
 import tempfile
 import time
-from typing import List, Optional, Union
+from typing import List, Union, Optional
 from xml.etree import ElementTree
 
 import nox
@@ -17,9 +16,12 @@ repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
 
-from src.ci.tested_versions_utils import NonSemanticVersion  # noqa: E402
-from src.ci.tested_versions_utils import (SemanticVersion, TestedVersions,
-                                          should_test_only_untested_versions)
+from src.ci.tested_versions_utils import (  # noqa: E402
+    NonSemanticVersion,
+    SemanticVersion,
+    TestedVersions,
+    should_test_only_untested_versions,
+)
 
 OTHER_REQUIREMENTS = "requirements_others.txt"
 
