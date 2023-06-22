@@ -164,7 +164,9 @@ def integration_tests_boto3_sqs(
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_it_tempfile_prefix("boto3-sqs")) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("boto3-sqs")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/boto3-sqs"):
@@ -218,7 +220,9 @@ def integration_tests_boto3(
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_it_tempfile_prefix("boto3")) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("boto3")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/boto3"):
@@ -309,7 +313,9 @@ def integration_tests_fastapi(
 
     session.install(".")
 
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_it_tempfile_prefix("fastapi")) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", prefix=get_it_tempfile_prefix("fastapi")
+    ) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/integration/fastapi"):
@@ -371,7 +377,9 @@ def component_tests_attr_max_size(
 
     session.install(".")
 
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_component_test_tempfile_prefix("attr_max_size")) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", prefix=get_component_test_tempfile_prefix("attr_max_size")
+    ) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/components"):
@@ -421,7 +429,9 @@ def component_tests_execution_tags(
 
     session.install(".")
 
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_component_test_tempfile_prefix("execution_tags")) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", prefix=get_component_test_tempfile_prefix("execution_tags")
+    ) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/components"):
@@ -474,7 +484,9 @@ def integration_tests_flask(session, flask_version):
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_it_tempfile_prefix("flask")) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("flask")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/flask"):
@@ -547,7 +559,9 @@ def integration_tests_pymongo(
             "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
         )
 
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_it_tempfile_prefix("pymongo")) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("pymongo")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymongo"):
@@ -603,7 +617,9 @@ def integration_tests_pymysql(
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=get_it_tempfile_prefix("pymysql")) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("pymysql")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymysql"):
