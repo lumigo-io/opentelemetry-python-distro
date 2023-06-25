@@ -48,6 +48,7 @@ workflows:
           - test
 
     - test:
+        name: test
         context: common
         filters:
           branches:
