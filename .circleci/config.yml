@@ -26,8 +26,6 @@ workflows:
         filters:
           tags:
             only: /.*auto-test-update.*/
-        requires:
-          - test
 
     - dummy:
         context: common
@@ -35,8 +33,6 @@ workflows:
         filters:
           tags:
             only: /.*auto-test-update.*/
-        requires:
-          - test
 
     - dummy:
         context: common
@@ -44,8 +40,6 @@ workflows:
         filters:
           tags:
             only: /.*auto-test-update.*/
-        requires:
-          - test
 
     - test:
         name: test
