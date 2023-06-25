@@ -83,10 +83,3 @@ jobs:
           body: ${{ env.new_versions }}
           base: main
           reviewers: GuyMoses,saartochner,shanishiri,mmanciop
-      - name: Add auto-test-update tag to commit
-        run: |
-          git config --global user.email "no-reply@build.com"
-          git config --global user.name "CircleCI"
-          tag="auto-test-update.${{steps.branch_name.outputs.branch_name}}"
-          git tag -a "${tag}" -m "${tag}"
-          git push origin "${tag}"

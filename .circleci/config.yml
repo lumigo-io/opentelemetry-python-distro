@@ -16,47 +16,18 @@ workflows:
     jobs:
     - lumigo-orb/print_orb_versions:
         lumigo_orb_version: *lumigo_orb_version
-        filters:
-          tags:
-            ignore: /.*auto-test-update.*/
-
-    - dummy:
-        context: common
-        name: test
-        filters:
-          tags:
-            only: /.*auto-test-update.*/
-
-    - dummy:
-        context: common
-        name: integration-test-parallel
-        filters:
-          tags:
-            only: /.*auto-test-update.*/
-
-    - dummy:
-        context: common
-        name: e2e-test
-        filters:
-          tags:
-            only: /.*auto-test-update.*/
 
     - test:
-        name: test
         context: common
         filters:
           branches:
             ignore: main
-          tags:
-            ignore: /.*auto-test-update.*/
 
     - lumigo-orb/is_environment_available:
         context: common
         filters:
           branches:
             ignore: main
-          tags:
-            ignore: /.*auto-test-update.*/
 
     - lumigo-orb/be-deploy:
         context: common
@@ -83,7 +54,6 @@ workflows:
           - lumigo-orb/integration-test-prep
 
     - lumigo-orb/integration-test-parallel:
-        name: integration-test-parallel
         context: common
         run_test_cleanup: false
         requires:
@@ -93,10 +63,9 @@ workflows:
         name: post-test-cleanup
         context: common
         requires:
-          - integration-test-parallel
+          - lumigo-orb/integration-test-parallel
 
     - lumigo-orb/e2e-test:
-        name: e2e-test
         context: common
         requires:
           - pre-test-cleanup
@@ -105,8 +74,8 @@ workflows:
         context: common
         requires:
           - test
-          - integration-test-parallel
-          - e2e-test
+          - lumigo-orb/integration-test-parallel
+          - lumigo-orb/e2e-test
 
     - deploy:
         context:
@@ -117,15 +86,6 @@ workflows:
             only: main
 
 jobs:
-  dummy:
-    docker:
-      - image: alpine:latest
-    resource_class: small
-    steps:
-      - run:
-          name: "dummy job"
-          command: echo "dummy job"
-
   test:
     <<: *defaults
     steps:
