@@ -1,0 +1,20 @@
+name: Auto-Merge
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-latest
+
+    # Specifically check that the GITHUB_TOKEN owner created this pull-request, and that it has been labelled correctly.
+    if: |
+        github.event.pull_request.user.name == 'github-actions[bot]' &&
+        github.event.pull_request.user.email == 'github-actions[bot]@users.noreply.github.com' &&
+        contains(github.event.pull_request.labels.*.name, 'version-testing') &&
+        contains(github.event.pull_request.labels.*.name, 'automerge')
+    steps:
+    - uses: alexwilson/enable-github-automerge-action@main
+      with:
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
+        merge-method: "SQUASH"
