@@ -93,7 +93,7 @@ workflows:
         name: post-test-cleanup
         context: common
         requires:
-          - lumigo-orb/integration-test-parallel
+          - integration-test-parallel
 
     - lumigo-orb/e2e-test:
         name: e2e-test
