@@ -23,6 +23,8 @@ from src.ci.tested_versions_utils import (  # noqa: E402
     should_test_only_untested_versions,
 )
 
+OTHER_REQUIREMENTS = "requirements_others.txt"
+
 
 def install_package(package_name: str, package_version: str, session) -> None:
     try:
@@ -30,6 +32,14 @@ def install_package(package_name: str, package_version: str, session) -> None:
     except Exception:
         session.log(f"Cannot install '{package_name}' version '{package_version}'")
         raise
+
+
+def get_component_test_tempfile_prefix(name: str):
+    return os.path.abspath(f"src/test/components/temp_{name}_")
+
+
+def get_it_tempfile_prefix(name: str):
+    return os.path.abspath(f"src/test/integration/{name}/temp_")
 
 
 def get_versions_from_pypi(package_name: str) -> List[str]:
@@ -154,12 +164,13 @@ def integration_tests_boto3_sqs(
 
         session.install(".")
 
-        abs_path = os.path.abspath("src/test/integration/boto3-sqs/")
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("boto3-sqs")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/boto3-sqs"):
-                session.install("-r", "requirements_others.txt")
+                session.install("-r", OTHER_REQUIREMENTS)
 
                 try:
                     session.run(
@@ -209,12 +220,13 @@ def integration_tests_boto3(
 
         session.install(".")
 
-        abs_path = os.path.abspath("src/test/integration/boto3/")
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("boto3")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/boto3"):
-                session.install("-r", "requirements_others.txt")
+                session.install("-r", OTHER_REQUIREMENTS)
 
                 try:
                     session.run(
@@ -301,12 +313,13 @@ def integration_tests_fastapi(
 
     session.install(".")
 
-    abs_path = os.path.abspath("src/test/integration/fastapi/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", prefix=get_it_tempfile_prefix("fastapi")
+    ) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/integration/fastapi"):
-            session.install("-r", "requirements_others.txt")
+            session.install("-r", OTHER_REQUIREMENTS)
 
             try:
                 session.run(
@@ -347,10 +360,6 @@ def component_tests(session):
         fastapi_version="0.78.0",  # arbitrary version
         uvicorn_version="0.16.0",  # arbitrary version
     )
-
-
-@nox.session(python=python_versions())
-def component_tests2(session):
     component_tests_execution_tags(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
@@ -368,12 +377,13 @@ def component_tests_attr_max_size(
 
     session.install(".")
 
-    abs_path = os.path.abspath("src/test/components/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", prefix=get_component_test_tempfile_prefix("attr_max_size")
+    ) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/components"):
-            session.install("-r", "requirements_others.txt")
+            session.install("-r", OTHER_REQUIREMENTS)
 
             try:
                 session.run(
@@ -419,12 +429,13 @@ def component_tests_execution_tags(
 
     session.install(".")
 
-    abs_path = os.path.abspath("src/test/components/")
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", prefix=get_component_test_tempfile_prefix("execution_tags")
+    ) as temp_file:
         full_path = f"{temp_file}.txt"
 
         with session.chdir("src/test/components"):
-            session.install("-r", "requirements_others.txt")
+            session.install("-r", OTHER_REQUIREMENTS)
 
             try:
                 session.run(
@@ -473,12 +484,13 @@ def integration_tests_flask(session, flask_version):
 
         session.install(".")
 
-        abs_path = os.path.abspath("src/test/integration/flask/")
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("flask")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/flask"):
-                session.install("-r", "requirements_others.txt")
+                session.install("-r", OTHER_REQUIREMENTS)
 
                 try:
                     session.run(
@@ -547,12 +559,13 @@ def integration_tests_pymongo(
             "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
         )
 
-        abs_path = os.path.abspath("src/test/integration/pymongo/")
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("pymongo")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymongo"):
-                session.install("-r", "requirements_others.txt")
+                session.install("-r", OTHER_REQUIREMENTS)
 
                 try:
                     session.run(
@@ -604,12 +617,13 @@ def integration_tests_pymysql(
 
         session.install(".")
 
-        abs_path = os.path.abspath("src/test/integration/pymysql/")
-        with tempfile.NamedTemporaryFile(suffix=".txt", prefix=abs_path) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=get_it_tempfile_prefix("pymysql")
+        ) as temp_file:
             full_path = f"{temp_file}.txt"
 
             with session.chdir("src/test/integration/pymysql"):
-                session.install("-r", "requirements_others.txt")
+                session.install("-r", OTHER_REQUIREMENTS)
 
                 try:
                     session.run(
