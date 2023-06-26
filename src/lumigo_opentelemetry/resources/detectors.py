@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 LUMIGO_DISTRO_VERSION_ATTR_NAME = "lumigo.distro.version"
+LUMIGO_TAG_ATTR_NAME = "lumigo.tag"
 ENV_ATTR_NAME = "process.environ"
 
 
@@ -56,6 +57,24 @@ class LumigoDistroDetector(ResourceDetector):
         return Resource(
             {
                 LUMIGO_DISTRO_VERSION_ATTR_NAME: lumigo_opentelemetry.__version__,
+            }
+        )
+
+
+class LumigoTagDetector(ResourceDetector):
+    def detect(self) -> "Resource":
+        lumigo_tag = os.environ.get("LUMIGO_TAG")
+        if not lumigo_tag:
+            return Resource.get_empty()
+        if ";" in lumigo_tag:
+            logger.warning(
+                "LUMIGO_TAG contains a semicolon, which is not allowed.",
+                extra={"lumigo_tag": lumigo_tag},
+            )
+            return Resource.get_empty()
+        return Resource(
+            {
+                LUMIGO_TAG_ATTR_NAME: lumigo_tag,
             }
         )
 
@@ -185,6 +204,7 @@ def get_infrastructure_resource() -> "Resource":
         detectors=[
             OTELResourceDetector(),
             LumigoDistroDetector(),
+            LumigoTagDetector(),
             LumigoAwsEcsResourceDetector(),
             LumigoKubernetesResourceDetector(),
             AwsEcsResourceDetector(),
