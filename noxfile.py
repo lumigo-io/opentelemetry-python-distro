@@ -1,13 +1,15 @@
 from __future__ import annotations
+
 import os
 import re
 import sys
 import tempfile
 import time
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 from xml.etree import ElementTree
 
 import nox
+import psutil
 import requests
 import yaml
 
@@ -16,14 +18,27 @@ repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
 
-from src.ci.tested_versions_utils import (  # noqa: E402
-    NonSemanticVersion,
-    SemanticVersion,
-    TestedVersions,
-    should_test_only_untested_versions,
-)
+from src.ci.tested_versions_utils import NonSemanticVersion  # noqa: E402
+from src.ci.tested_versions_utils import (SemanticVersion, TestedVersions,
+                                          should_test_only_untested_versions)
 
 OTHER_REQUIREMENTS = "requirements_others.txt"
+
+
+def create_component_tempfile(name: str):
+    temp_file = tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=f"temp_{name}_", dir=os.path.abspath(f"src/test/components/"), delete=False
+    )
+    temp_file.close()
+    return temp_file.name
+
+
+def create_it_tempfile(name: str):
+    temp_file = tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix="temp_", dir=os.path.abspath(f"src/test/integration/{name}/"), delete=False
+    )
+    temp_file.close()
+    return temp_file.name
 
 
 def install_package(package_name: str, package_version: str, session) -> None:
@@ -32,14 +47,6 @@ def install_package(package_name: str, package_version: str, session) -> None:
     except Exception:
         session.log(f"Cannot install '{package_name}' version '{package_version}'")
         raise
-
-
-def get_component_test_tempfile_prefix(name: str):
-    return os.path.abspath(f"src/test/components/temp_{name}_")
-
-
-def get_it_tempfile_prefix(name: str):
-    return os.path.abspath(f"src/test/integration/{name}/temp_")
 
 
 def get_versions_from_pypi(package_name: str) -> List[str]:
@@ -164,42 +171,38 @@ def integration_tests_boto3_sqs(
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("boto3-sqs")
-        ) as temp_file:
-            full_path = f"{temp_file}.txt"
+        temp_file = create_it_tempfile("boto3-sqs")
+        with session.chdir("src/test/integration/boto3-sqs"):
+            session.install("-r", OTHER_REQUIREMENTS)
 
-            with session.chdir("src/test/integration/boto3-sqs"):
-                session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/run_app",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                try:
-                    session.run(
-                        "sh",
-                        "./scripts/run_app",
-                        env={
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        },
-                        external=True,
-                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                # TODO Make this deterministic
+                # Give time for app to start
+                time.sleep(8)
 
-                    # TODO Make this deterministic
-                    # Give time for app to start
-                    time.sleep(8)
-
-                    session.run(
-                        "pytest",
-                        "--tb",
-                        "native",
-                        "--log-cli-level=INFO",
-                        "--color=yes",
-                        "-v",
-                        "./tests/test_boto3_sqs.py",
-                        env={
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        },
-                    )
-                finally:
-                    kill_process_and_clean_outputs(full_path, "run_app", session)
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_boto3_sqs.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "run_app", session)
 
 
 @nox.session(python=python_versions())
@@ -220,45 +223,41 @@ def integration_tests_boto3(
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("boto3")
-        ) as temp_file:
-            full_path = f"{temp_file}.txt"
+        temp_file = create_it_tempfile("boto3")
+        with session.chdir("src/test/integration/boto3"):
+            session.install("-r", OTHER_REQUIREMENTS)
 
-            with session.chdir("src/test/integration/boto3"):
-                session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                        "OTEL_RESOURCE_ATTRIBUTES": "K0=V0,K1=V1",  # for testing OTELResourceDetector
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                try:
-                    session.run(
-                        "sh",
-                        "./scripts/start_uvicorn",
-                        env={
-                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                            "OTEL_SERVICE_NAME": "app",
-                            "OTEL_RESOURCE_ATTRIBUTES": "K0=V0,K1=V1",  # for testing OTELResourceDetector
-                        },
-                        external=True,
-                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
 
-                    # TODO Make this deterministic
-                    # Wait 1s to give time for app to start
-                    time.sleep(8)
-
-                    session.run(
-                        "pytest",
-                        "--tb",
-                        "native",
-                        "--log-cli-level=INFO",
-                        "--color=yes",
-                        "-v",
-                        "./tests/test_boto3.py",
-                        env={
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        },
-                    )
-                finally:
-                    kill_process_and_clean_outputs(full_path, "uvicorn", session)
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_boto3.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -313,44 +312,40 @@ def integration_tests_fastapi(
 
     session.install(".")
 
-    with tempfile.NamedTemporaryFile(
-        suffix=".txt", prefix=get_it_tempfile_prefix("fastapi")
-    ) as temp_file:
-        full_path = f"{temp_file}.txt"
+    temp_file = create_it_tempfile("fastapi")
+    with session.chdir("src/test/integration/fastapi"):
+        session.install("-r", OTHER_REQUIREMENTS)
 
-        with session.chdir("src/test/integration/fastapi"):
-            session.install("-r", OTHER_REQUIREMENTS)
+        try:
+            session.run(
+                "sh",
+                "./scripts/start_uvicorn",
+                env={
+                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    "OTEL_SERVICE_NAME": "app",
+                },
+                external=True,
+            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+            # TODO Make this deterministic
+            # Wait 1s to give time for app to start
+            time.sleep(8)
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
-
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_fastapi.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(full_path, "uvicorn", session)
+            session.run(
+                "pytest",
+                "--tb",
+                "native",
+                "--log-cli-level=INFO",
+                "--color=yes",
+                "-v",
+                "./tests/test_fastapi.py",
+                env={
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                },
+            )
+        finally:
+            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -377,46 +372,42 @@ def component_tests_attr_max_size(
 
     session.install(".")
 
-    with tempfile.NamedTemporaryFile(
-        suffix=".txt", prefix=get_component_test_tempfile_prefix("attr_max_size")
-    ) as temp_file:
-        full_path = f"{temp_file}.txt"
+    temp_file=create_component_tempfile("attr_max_size")
+    with session.chdir("src/test/components"):
+        session.install("-r", OTHER_REQUIREMENTS)
 
-        with session.chdir("src/test/components"):
-            session.install("-r", OTHER_REQUIREMENTS)
+        try:
+            session.run(
+                "sh",
+                "./scripts/start_uvicorn",
+                env={
+                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    "OTEL_SERVICE_NAME": "app",
+                    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
+                },
+                external=True,
+            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                        "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+            # TODO Make this deterministic
+            # Wait 1s to give time for app to start
+            time.sleep(8)
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
-
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_attr_max_size.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(full_path, "uvicorn", session)
+            session.run(
+                "pytest",
+                "--tb",
+                "native",
+                "--log-cli-level=INFO",
+                "--color=yes",
+                "-v",
+                "./tests/test_attr_max_size.py",
+                env={
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
+                },
+            )
+        finally:
+            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 def component_tests_execution_tags(
@@ -429,44 +420,40 @@ def component_tests_execution_tags(
 
     session.install(".")
 
-    with tempfile.NamedTemporaryFile(
-        suffix=".txt", prefix=get_component_test_tempfile_prefix("execution_tags")
-    ) as temp_file:
-        full_path = f"{temp_file}.txt"
+    temp_file=create_component_tempfile("execution_tags")
+    with session.chdir("src/test/components"):
+        session.install("-r", OTHER_REQUIREMENTS)
 
-        with session.chdir("src/test/components"):
-            session.install("-r", OTHER_REQUIREMENTS)
+        try:
+            session.run(
+                "sh",
+                "./scripts/start_uvicorn",
+                env={
+                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    "OTEL_SERVICE_NAME": "app",
+                },
+                external=True,
+            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+            # TODO Make this deterministic
+            # Wait 1s to give time for app to start
+            time.sleep(8)
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
-
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_execution_tags.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": full_path,
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(full_path, "uvicorn", session)
+            session.run(
+                "pytest",
+                "--tb",
+                "native",
+                "--log-cli-level=INFO",
+                "--color=yes",
+                "-v",
+                "./tests/test_execution_tags.py",
+                env={
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                },
+            )
+        finally:
+            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -484,44 +471,40 @@ def integration_tests_flask(session, flask_version):
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("flask")
-        ) as temp_file:
-            full_path = f"{temp_file}.txt"
+        temp_file = create_it_tempfile("flask")
+        with session.chdir("src/test/integration/flask"):
+            session.install("-r", OTHER_REQUIREMENTS)
 
-            with session.chdir("src/test/integration/flask"):
-                session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_flask",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                try:
-                    session.run(
-                        "sh",
-                        "./scripts/start_flask",
-                        env={
-                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                            "OTEL_SERVICE_NAME": "app",
-                        },
-                        external=True,
-                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
 
-                    # TODO Make this deterministic
-                    # Wait 1s to give time for app to start
-                    time.sleep(8)
-
-                    session.run(
-                        "pytest",
-                        "--tb",
-                        "native",
-                        "--log-cli-level=INFO",
-                        "--color=yes",
-                        "-v",
-                        "./tests/test_flask.py",
-                        env={
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        },
-                    )
-                finally:
-                    kill_process_and_clean_outputs(full_path, "flask", session)
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_flask.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "flask", session)
 
 
 @nox.session(python=python_versions())
@@ -539,8 +522,8 @@ def integration_tests_pymongo(
 ):
     with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
         if (
-            pymongo_version.startswith("3.")  # is 3.x
-            and not re.match(r"3\.\d{2}.*", pymongo_version)  # not 3.10.x or above
+            str(pymongo_version).startswith("3.")  # is 3.x
+            and not re.match(r"3\.\d{2}.*", str(pymongo_version))  # not 3.10.x or above
             # and on a Python version above 3.9
             and sys.version_info.major == 3
             and sys.version_info.minor > 9
@@ -559,44 +542,40 @@ def integration_tests_pymongo(
             "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
         )
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("pymongo")
-        ) as temp_file:
-            full_path = f"{temp_file}.txt"
+        temp_file = create_it_tempfile("pymongo")
+        with session.chdir("src/test/integration/pymongo"):
+            session.install("-r", OTHER_REQUIREMENTS)
 
-            with session.chdir("src/test/integration/pymongo"):
-                session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                try:
-                    session.run(
-                        "sh",
-                        "./scripts/start_uvicorn",
-                        env={
-                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                            "OTEL_SERVICE_NAME": "app",
-                        },
-                        external=True,
-                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
 
-                    # TODO Make this deterministic
-                    # Wait 1s to give time for app to start
-                    time.sleep(8)
-
-                    session.run(
-                        "pytest",
-                        "--tb",
-                        "native",
-                        "--log-cli-level=INFO",
-                        "--color=yes",
-                        "-v",
-                        "./tests/test_pymongo.py",
-                        env={
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        },
-                    )
-                finally:
-                    kill_process_and_clean_outputs(full_path, "uvicorn", session)
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_pymongo.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 @nox.session(python=python_versions())
@@ -617,44 +596,40 @@ def integration_tests_pymysql(
 
         session.install(".")
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("pymysql")
-        ) as temp_file:
-            full_path = f"{temp_file}.txt"
+        temp_file = create_it_tempfile("pymysql")
+        with session.chdir("src/test/integration/pymysql"):
+            session.install("-r", OTHER_REQUIREMENTS)
 
-            with session.chdir("src/test/integration/pymysql"):
-                session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                try:
-                    session.run(
-                        "sh",
-                        "./scripts/start_uvicorn",
-                        env={
-                            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                            "OTEL_SERVICE_NAME": "app",
-                        },
-                        external=True,
-                    )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
 
-                    # TODO Make this deterministic
-                    # Wait 1s to give time for app to start
-                    time.sleep(8)
-
-                    session.run(
-                        "pytest",
-                        "--tb",
-                        "native",
-                        "--log-cli-level=INFO",
-                        "--color=yes",
-                        "-v",
-                        "./tests/test_pymysql.py",
-                        env={
-                            "LUMIGO_DEBUG_SPANDUMP": full_path,
-                        },
-                    )
-                finally:
-                    kill_process_and_clean_outputs(full_path, "uvicorn", session)
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_pymysql.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
@@ -663,17 +638,20 @@ def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -
 
 
 def kill_process(process_name: str) -> None:
-    import psutil
-
-    # Kill all uvicorn processes
-    for proc in psutil.process_iter():
-        # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-        if proc.name() == process_name:
-            proc.kill()
-        elif proc.name().lower() == "python":
-            cmdline = proc.cmdline()
-            if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
+    try:
+        # Kill all processes with the given name
+        for proc in psutil.process_iter():
+            # The python process is names "Python" os OS X and "uvicorn" on CircleCI
+            if proc.name() == process_name:
+                print(f"Killing process with name {proc.name()}...")
                 proc.kill()
+            elif proc.name().lower() == "python":
+                cmdline = proc.cmdline()
+                if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
+                    print(f"Killing process with name {proc.name()} and cmdline {cmdline}...")
+                    proc.kill()
+    except psutil.ZombieProcess as zp:
+        print(f"Failed to kill zombie process named {process_name}: {str(zp)}")
 
 
 def clean_outputs(full_path: str, session) -> None:
