@@ -1,15 +1,13 @@
 from __future__ import annotations
-
 import os
 import re
 import sys
 import tempfile
 import time
-from typing import List, Optional, Union
+from typing import List, Union, Optional
 from xml.etree import ElementTree
 
 import nox
-import psutil
 import requests
 import yaml
 
@@ -18,16 +16,22 @@ repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
 
-from src.ci.tested_versions_utils import NonSemanticVersion  # noqa: E402
-from src.ci.tested_versions_utils import (SemanticVersion, TestedVersions,
-                                          should_test_only_untested_versions)
+from src.ci.tested_versions_utils import (  # noqa: E402
+    NonSemanticVersion,
+    SemanticVersion,
+    TestedVersions,
+    should_test_only_untested_versions,
+)
 
 OTHER_REQUIREMENTS = "requirements_others.txt"
 
 
 def create_component_tempfile(name: str):
     temp_file = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=f"temp_{name}_", dir=os.path.abspath(f"src/test/components/"), delete=False
+        suffix=".txt",
+        prefix=f"temp_{name}_",
+        dir=os.path.abspath("src/test/components/"),
+        delete=False,
     )
     temp_file.close()
     return temp_file.name
@@ -35,7 +39,10 @@ def create_component_tempfile(name: str):
 
 def create_it_tempfile(name: str):
     temp_file = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix="temp_", dir=os.path.abspath(f"src/test/integration/{name}/"), delete=False
+        suffix=".txt",
+        prefix="temp_",
+        dir=os.path.abspath(f"src/test/integration/{name}/"),
+        delete=False,
     )
     temp_file.close()
     return temp_file.name
@@ -372,7 +379,7 @@ def component_tests_attr_max_size(
 
     session.install(".")
 
-    temp_file=create_component_tempfile("attr_max_size")
+    temp_file = create_component_tempfile("attr_max_size")
     with session.chdir("src/test/components"):
         session.install("-r", OTHER_REQUIREMENTS)
 
@@ -420,7 +427,7 @@ def component_tests_execution_tags(
 
     session.install(".")
 
-    temp_file=create_component_tempfile("execution_tags")
+    temp_file = create_component_tempfile("execution_tags")
     with session.chdir("src/test/components"):
         session.install("-r", OTHER_REQUIREMENTS)
 
@@ -648,7 +655,9 @@ def kill_process(process_name: str) -> None:
             elif proc.name().lower() == "python":
                 cmdline = proc.cmdline()
                 if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
-                    print(f"Killing process with name {proc.name()} and cmdline {cmdline}...")
+                    print(
+                        f"Killing process with name {proc.name()} and cmdline {cmdline}..."
+                    )
                     proc.kill()
     except psutil.ZombieProcess as zp:
         print(f"Failed to kill zombie process named {process_name}: {str(zp)}")
