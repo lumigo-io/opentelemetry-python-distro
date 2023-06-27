@@ -57,7 +57,7 @@ def python_versions() -> Optional[List[str]]:
         return None
 
     with open(
-        os.path.dirname(__file__) + "/.github/workflows/nightly-actions.yml"
+        os.path.dirname(__file__) + "/.github/workflows/version-testing.yml"
     ) as f:
         github_workflow = yaml.load(f, Loader=yaml.FullLoader)
         return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
