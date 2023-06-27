@@ -25,15 +25,15 @@ class SpansContainer:
         spanCounter.counter = sum(1 for line in open(SPANS_FILE_FULL_PATH))
 
     @staticmethod
-    def parse_spans_from_file() -> SpansContainer:
-        with open(SPANS_FILE_FULL_PATH) as file:
+    def parse_spans_from_file(path: Optional[str] = None) -> SpansContainer:
+        with open(path or SPANS_FILE_FULL_PATH) as file:
             spans = [json.loads(line) for line in file.readlines()]
 
         return SpansContainer(spans=spans)
 
     @staticmethod
-    def get_spans_from_file() -> SpansContainer:
-        spans = SpansContainer.parse_spans_from_file().spans
+    def get_spans_from_file(path: Optional[str] = None) -> SpansContainer:
+        spans = SpansContainer.parse_spans_from_file(path).spans
         return SpansContainer(spans=spans[spanCounter.counter :])  # noqa
 
     def get_root(self) -> Dict[str, Any]:
