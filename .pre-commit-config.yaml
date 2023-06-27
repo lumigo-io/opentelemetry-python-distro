@@ -31,7 +31,7 @@ repos:
     rev: v2.4.0
     hooks:
     - id: flake8
-      args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*|src/test/integration/grpcio/app/*"]
+      args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*,src/test/integration/grpcio/app/*"]
       additional_dependencies: ['importlib-metadata==4.2.0']
 
 -   repo: https://github.com/PyCQA/bandit
