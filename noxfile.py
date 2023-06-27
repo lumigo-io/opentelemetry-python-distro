@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import psutil
 import re
 import sys
 import tempfile
