@@ -570,7 +570,7 @@ def integration_tests_grpcio(
                     },
                 )
             finally:
-                kill_process_and_clean_outputs(temp_file, "run_grpcio_server", session)
+                kill_process_and_clean_outputs(temp_file, "greeter_server.py", session)
 
 
 @nox.session(python=python_versions())
@@ -711,7 +711,7 @@ def kill_process(process_name: str) -> None:
             if proc.name() == process_name:
                 print(f"Killing process with name {proc.name()}...")
                 proc.kill()
-            elif proc.name().lower() == "python":
+            elif proc.name().lower().startswith("python"):
                 cmdline = proc.cmdline()
                 if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
                     print(
@@ -719,7 +719,7 @@ def kill_process(process_name: str) -> None:
                     )
                     proc.kill()
     except psutil.ZombieProcess as zp:
-        print(f"Failed to kill zombie process named {process_name}: {str(zp)}")
+        print(f"Failed to kill zombie process for {process_name}: {str(zp)}")
 
 
 def clean_outputs(full_path: str, session) -> None:
