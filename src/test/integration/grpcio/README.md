@@ -10,4 +10,4 @@ To compile the protocol buffers defined in the `protos` folder, either run the t
 scripts/rebuild_protos
 ```
 
-This will compile any `.proto` files in the `protos` directory and place the output files in both the `app` and `tests` folders.
+This will compile any `.proto` files in the `protos` directory.

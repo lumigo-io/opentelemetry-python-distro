@@ -1,18 +1,13 @@
 #!/bin/sh -e
 
-output_folders=("protos")
-
-for output_folder in "${output_folders[@]}"
+# loop over proto files
+for proto_file in protos/*.proto
 do
-    # loop over proto files
-    for proto_file in protos/*.proto
-    do
-        # generate python code from proto files
-        python -m grpc_tools.protoc \
-            -I./protos \
-            --python_out=./"$output_folder" \
-            --pyi_out=./"$output_folder" \
-            --grpc_python_out=./"$output_folder" \
-            "$proto_file"
-    done
+    # generate python code from proto files
+    python -m grpc_tools.protoc \
+        -I./protos \
+        --python_out=./protos \
+        --pyi_out=./protos \
+        --grpc_python_out=./protos \
+        "$proto_file"
 done
