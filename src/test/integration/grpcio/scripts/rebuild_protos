@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-output_folders=("app" "tests")
+output_folders=("protos")
 
 for output_folder in "${output_folders[@]}"
 do

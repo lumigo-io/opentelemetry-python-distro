@@ -14,7 +14,12 @@
 """The Python implementation of the GRPC helloworld.Greeter server."""
 
 import logging
+import os
+import sys
 from concurrent import futures
+
+parent_dir_name = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parent_dir_name + "/protos")
 
 import grpc
 import helloworld_pb2

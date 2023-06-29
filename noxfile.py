@@ -542,7 +542,7 @@ def integration_tests_grpcio(
                     "sh",
                     "./scripts/rebuild_protos",
                     external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+                )
 
                 session.run(
                     "sh",
@@ -555,7 +555,7 @@ def integration_tests_grpcio(
 
                 # TODO Make this deterministic
                 # Give time for app to start
-                time.sleep(8)
+                time.sleep(3)
 
                 session.run(
                     "pytest",
