@@ -1,12 +1,6 @@
 import os
 import sys
-
-print("this is what you're looking for!", file=sys.stderr)
-print(sys.path, file=sys.stderr)
-# get current working dir
-print(os.getcwd(), file=sys.stderr)
-import os
-import sys
+import time
 import unittest
 from test.test_utils.spans_parser import SpansContainer
 
@@ -25,3 +19,17 @@ class TestGrpcSpans(unittest.TestCase):
             response = stub.SayHello(helloworld_pb2.HelloRequest(name="you"))
         print("Greeter client received: " + response.message)
         assert response.message == "Hello, you!"
+
+        time.sleep(5)
+
+        with grpc.insecure_channel("localhost:50051") as channel:
+            stub = helloworld_pb2_grpc.GreeterStub(channel)
+            response = stub.SayHello(helloworld_pb2.HelloRequest(name="me"))
+        print("Greeter client received: " + response.message)
+        assert response.message == "Hello, me!"
+
+        with grpc.insecure_channel("localhost:50051") as channel:
+            stub = helloworld_pb2_grpc.GreeterStub(channel)
+            response = stub.SayHello(helloworld_pb2.HelloRequest(name="Harry"))
+        print("Greeter client received: " + response.message)
+        assert response.message == "Hello, me!"

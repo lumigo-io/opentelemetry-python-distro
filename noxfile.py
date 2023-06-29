@@ -569,8 +569,11 @@ def integration_tests_grpcio(
                         "LUMIGO_DEBUG_SPANDUMP": temp_file,
                     },
                 )
-            finally:
                 kill_process_and_clean_outputs(temp_file, "greeter_server.py", session)
+            except Exception as e:
+                print(f"Test failed, temporary file name {temp_file} not deleted")
+                kill_process("greeter_server.py")
+                raise e
 
 
 @nox.session(python=python_versions())
