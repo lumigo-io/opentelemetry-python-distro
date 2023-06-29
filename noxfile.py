@@ -540,6 +540,12 @@ def integration_tests_grpcio(
             try:
                 session.run(
                     "sh",
+                    "./scripts/rebuild_protos",
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                session.run(
+                    "sh",
                     "./scripts/run_grpcio_server",
                     env={
                         "LUMIGO_DEBUG_SPANDUMP": temp_file,
