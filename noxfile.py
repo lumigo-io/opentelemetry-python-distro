@@ -517,6 +517,58 @@ def integration_tests_flask(session, flask_version):
 
 @nox.session(python=python_versions())
 @nox.parametrize(
+    "grpcio_version",
+    dependency_versions_to_be_tested(
+        directory="grpcio",
+        dependency_name="grpcio",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_grpcio(
+    session,
+    grpcio_version,
+):
+    with TestedVersions.save_tests_result("grpcio", "grpcio", grpcio_version):
+        install_package("grpcio", grpcio_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("grpcio")
+        with session.chdir("src/test/integration/grpcio"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/run_grpcio_server",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_grpcio.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "run_grpcio_server", session)
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
     "pymongo_version",
     dependency_versions_to_be_tested(
         directory="pymongo",

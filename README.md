@@ -341,3 +341,14 @@ We use [nox](https://pypi.org/project/nox/) for setting up and running our tests
 python3 -m nox
 python3 -m nox -e integration_tests_flask
 ```
+
+### Tested versions
+
+The `tested_versions` folder must be present and updated both under `src/lumigo_opentelemetry/instrumentations` and in the tested package's folder under `src/test`. For this to work, create a symlink from the package's `src/test` folder.
+
+```sh
+mkdir -p src/lumigo_opentelemetry/instrumentations/<PACKAGE_NAME>/tested_versions
+touch src/lumigo_opentelemetry/instrumentations/<PACKAGE_NAME>/tested_versions/<PACKAGE_NAME>
+cd src/test/<PACKAGE_NAME>
+ln -s ../../../lumigo_opentelemetry/instrumentations/<PACKAGE_NAME>/tested_versions tested_versions
+```

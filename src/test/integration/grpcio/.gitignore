@@ -1,0 +1,8 @@
+bin
+include
+lib
+lib64
+share
+pyvenv.cfg
+*_pb2*.py
+*_pb2*.pyi
