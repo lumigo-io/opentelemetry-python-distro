@@ -332,3 +332,12 @@ for message in response.get("Messages", []):
 ```
 
 Without the scope provided by the iterator over `response["Messages"]`, `span_1` would be without a parent span, and that would result in a separate invocation and a separate transaction in Lumigo.
+
+## Testing
+
+We use [nox](https://pypi.org/project/nox/) for setting up and running our tests.
+
+```sh
+python3 -m nox
+python3 -m nox -e integration_tests_flask
+```
