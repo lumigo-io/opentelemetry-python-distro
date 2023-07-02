@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+python3 $(dirname $script_dir)/app/greeter_client.py &

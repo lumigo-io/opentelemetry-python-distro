@@ -524,7 +524,7 @@ def integration_tests_flask(session, flask_version):
         test_untested_versions=should_test_only_untested_versions(),
     ),
 )
-def integration_tests_grpcio(
+def integration_tests_grpcio_server(
     session,
     grpcio_version,
 ):
@@ -564,7 +564,7 @@ def integration_tests_grpcio(
                     "--log-cli-level=INFO",
                     "--color=yes",
                     "-v",
-                    "./tests/test_grpcio.py",
+                    "./tests/test_grpcio_server.py",
                     env={
                         "LUMIGO_DEBUG_SPANDUMP": temp_file,
                     },
@@ -573,6 +573,67 @@ def integration_tests_grpcio(
             except Exception as e:
                 print(f"Test failed, temporary file name {temp_file} not deleted")
                 kill_process("greeter_server.py")
+                raise e
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
+    "grpcio_version",
+    dependency_versions_to_be_tested(
+        directory="grpcio",
+        dependency_name="grpcio",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_grpcio_client(
+    session,
+    grpcio_version,
+):
+    with TestedVersions.save_tests_result("grpcio", "grpcio", grpcio_version):
+        install_package("grpcio", grpcio_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("grpcio")
+        with session.chdir("src/test/integration/grpcio"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/rebuild_protos",
+                    external=True,
+                )
+
+                session.run(
+                    "sh",
+                    "./scripts/run_grpcio_client",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Give time for app to start
+                time.sleep(3)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_grpcio_client.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+                kill_process_and_clean_outputs(temp_file, "greeter_client.py", session)
+            except Exception as e:
+                print(f"Test failed, temporary file name {temp_file} not deleted")
+                kill_process("greeter_client.py")
                 raise e
 
 

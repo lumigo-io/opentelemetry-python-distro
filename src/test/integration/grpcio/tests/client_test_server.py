@@ -13,7 +13,6 @@
 # limitations under the License.
 """The Python implementation of the GRPC helloworld.Greeter server."""
 
-import logging
 import os
 import sys
 from concurrent import futures
@@ -31,16 +30,30 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
         return helloworld_pb2.HelloReply(message="Hello, %s!" % request.name)
 
 
-def serve():
-    port = "50051"
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port("[::]:" + port)
-    server.start()
-    print("Greeter server test server started, listening on " + port)
-    server.wait_for_termination()
+class ClientTestServer:
+    def __init__(self, port: str = "50052"):
+        self.port = port
+        self.running = False
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), self.server)
+        self.server.add_insecure_port("[::]:" + self.port)
 
+    def __enter__(self):
+        self.start()
 
-if __name__ == "__main__":
-    logging.basicConfig()
-    serve()
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
+
+    def start(self):
+        if self.running:
+            print("Greeter client test server already started")
+            return
+        self.server.start()
+        self.running = True
+        print("Greeter client test server started, listening on " + self.port)
+
+    def stop(self):
+        if self.running:
+            self.server.stop(0)
+        else:
+            print("Greeter client test server not running")

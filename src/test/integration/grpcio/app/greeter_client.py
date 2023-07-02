@@ -16,7 +16,7 @@
 import logging
 import os
 import sys
-from concurrent import futures
+import time
 
 parent_dir_name = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir_name + "/protos")
@@ -26,21 +26,23 @@ import helloworld_pb2  # noqa: E402
 import helloworld_pb2_grpc  # noqa: E402
 
 
-class Greeter(helloworld_pb2_grpc.GreeterServicer):
-    def SayHello(self, request, context):
-        return helloworld_pb2.HelloReply(message="Hello, %s!" % request.name)
-
-
-def serve():
-    port = "50051"
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port("[::]:" + port)
-    server.start()
-    print("Greeter server test server started, listening on " + port)
-    server.wait_for_termination()
+def attempt_connection():
+    counter = 0
+    while counter < 10:
+        counter += 1
+        try:
+            with grpc.insecure_channel("localhost:50052") as channel:
+                stub = helloworld_pb2_grpc.GreeterStub(channel)
+                response = stub.SayHello(helloworld_pb2.HelloRequest(name="you"))
+            print("Greeter client received: " + response.message)
+            assert response.message == "Hello, you!"
+            print(f"Greeter client attempt {counter} succeeded")
+            return
+        except Exception as e:
+            print(f"Greeter client attempt {counter} threw an exception: {e}")
+        time.sleep(1)
 
 
 if __name__ == "__main__":
     logging.basicConfig()
-    serve()
+    attempt_connection()
