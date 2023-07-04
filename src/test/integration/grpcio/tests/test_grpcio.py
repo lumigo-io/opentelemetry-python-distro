@@ -34,6 +34,7 @@ class TestGrpcioSpans(unittest.TestCase):
         assert server_span["attributes"]["rpc.method"] == "SayHello"
         assert server_span["attributes"]["rpc.service"] == "helloworld.Greeter"
         assert server_span["attributes"]["rpc.system"] == "grpc"
+        assert server_span["attributes"]["rpc.payload"] == 'name: "you"\n'
 
         assert len(client_spans.spans) == 1
         client_span = client_spans.spans[0]
@@ -41,6 +42,7 @@ class TestGrpcioSpans(unittest.TestCase):
         assert client_span["attributes"]["rpc.method"] == "SayHello"
         assert client_span["attributes"]["rpc.service"] == "helloworld.Greeter"
         assert client_span["attributes"]["rpc.system"] == "grpc"
+        assert client_span["attributes"]["rpc.payload"] == 'name: "you"\n'
 
         assert server_span["context"]["trace_id"] == client_span["context"]["trace_id"]
         assert client_span["context"]["span_id"] == server_span["parent_id"]
