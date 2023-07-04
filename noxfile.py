@@ -610,10 +610,10 @@ def integration_tests_grpcio(
         )
 
         server_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("grpcio")
+            suffix=".txt", prefix=create_it_tempfile("grpcio")
         ).name
         client_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=get_it_tempfile_prefix("grpcio")
+            suffix=".txt", prefix=create_it_tempfile("grpcio")
         ).name
         with session.chdir("src/test/integration/grpcio"):
             session.install("-r", OTHER_REQUIREMENTS)
@@ -715,9 +715,9 @@ def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -
 
 
 def kill_process(process_name: str) -> None:
-    try:
-        # Kill all processes with the given name
-        for proc in psutil.process_iter():
+    # Kill all processes with the given name
+    for proc in psutil.process_iter():
+        try:
             # The python process is names "Python" os OS X and "uvicorn" on CircleCI
             if proc.name() == process_name:
                 print(f"Killing process with name {proc.name()}...")
@@ -729,8 +729,8 @@ def kill_process(process_name: str) -> None:
                         f"Killing process with name {proc.name()} and cmdline {cmdline}..."
                     )
                     proc.kill()
-    except psutil.ZombieProcess as zp:
-        print(f"Failed to kill zombie process named {process_name}: {str(zp)}")
+        except psutil.ZombieProcess as zp:
+            print(f"Failed to kill zombie process for {process_name}: {str(zp)}")
 
 
 def clean_outputs(full_path: str, session) -> None:
