@@ -45,20 +45,6 @@ class TestDependencyReport(TestCase):
 
     @httpretty.activate(allow_net_connect=False)
     @patch.dict(
-        environ,
-        {
-            "LUMIGO_TRACER_TOKEN": "abcdef",
-            "LUMIGO_REPORT_DEPENDENCIES": "true",
-            "LUMIGO_ENDPOINT": "https://some.url",
-        },
-    )
-    def test_dependency_report_disabled_if_lumigo_endpoint_not_default(self):
-        init()
-
-        assert not httpretty.latest_requests()
-
-    @httpretty.activate(allow_net_connect=False)
-    @patch.dict(
         environ, {"LUMIGO_TRACER_TOKEN": "abcdef", "LUMIGO_REPORT_DEPENDENCIES": "true"}
     )
     def test_dependency_report_fails(self):
@@ -76,9 +62,24 @@ class TestDependencyReport(TestCase):
 
     @httpretty.activate(allow_net_connect=False)
     @patch.dict(
+        environ,
+        {
+            "LUMIGO_TRACER_TOKEN": "abcdef",
+            "LUMIGO_REPORT_DEPENDENCIES": "true",
+            "LUMIGO_ENDPOINT": "https://some.url",
+        },
+    )
+    def test_dependency_report_enabled_if_lumigo_endpoint_not_default(self):
+        self._test_dependency_report_called()
+
+    @httpretty.activate(allow_net_connect=False)
+    @patch.dict(
         environ, {"LUMIGO_TRACER_TOKEN": "abcdef", "LUMIGO_REPORT_DEPENDENCIES": "true"}
     )
     def test_dependency_report_called(self):
+        self._test_dependency_report_called()
+
+    def _test_dependency_report_called(self):
         httpretty.register_uri(
             HTTPretty.POST,
             "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/dependencies",

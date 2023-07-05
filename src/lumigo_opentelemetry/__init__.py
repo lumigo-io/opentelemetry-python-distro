@@ -133,10 +133,7 @@ def init() -> Dict[str, Any]:
             )
         )
 
-        if (
-            lumigo_report_dependencies == "true"
-            and lumigo_endpoint == DEFAULT_LUMIGO_ENDPOINT
-        ):
+        if lumigo_report_dependencies == "true":
             from lumigo_opentelemetry.dependencies import report
 
             try:
