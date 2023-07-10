@@ -12,7 +12,9 @@ def iterator_wrapper(it: IteratorType[Any], attribute_name: str) -> IteratorType
     for data_chunk in it:
         if len(str(history)) < PAYLOAD_MAX_SIZE:
             history.append(str(data_chunk))
-            get_current_span().set_attribute(attribute_name, ",".join(history)[:PAYLOAD_MAX_SIZE])
+            get_current_span().set_attribute(
+                attribute_name, ",".join(history)[:PAYLOAD_MAX_SIZE]
+            )
         yield data_chunk
 
 
@@ -21,7 +23,9 @@ class LumigoClientInterceptor(OpenTelemetryClientInterceptor):
         ctx = super()._start_span(method, **kwargs)
         if getattr(self, "latest_request", None) is not None:
             if not isinstance(self.latest_request, Iterator):
-                ctx.kwds["attributes"]["rpc.request.payload"] = str(self.latest_request)[:PAYLOAD_MAX_SIZE]
+                ctx.kwds["attributes"]["rpc.request.payload"] = str(
+                    self.latest_request
+                )[:PAYLOAD_MAX_SIZE]
         return ctx
 
     def _intercept(self, request, metadata, client_info, invoker):  # type: ignore

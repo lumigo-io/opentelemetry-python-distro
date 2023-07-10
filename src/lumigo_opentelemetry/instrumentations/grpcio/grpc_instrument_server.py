@@ -16,7 +16,9 @@ def request_wrapper(request: _RequestIterator) -> None:
         data_chunk = original_next()
         if len(str(history)) < PAYLOAD_MAX_SIZE:
             history.append(str(data_chunk))
-            get_current_span().set_attribute("rpc.request.payload", ",".join(history)[:PAYLOAD_MAX_SIZE])
+            get_current_span().set_attribute(
+                "rpc.request.payload", ",".join(history)[:PAYLOAD_MAX_SIZE]
+            )
         return data_chunk
 
     request._next = wrapped_next
@@ -33,7 +35,9 @@ class LumigoServerInterceptor(OpenTelemetryServerInterceptor):
             if isinstance(self.latest_request, _RequestIterator):
                 request_wrapper(self.latest_request)
             else:
-                ctx.kwds["attributes"]["rpc.request.payload"] = str(self.latest_request)[:PAYLOAD_MAX_SIZE]
+                ctx.kwds["attributes"]["rpc.request.payload"] = str(
+                    self.latest_request
+                )[:PAYLOAD_MAX_SIZE]
         return ctx
 
     def intercept_service(self, continuation, handler_call_details):  # type: ignore
