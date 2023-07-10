@@ -1,4 +1,5 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
+from .config import SHOULD_INSTRUMENT_PAYLOADS
 
 
 class GRPCInstrumentor(AbstractInstrumentor):
@@ -23,7 +24,8 @@ class GRPCInstrumentor(AbstractInstrumentor):
             GrpcInstrumentorClient,
         )
 
-        self.inject_lumigo_interceptors()
+        if SHOULD_INSTRUMENT_PAYLOADS:
+            self.inject_lumigo_interceptors()
         GrpcInstrumentorServer().instrument()
         GrpcInstrumentorClient().instrument()
 

@@ -15,6 +15,7 @@
 import threading
 from concurrent import futures
 import logging
+from typing import Iterable
 
 import grpc
 import helloworld_pb2
@@ -24,10 +25,22 @@ done = threading.Event()
 
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
-
-    def SayHello(self, request, context):
-        done.set()
+    def SayHelloUnaryUnary(self, request, context):
+        if request.name == 'exit':
+            done.set()
         return helloworld_pb2.HelloReply(message='Hello, %s!' % request.name)
+
+    def SayHelloUnaryStream(self, request, context) -> Iterable[helloworld_pb2.HelloReply]:
+        yield helloworld_pb2.HelloReply(message='First hello, %s!' % request.name)
+        yield helloworld_pb2.HelloReply(message='Second hello, %s!' % request.name)
+
+    def SayHelloStreamUnary(self, request_iterator, context):
+        return helloworld_pb2.HelloReply(message='Hello, %s!' % ','.join([r.name for r in request_iterator]))
+
+    def SayHelloStreamStream(self, request_iterator, context):
+        name = ','.join([r.name for r in request_iterator])
+        yield helloworld_pb2.HelloReply(message='First hello, %s!' % name)
+        yield helloworld_pb2.HelloReply(message='Second hello, %s!' % name)
 
 
 def serve():

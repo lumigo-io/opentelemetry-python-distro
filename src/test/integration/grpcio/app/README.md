@@ -1,4 +1,8 @@
-This app was copied as-is from the grpc.io site as an example GRPC client/server:
+This app is mainly based on the GRPC client/server example:
 https://grpc.io/docs/languages/python/quickstart/
-The code was downloaded specifically from:
-https://github.com/grpc/grpc/tree/master/examples/python/helloworld
+
+The file `helloworld.proto` has changed to measure all the `unary X stream` options of the requestand response.
+To recompile this proto file and regenerate the files `helloworld_pb2.py, helloworld_pb2.pyi, helloworld_pb2_grpc.py` use:
+```
+python -m grpc_tools.protoc helloworld.proto -I. --python_out=. --pyi_out=. --grpc_python_out=.
+```
