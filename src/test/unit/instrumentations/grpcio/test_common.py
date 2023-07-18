@@ -11,7 +11,7 @@ def test_add_payload_in_bulks(monkeypatch):
 
     span_mock = Mock(set_attribute=Mock())
     monkeypatch.setattr(
-        "src.lumigo_opentelemetry.instrumentations.grpcio.common.get_current_span",
+        "lumigo_opentelemetry.instrumentations.grpcio.common.get_current_span",
         lambda: span_mock,
     )
     add_payload("payload1")
@@ -25,7 +25,7 @@ def test_add_payload_in_bulks_too_big(monkeypatch):
 
     span_mock = Mock(set_attribute=Mock())
     monkeypatch.setattr(
-        "src.lumigo_opentelemetry.instrumentations.grpcio.common.get_current_span",
+        "lumigo_opentelemetry.instrumentations.grpcio.common.get_current_span",
         lambda: span_mock,
     )
     add_payload("test1")
