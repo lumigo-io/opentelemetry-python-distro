@@ -1,5 +1,5 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
-from .config import SHOULD_INSTRUMENT_PAYLOADS
+from .common import SHOULD_INSTRUMENT_PAYLOADS
 
 
 class GRPCInstrumentor(AbstractInstrumentor):

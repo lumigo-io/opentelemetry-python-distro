@@ -26,34 +26,38 @@ done = threading.Event()
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
     def SayHelloUnaryUnary(self, request, context):
-        if request.name == 'exit':
+        if request.name == "exit":
             done.set()
-        return helloworld_pb2.HelloReply(message='Hello, %s!' % request.name)
+        return helloworld_pb2.HelloReply(message="Hello, %s!" % request.name)
 
-    def SayHelloUnaryStream(self, request, context) -> Iterable[helloworld_pb2.HelloReply]:
-        yield helloworld_pb2.HelloReply(message='First hello, %s!' % request.name)
-        yield helloworld_pb2.HelloReply(message='Second hello, %s!' % request.name)
+    def SayHelloUnaryStream(
+        self, request, context
+    ) -> Iterable[helloworld_pb2.HelloReply]:
+        yield helloworld_pb2.HelloReply(message="First hello, %s!" % request.name)
+        yield helloworld_pb2.HelloReply(message="Second hello, %s!" % request.name)
 
     def SayHelloStreamUnary(self, request_iterator, context):
-        return helloworld_pb2.HelloReply(message='Hello, %s!' % ','.join([r.name for r in request_iterator]))
+        return helloworld_pb2.HelloReply(
+            message="Hello, %s!" % ",".join([r.name for r in request_iterator])
+        )
 
     def SayHelloStreamStream(self, request_iterator, context):
-        name = ','.join([r.name for r in request_iterator])
-        yield helloworld_pb2.HelloReply(message='First hello, %s!' % name)
-        yield helloworld_pb2.HelloReply(message='Second hello, %s!' % name)
+        name = ",".join([r.name for r in request_iterator])
+        yield helloworld_pb2.HelloReply(message="First hello, %s!" % name)
+        yield helloworld_pb2.HelloReply(message="Second hello, %s!" % name)
 
 
 def serve():
-    port = '50051'
+    port = "50051"
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
     helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port('[::]:' + port)
+    server.add_insecure_port("[::]:" + port)
     server.start()
     print("Server started, listening on " + port)
     done.wait()
     server.stop(1).wait()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig()
     serve()

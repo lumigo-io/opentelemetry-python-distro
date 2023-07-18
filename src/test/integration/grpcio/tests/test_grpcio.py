@@ -47,7 +47,7 @@ class TestGrpcioSpans(unittest.TestCase):
         # payloads
         assert server_span["attributes"]["rpc.request.payload"] == request_payload
         assert client_span["attributes"]["rpc.request.payload"] == request_payload
-        # TODO: collect the response from the server - left for future work
+        # TODO: collect the response from the server - RD-11068
         # assert server_span["attributes"]["rpc.response.payload"] == response_payload
         assert client_span["attributes"]["rpc.response.payload"] == response_payload
 

@@ -1,31 +1,32 @@
 from collections.abc import Iterator
-from typing import List, Any, Iterator as IteratorType
+from typing import Any, Iterator as IteratorType
 
-from opentelemetry.trace import get_current_span
 from opentelemetry.instrumentation.grpc._client import OpenTelemetryClientInterceptor
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 
-from .config import PAYLOAD_MAX_SIZE
+from .common import PAYLOAD_MAX_SIZE, add_payload_in_bulks
 
 
-def iterator_wrapper(it: IteratorType[Any], attribute_name: str) -> IteratorType[Any]:
-    history: List[str] = []
-    for data_chunk in it:
-        if len(str(history)) < PAYLOAD_MAX_SIZE:
-            history.append(str(data_chunk))
-            get_current_span().set_attribute(
-                attribute_name, ",".join(history)[:PAYLOAD_MAX_SIZE]
-            )
+def iterator_wrapper(
+    iterator: IteratorType[Any], attribute_name: str
+) -> IteratorType[Any]:
+    add_payload = add_payload_in_bulks(attribute_name)
+
+    for data_chunk in iterator:
+        add_payload(data_chunk)
         yield data_chunk
 
 
 class LumigoClientInterceptor(OpenTelemetryClientInterceptor):
     def _start_span(self, method, **kwargs):  # type: ignore
         ctx = super()._start_span(method, **kwargs)
-        if getattr(self, "latest_request", None) is not None:
-            if not isinstance(self.latest_request, Iterator):
-                ctx.kwds["attributes"]["rpc.request.payload"] = str(
-                    self.latest_request
-                )[:PAYLOAD_MAX_SIZE]
+        with lumigo_safe_execute("LumigoClientInterceptor._start_span"):
+            if getattr(self, "latest_request", None) is not None:
+                # if it's an iterator, we already set the attribute in the iterator wrapper
+                if not isinstance(self.latest_request, Iterator):
+                    ctx.kwds["attributes"]["rpc.request.payload"] = str(
+                        self.latest_request
+                    )[:PAYLOAD_MAX_SIZE]
         return ctx
 
     def _intercept(self, request, metadata, client_info, invoker):  # type: ignore
@@ -38,6 +39,15 @@ class LumigoClientInterceptor(OpenTelemetryClientInterceptor):
     def _intercept_server_stream(  # type: ignore
         self, request_or_iterator, metadata, client_info, invoker
     ):
+        """
+        This is a wrapper to the original _intercept_server_stream method.
+        The flow is:
+        1. Get the payload from the request
+            a. Iterator - we wrap the iterator with the iterator wrapper
+            b. Non-iterator - we save the request in the latest_request member
+        2. call the original method
+        3. wrap the response with the iterator wrapper (to read the payload)
+        """
         if isinstance(request_or_iterator, Iterator):
             request_or_iterator = iterator_wrapper(
                 request_or_iterator, "rpc.request.payload"

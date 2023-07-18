@@ -20,3 +20,16 @@ Getting your machine ready to develop against the package is a straightforward p
 ### Running the test suite
 
 Run `./scripts/checks.sh` in the root folder.
+
+```sh
+# Run all the tests
+python3 -m nox
+# List all the tests
+python3 -m nox -l
+# Run a given test with the entire parameter matrix
+python3 -m nox -e integration_tests_flask
+# Run a given test for a given version of Python and all dependency versions
+python -m nox -e integration_tests_grpcio --python 3.9
+# Run a given test for a given version of Python and a given dependency version
+python -m nox --session "integration_tests_grpcio-3.9(grpcio_version='1.56.0')"
+```

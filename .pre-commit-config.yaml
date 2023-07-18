@@ -4,7 +4,7 @@ repos:
     hooks:
     - id: black
       language_version: python3.7
-      exclude: 'src/lumigo_opentelemetry/external/.*|src/test/integration/grpcio/app/.*'
+      exclude: 'src/lumigo_opentelemetry/external/.*'
       additional_dependencies: ['click==8.0.4']
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
@@ -21,7 +21,7 @@ repos:
       - types-requests==2.28.11.2
       - types-setuptools==65.5.0.2
       - types-urllib3<1.27
-      exclude: '(src/test/|noxfile\.py)|(src/lumigo_opentelemetry/external/.*)|(src/test/integration/grpcio/app/.*)'
+      exclude: '(src/test/|noxfile\.py)|(src/lumigo_opentelemetry/external/.*)'
       args: ['--install-types',  # Ensure the types stubs are installed
              '--explicit-package-bases',  # Needed for src/ci
              '--namespace-packages',  # Needed for opentelemetry package
@@ -31,7 +31,7 @@ repos:
     rev: v2.4.0
     hooks:
     - id: flake8
-      args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*,src/test/integration/grpcio/app/*"]
+      args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*"]
       additional_dependencies: ['importlib-metadata==4.2.0']
 
 -   repo: https://github.com/PyCQA/bandit
