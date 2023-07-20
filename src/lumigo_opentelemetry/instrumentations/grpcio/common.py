@@ -29,6 +29,8 @@ def add_payload_in_bulks(attribute_name: str) -> Callable[[str], None]:
                 )
                 remaining_size -= len(history[-1])
                 if remaining_size <= 0:
-                    logger.debug(f"gRPC: payload size limit reached ({PAYLOAD_MAX_SIZE})")
+                    logger.debug(
+                        f"gRPC: payload size limit reached ({PAYLOAD_MAX_SIZE})"
+                    )
 
     return add_payload
