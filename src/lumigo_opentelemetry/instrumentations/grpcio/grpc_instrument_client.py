@@ -24,14 +24,14 @@ class LumigoClientInterceptor(OpenTelemetryClientInterceptor):
             if getattr(self, "latest_request", None) is not None:
                 # if it's an iterator, we already set the attribute in the iterator wrapper
                 if not isinstance(self.latest_request, Iterator):
-                    ctx.kwds["attributes"]["rpc.request.payload"] = str(
+                    ctx.kwds["attributes"]["rpc.grpc.request.payload"] = str(
                         self.latest_request
                     )[:PAYLOAD_MAX_SIZE]
         return ctx
 
     def _intercept(self, request, metadata, client_info, invoker):  # type: ignore
         if isinstance(request, Iterator):
-            request = iterator_wrapper(request, "rpc.request.payload")
+            request = iterator_wrapper(request, "rpc.grpc.request.payload")
         else:
             self.latest_request = request
         return super()._intercept(request, metadata, client_info, invoker)
@@ -50,15 +50,15 @@ class LumigoClientInterceptor(OpenTelemetryClientInterceptor):
         """
         if isinstance(request_or_iterator, Iterator):
             request_or_iterator = iterator_wrapper(
-                request_or_iterator, "rpc.request.payload"
+                request_or_iterator, "rpc.grpc.request.payload"
             )
         else:
             self.latest_request = request_or_iterator
         result = super()._intercept_server_stream(
             request_or_iterator, metadata, client_info, invoker
         )
-        return iterator_wrapper(result, "rpc.response.payload")
+        return iterator_wrapper(result, "rpc.grpc.response.payload")
 
     def _trace_result(self, span, rpc_info, result):  # type: ignore
-        span.set_attribute("rpc.response.payload", str(result)[:PAYLOAD_MAX_SIZE])
+        span.set_attribute("rpc.grpc.response.payload", str(result)[:PAYLOAD_MAX_SIZE])
         return super()._trace_result(span, rpc_info, result)

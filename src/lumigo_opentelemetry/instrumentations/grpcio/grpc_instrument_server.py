@@ -9,7 +9,7 @@ from .common import PAYLOAD_MAX_SIZE, add_payload_in_bulks
 
 
 def request_wrapper(request: _RequestIterator) -> None:
-    add_payload = add_payload_in_bulks("rpc.request.payload")
+    add_payload = add_payload_in_bulks("rpc.grpc.request.payload")
     original_next = request._next
 
     def wrapped_next() -> Any:
@@ -32,7 +32,7 @@ class LumigoServerInterceptor(OpenTelemetryServerInterceptor):
                 if isinstance(self.latest_request, _RequestIterator):
                     request_wrapper(self.latest_request)
                 else:
-                    ctx.kwds["attributes"]["rpc.request.payload"] = str(
+                    ctx.kwds["attributes"]["rpc.grpc.request.payload"] = str(
                         self.latest_request
                     )[:PAYLOAD_MAX_SIZE]
         return ctx

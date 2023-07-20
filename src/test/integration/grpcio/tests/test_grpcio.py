@@ -45,11 +45,11 @@ class TestGrpcioSpans(unittest.TestCase):
         assert client_span["context"]["span_id"] == server_span["parent_id"]
 
         # payloads
-        assert server_span["attributes"]["rpc.request.payload"] == request_payload
-        assert client_span["attributes"]["rpc.request.payload"] == request_payload
+        assert server_span["attributes"]["rpc.grpc.request.payload"] == request_payload
+        assert client_span["attributes"]["rpc.grpc.request.payload"] == request_payload
         # TODO: collect the response from the server - RD-11068
-        # assert server_span["attributes"]["rpc.response.payload"] == response_payload
-        assert client_span["attributes"]["rpc.response.payload"] == response_payload
+        # assert server_span["attributes"]["rpc.grpc.response.payload"] == response_payload
+        assert client_span["attributes"]["rpc.grpc.response.payload"] == response_payload
 
         return server_span, client_span
 

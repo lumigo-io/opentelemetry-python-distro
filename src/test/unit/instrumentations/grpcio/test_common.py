@@ -20,7 +20,7 @@ def test_add_payload_in_bulks(monkeypatch):
     assert span_mock.set_attribute.call_args[0] == ("test.attr", "payload1,payload2")
 
 
-def test_add_payload_in_bulks_too_big(monkeypatch):
+def test_add_payload_in_bulks_too_big(monkeypatch, caplog):
     add_payload = add_payload_in_bulks("test.attr")
 
     span_mock = Mock(set_attribute=Mock())
@@ -37,3 +37,5 @@ def test_add_payload_in_bulks_too_big(monkeypatch):
     assert value.startswith("test1,test2test2")
     assert len(value) == PAYLOAD_MAX_SIZE
     assert "test3" not in value
+    assert len(caplog.records) == 1
+    assert "payload size limit reached" in caplog.records[0].message
