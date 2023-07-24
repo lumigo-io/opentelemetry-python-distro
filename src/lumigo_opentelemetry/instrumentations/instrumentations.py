@@ -11,6 +11,7 @@ from .botocore import instrumentor as botocore_instrumentor
 from .fastapi import instrumentor as fastapi_instrumentor
 from .flask import instrumentor as flask_instrumentor
 from .pymongo import instrumentor as pymongo_instrumentor
+from .grpcio import instrumentor as grpc_instrumentor
 from .pymysql import instrumentor as pymysql_instrumentor
 from .requests import instrumentor as requests_instrumentor
 
@@ -22,6 +23,7 @@ instrumentors: List[AbstractInstrumentor] = [
     fastapi_instrumentor,
     flask_instrumentor,
     pymongo_instrumentor,
+    grpc_instrumentor,
     pymysql_instrumentor,
     requests_instrumentor,
 ]

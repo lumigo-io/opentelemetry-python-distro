@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd app || exit
+python greeter_server.py &

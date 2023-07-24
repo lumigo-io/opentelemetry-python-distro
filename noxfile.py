@@ -588,6 +588,75 @@ def integration_tests_pymongo(
 
 @nox.session(python=python_versions())
 @nox.parametrize(
+    "grpcio_version",
+    dependency_versions_to_be_tested(
+        directory="grpcio",
+        dependency_name="grpcio",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_grpcio(
+    session,
+    grpcio_version,
+):
+    with TestedVersions.save_tests_result("grpcio", "grpcio", grpcio_version):
+        install_package("grpcio", grpcio_version, session)
+
+        session.install(".")
+
+        # Some versions of PyMongo fail with older versions of wheel
+        session.run(
+            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
+        )
+
+        server_spans = tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=create_it_tempfile("grpcio")
+        ).name
+        client_spans = tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=create_it_tempfile("grpcio")
+        ).name
+        with session.chdir("src/test/integration/grpcio"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_server",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": server_spans,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_grpcio.py",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "SERVER_SPANDUMP": server_spans,
+                        "LUMIGO_DEBUG_SPANDUMP": client_spans,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                )
+            finally:
+                kill_process("greeter_server.py")
+                clean_outputs(server_spans, session)
+                clean_outputs(client_spans, session)
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
     "pymysql_version",
     dependency_versions_to_be_tested(
         directory="pymysql",
@@ -661,8 +730,14 @@ def kill_process(process_name: str) -> None:
                     )
                     proc.kill()
     except psutil.ZombieProcess as zp:
-        print(f"Failed to kill zombie process named {process_name}: {str(zp)}")
+        print(f"Failed to kill zombie process for {process_name}: {str(zp)}")
 
 
 def clean_outputs(full_path: str, session) -> None:
     session.run("rm", "-f", full_path, external=True)
+
+
+if __name__ == "__main__":
+    from nox.__main__ import main
+
+    main()

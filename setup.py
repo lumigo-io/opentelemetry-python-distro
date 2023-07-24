@@ -29,6 +29,7 @@ setup(
         "opentelemetry-instrumentation-fastapi==0.36b0",
         "opentelemetry-instrumentation-flask==0.36b0",
         "opentelemetry-instrumentation-pymongo==0.36b0",
+        "opentelemetry-instrumentation-grpc==0.36b0",
         "opentelemetry-instrumentation-pymysql==0.36b0",
         "opentelemetry-instrumentation-requests==0.36b0",
     ],
