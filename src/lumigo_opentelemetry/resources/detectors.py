@@ -79,6 +79,18 @@ class LumigoTagDetector(ResourceDetector):
         )
 
 
+class LumigoContainerNameDetector(ResourceDetector):
+    def detect(self) -> "Resource":
+        container_name = os.environ.get("LUMIGO_CONTAINER_NAME")
+        if not container_name:
+            return Resource.get_empty()
+        return Resource(
+            {
+                ResourceAttributes.K8S_CONTAINER_NAME: container_name,
+            }
+        )
+
+
 class EnvVarsDetector(ResourceDetector):
     def detect(self) -> "Resource":
         return Resource(
@@ -205,6 +217,7 @@ def get_infrastructure_resource() -> "Resource":
             OTELResourceDetector(),
             LumigoDistroDetector(),
             LumigoTagDetector(),
+            LumigoContainerNameDetector(),
             LumigoAwsEcsResourceDetector(),
             LumigoKubernetesResourceDetector(),
             AwsEcsResourceDetector(),
