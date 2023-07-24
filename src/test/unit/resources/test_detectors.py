@@ -19,6 +19,7 @@ from lumigo_opentelemetry.resources.detectors import (
     get_infrastructure_resource,
     get_process_resource,
     LumigoTagDetector,
+    LumigoContainerNameDetector,
 )
 
 from lumigo_opentelemetry import _setup_logger
@@ -275,3 +276,16 @@ def test_kubernetes_detector_pod_uid_v2():
             .attributes[ResourceAttributes.K8S_POD_UID]
             == K8S_POD_ID
         )
+
+
+def test_lumigo_container_name_detect_not_exist():
+    resource = LumigoContainerNameDetector().detect()
+    container_name = resource.attributes.get("k8s.container.name")
+    assert not container_name
+
+
+def test_lumigo_container_name_detect(monkeypatch):
+    monkeypatch.setenv("LUMIGO_CONTAINER_NAME", "test1234")
+    resource = LumigoContainerNameDetector().detect()
+    container_name = resource.attributes.get("k8s.container.name")
+    assert container_name == "test1234"
