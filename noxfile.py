@@ -517,6 +517,193 @@ def integration_tests_flask(session, flask_version):
 
 @nox.session(python=python_versions())
 @nox.parametrize(
+    "grpcio_version",
+    dependency_versions_to_be_tested(
+        directory="grpcio",
+        dependency_name="grpcio",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_grpcio(
+    session,
+    grpcio_version,
+):
+    with TestedVersions.save_tests_result("grpcio", "grpcio", grpcio_version):
+        install_package("grpcio", grpcio_version, session)
+
+        session.install(".")
+
+        # Some versions of PyMongo fail with older versions of wheel
+        session.run(
+            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
+        )
+
+        server_spans = tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=create_it_tempfile("grpcio")
+        ).name
+        client_spans = tempfile.NamedTemporaryFile(
+            suffix=".txt", prefix=create_it_tempfile("grpcio")
+        ).name
+        with session.chdir("src/test/integration/grpcio"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_server",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": server_spans,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_grpcio.py",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "SERVER_SPANDUMP": server_spans,
+                        "LUMIGO_DEBUG_SPANDUMP": client_spans,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                )
+            finally:
+                kill_process("greeter_server.py")
+                clean_outputs(server_spans, session)
+                clean_outputs(client_spans, session)
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
+    "kafka_python_version",
+    dependency_versions_to_be_tested(
+        directory="kafka_python",
+        dependency_name="kafka_python",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_kafka_python(
+    session,
+    kafka_python_version,
+):
+    with TestedVersions.save_tests_result(
+        "kafka_python", "kafka_python", kafka_python_version
+    ):
+        install_package("kafka_python", kafka_python_version, session)
+
+        session.install(".")
+
+        session.run(
+            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
+        )
+
+        temp_file = create_it_tempfile("kafka_python")
+        with session.chdir("src/test/integration/kafka_python"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_kafka_python.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
+    "pika_version",
+    dependency_versions_to_be_tested(
+        directory="pika",
+        dependency_name="pika",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_pika(
+    session,
+    pika_version,
+):
+    with TestedVersions.save_tests_result("pika", "pika", pika_version):
+        install_package("pika", pika_version, session)
+
+        session.install(".")
+
+        session.run(
+            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
+        )
+
+        temp_file = create_it_tempfile("pika")
+        with session.chdir("src/test/integration/pika"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_pika.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+
+
+@nox.session(python=python_versions())
+@nox.parametrize(
     "pymongo_version",
     dependency_versions_to_be_tested(
         directory="pymongo",
@@ -588,75 +775,6 @@ def integration_tests_pymongo(
 
 @nox.session(python=python_versions())
 @nox.parametrize(
-    "grpcio_version",
-    dependency_versions_to_be_tested(
-        directory="grpcio",
-        dependency_name="grpcio",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
-)
-def integration_tests_grpcio(
-    session,
-    grpcio_version,
-):
-    with TestedVersions.save_tests_result("grpcio", "grpcio", grpcio_version):
-        install_package("grpcio", grpcio_version, session)
-
-        session.install(".")
-
-        # Some versions of PyMongo fail with older versions of wheel
-        session.run(
-            "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
-        )
-
-        server_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=create_it_tempfile("grpcio")
-        ).name
-        client_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=create_it_tempfile("grpcio")
-        ).name
-        with session.chdir("src/test/integration/grpcio"):
-            session.install("-r", OTHER_REQUIREMENTS)
-
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_server",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": server_spans,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
-
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_grpcio.py",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "SERVER_SPANDUMP": server_spans,
-                        "LUMIGO_DEBUG_SPANDUMP": client_spans,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                )
-            finally:
-                kill_process("greeter_server.py")
-                clean_outputs(server_spans, session)
-                clean_outputs(client_spans, session)
-
-
-@nox.session(python=python_versions())
-@nox.parametrize(
     "pymysql_version",
     dependency_versions_to_be_tested(
         directory="pymysql",
@@ -718,11 +836,13 @@ def kill_process(process_name: str) -> None:
     try:
         # Kill all processes with the given name
         for proc in psutil.process_iter():
+            if proc.status() == psutil.STATUS_ZOMBIE:
+                continue
             # The python process is names "Python" os OS X and "uvicorn" on CircleCI
             if proc.name() == process_name:
                 print(f"Killing process with name {proc.name()}...")
                 proc.kill()
-            elif proc.name().lower() == "python":
+            elif proc.name().lower().startswith("python"):
                 cmdline = proc.cmdline()
                 if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
                     print(

@@ -209,6 +209,10 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | | | 0.100.0b2~0.100.0b3 |
 | | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0 |
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5 |
+| grpcio | [grpcio](https://pypi.org/project/grpcio/) | 1.56.0~1.56.0 |
+| kafka_python | [kafka_python](https://pypi.org/project/kafka_python/) | 2.0.0~2.0.2 |
+| | | 1.4.0~1.4.7 |
+| pika | [pika](https://pypi.org/project/pika/) | 1.0.0~1.3.2 |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1 |
 | | | 3.5.0~3.13.0 |
 | | | 4.0.1~4.4.1 |

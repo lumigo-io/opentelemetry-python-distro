@@ -25,7 +25,18 @@ repos:
       args: ['--install-types',  # Ensure the types stubs are installed
              '--explicit-package-bases',  # Needed for src/ci
              '--namespace-packages',  # Needed for opentelemetry package
-             '--disallow-any-generics', '--disallow-untyped-defs', '--disallow-incomplete-defs', '--check-untyped-defs', '--no-implicit-optional', '--warn-redundant-casts', '--warn-unused-ignores', '--warn-return-any', '--no-implicit-reexport', '--strict-equality', '--ignore-missing-imports']
+             '--disallow-any-generics',
+             '--disallow-untyped-defs',
+             '--disallow-incomplete-defs',
+             '--check-untyped-defs',
+             '--no-implicit-optional',
+             '--warn-redundant-casts',
+             '--warn-unused-ignores',
+             '--warn-return-any',
+             '--no-implicit-reexport',
+             '--strict-equality',
+             '--ignore-missing-imports'
+      ]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0

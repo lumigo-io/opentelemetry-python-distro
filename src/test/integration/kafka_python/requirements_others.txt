@@ -1,0 +1,10 @@
+pytest==7.1.1
+uvicorn[standard]==0.16.0
+fastapi==0.70.1
+json-stream==1.4.2
+requests==2.27.1
+psutil==5.9.1
+testcontainers==3.7.0
+cryptography==38.0.1
+attrs==21.4.0
+certifi==2022.9.14

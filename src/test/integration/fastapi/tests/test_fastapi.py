@@ -1,8 +1,8 @@
-import requests
 import time
 import unittest
-
 from test.test_utils.spans_parser import SpansContainer
+
+import requests
 
 
 class TestFastApiSpans(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(body, {"message": "Hello FastAPI!"})
 
         # TODO Do something deterministic
-        time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
+        time.sleep(3)  # Sleep to allow the exporter to catch up
 
         spans_container = SpansContainer.get_spans_from_file()
         self.assertEqual(3, len(spans_container.spans))
@@ -51,7 +51,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertIn("https://api.chucknorris.io/jokes/", body["url"])
 
         # TODO Do something deterministic
-        time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
+        time.sleep(3)  # Sleep to allow the exporter to catch up
 
         spans_container = SpansContainer.get_spans_from_file()
         self.assertEqual(4, len(spans_container.spans))
@@ -87,7 +87,7 @@ class TestFastApiSpans(unittest.TestCase):
         assert body is not None
 
         # TODO Do something deterministic
-        time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
+        time.sleep(3)  # Sleep to allow the exporter to catch up
 
         spans_container = SpansContainer.get_spans_from_file()
         self.assertEqual(4, len(spans_container.spans))
