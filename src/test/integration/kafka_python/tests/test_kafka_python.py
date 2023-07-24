@@ -45,4 +45,6 @@ class TestFastApiSpans(unittest.TestCase):
                 print(span)
 
             # TODO this must be updated once the kafka-python instrumentation is implemented
-            # assert len(spans_container.spans) == 2
+            # without the instrumentation, we should have 8 spans (4 for the producer and 4 for the consumer)
+            # that are all related to the http requests to the fastapi server
+            assert len(spans_container.spans) == 8

@@ -851,6 +851,8 @@ def kill_process(process_name: str) -> None:
                     proc.kill()
     except psutil.ZombieProcess as zp:
         print(f"Failed to kill zombie process for {process_name}: {str(zp)}")
+    except psutil.NoSuchProcess as nsp:
+        print(f"Failed to kill process for {process_name}: {str(nsp)}")
 
 
 def clean_outputs(full_path: str, session) -> None:
