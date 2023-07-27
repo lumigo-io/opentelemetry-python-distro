@@ -14,6 +14,7 @@ class TestFastApiSpans(unittest.TestCase):
                 "host": rabbitmq_server.get_container_host_ip(),
                 "port": rabbitmq_server.get_exposed_port(5672),
             }
+
             response = requests.post(
                 "http://localhost:8005/invoke-pika-producer",
                 data=json.dumps(connection_params),

@@ -1,8 +1,6 @@
 from typing import List
 
 from lumigo_opentelemetry import logger
-
-
 # Instrumentations
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
@@ -10,11 +8,12 @@ from .boto import instrumentor as boto_instrumentor
 from .botocore import instrumentor as botocore_instrumentor
 from .fastapi import instrumentor as fastapi_instrumentor
 from .flask import instrumentor as flask_instrumentor
-from .pymongo import instrumentor as pymongo_instrumentor
 from .grpcio import instrumentor as grpc_instrumentor
+from .kafka_python import instrumentor as kafka_python_instrumentor
+from .pika import instrumentor as pika_instrumentor
+from .pymongo import instrumentor as pymongo_instrumentor
 from .pymysql import instrumentor as pymysql_instrumentor
 from .requests import instrumentor as requests_instrumentor
-
 
 installed_instrumentations: List[str] = []
 instrumentors: List[AbstractInstrumentor] = [
@@ -22,8 +21,10 @@ instrumentors: List[AbstractInstrumentor] = [
     botocore_instrumentor,
     fastapi_instrumentor,
     flask_instrumentor,
-    pymongo_instrumentor,
     grpc_instrumentor,
+    kafka_python_instrumentor,
+    pika_instrumentor,
+    pymongo_instrumentor,
     pymysql_instrumentor,
     requests_instrumentor,
 ]
