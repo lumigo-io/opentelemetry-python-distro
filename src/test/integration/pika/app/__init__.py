@@ -3,7 +3,6 @@ from fastapi import FastAPI, Request
 
 app = FastAPI()
 test_message = "Hello World!"
-topic = "pika-topic"
 
 
 @app.get("/")
@@ -18,8 +17,11 @@ def on_message(channel, method_frame, header_frame, body):
 
 @app.post("/invoke-pika-consumer")
 async def invoke_pika_consumer(request: Request):
-    connection_params = await request.json()
+    request_body = await request.json()
+    connection_params = request_body["connection_params"]
     print(f"connection_params: {connection_params}")
+    topic = request_body["topic"]
+    print(f"topic: {topic}")
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
             host=connection_params["host"], port=connection_params["port"]
@@ -47,8 +49,11 @@ async def invoke_pika_consumer(request: Request):
 
 @app.post("/invoke-pika-producer")
 async def invoke_pika_producer(request: Request):
-    connection_params = await request.json()
+    request_body = await request.json()
+    connection_params = request_body["connection_params"]
     print(f"connection_params: {connection_params}")
+    topic = request_body["topic"]
+    print(f"topic: {topic}")
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
             host=connection_params["host"], port=connection_params["port"]

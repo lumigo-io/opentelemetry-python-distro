@@ -9,6 +9,7 @@ from testcontainers.rabbitmq import RabbitMqContainer
 
 class TestFastApiSpans(unittest.TestCase):
     def test_pika_instrumentation(self):
+        test_topic = "test-pika-topic"
         with RabbitMqContainer("rabbitmq:latest") as rabbitmq_server:
             connection_params = {
                 "host": rabbitmq_server.get_container_host_ip(),
@@ -17,7 +18,10 @@ class TestFastApiSpans(unittest.TestCase):
 
             response = requests.post(
                 "http://localhost:8005/invoke-pika-producer",
-                data=json.dumps(connection_params),
+                data=json.dumps({
+                    "connection_params": connection_params,
+                    "topic": test_topic,
+                }),
             )
 
             response.raise_for_status()
@@ -28,7 +32,10 @@ class TestFastApiSpans(unittest.TestCase):
 
             response = requests.post(
                 "http://localhost:8005/invoke-pika-consumer",
-                data=json.dumps(connection_params),
+                data=json.dumps({
+                    "connection_params": connection_params,
+                    "topic": test_topic,
+                }),
             )
 
             response.raise_for_status()
@@ -45,7 +52,23 @@ class TestFastApiSpans(unittest.TestCase):
             for span in spans_container.spans:
                 print(span)
 
-            # TODO this must be updated once the pika instrumentation is implemented
-            # without the instrumentation, we should have 8 spans (4 for the producer and 4 for the consumer)
-            # that are all related to the http requests to the fastapi server
-            assert len(spans_container.spans) == 8
+            assert len(spans_container.spans) == 10
+
+            for span in spans_container.spans:
+                if span["name"].startswith(test_topic):
+                    if span["name"].endswith("send"):
+                        send_span = span
+                    if span["name"].endswith("receive"):
+                        receive_span = span
+
+            # assert pika spans
+            assert send_span["kind"] == "SpanKind.PRODUCER"
+            assert send_span["attributes"]["messaging.system"] == "rabbitmq"
+            assert send_span["attributes"]["net.peer.name"] == "localhost"
+
+            assert receive_span
+            assert receive_span["kind"] == "SpanKind.CONSUMER"
+            assert receive_span["attributes"]["messaging.system"] == "rabbitmq"
+            assert receive_span["attributes"]["net.peer.name"] == "localhost"
+
+            assert send_span["attributes"]["net.peer.port"] == receive_span["attributes"]["net.peer.port"]
