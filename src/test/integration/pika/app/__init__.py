@@ -9,11 +9,13 @@ test_message = "Hello World!"
 async def root():
     return {"message": "Hello FastAPI!"}
 
+
 def on_message(channel, method_frame, header_frame, body):
     decoded_body = str(body, "utf-8")
     print(f"message received: method_frame: {method_frame}, body: {decoded_body}")
     channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     channel.stop_consuming()
+
 
 @app.post("/invoke-pika-consumer")
 async def invoke_pika_consumer(request: Request):

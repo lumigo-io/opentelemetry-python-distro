@@ -18,10 +18,12 @@ class TestFastApiSpans(unittest.TestCase):
 
             response = requests.post(
                 "http://localhost:8005/invoke-pika-producer",
-                data=json.dumps({
-                    "connection_params": connection_params,
-                    "topic": test_topic,
-                }),
+                data=json.dumps(
+                    {
+                        "connection_params": connection_params,
+                        "topic": test_topic,
+                    }
+                ),
             )
 
             response.raise_for_status()
@@ -32,10 +34,12 @@ class TestFastApiSpans(unittest.TestCase):
 
             response = requests.post(
                 "http://localhost:8005/invoke-pika-consumer",
-                data=json.dumps({
-                    "connection_params": connection_params,
-                    "topic": test_topic,
-                }),
+                data=json.dumps(
+                    {
+                        "connection_params": connection_params,
+                        "topic": test_topic,
+                    }
+                ),
             )
 
             response.raise_for_status()
@@ -71,4 +75,7 @@ class TestFastApiSpans(unittest.TestCase):
             assert receive_span["attributes"]["messaging.system"] == "rabbitmq"
             assert receive_span["attributes"]["net.peer.name"] == "localhost"
 
-            assert send_span["attributes"]["net.peer.port"] == receive_span["attributes"]["net.peer.port"]
+            assert (
+                send_span["attributes"]["net.peer.port"]
+                == receive_span["attributes"]["net.peer.port"]
+            )

@@ -16,7 +16,7 @@ class TestFastApiSpans(unittest.TestCase):
                 data=json.dumps(
                     {
                         "bootstrap_servers": kafka_server.get_bootstrap_server(),
-                        "topic": test_topic
+                        "topic": test_topic,
                     }
                 ),
             )
@@ -32,7 +32,7 @@ class TestFastApiSpans(unittest.TestCase):
                 data=json.dumps(
                     {
                         "bootstrap_servers": kafka_server.get_bootstrap_server(),
-                        "topic": test_topic
+                        "topic": test_topic,
                     }
                 ),
             )
@@ -70,5 +70,11 @@ class TestFastApiSpans(unittest.TestCase):
             assert receive_span["attributes"]["messaging.system"] == "kafka"
             assert receive_span["attributes"]["messaging.destination"] == test_topic
 
-            assert send_span["attributes"]["messaging.kafka.partition"] == receive_span["attributes"]["messaging.kafka.partition"]
-            assert send_span["attributes"]["messaging.url"] == receive_span["attributes"]["messaging.url"]
+            assert (
+                send_span["attributes"]["messaging.kafka.partition"]
+                == receive_span["attributes"]["messaging.kafka.partition"]
+            )
+            assert (
+                send_span["attributes"]["messaging.url"]
+                == receive_span["attributes"]["messaging.url"]
+            )

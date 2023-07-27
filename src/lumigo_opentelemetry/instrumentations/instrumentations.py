@@ -1,6 +1,7 @@
 from typing import List
 
 from lumigo_opentelemetry import logger
+
 # Instrumentations
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
