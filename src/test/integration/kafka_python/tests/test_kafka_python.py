@@ -9,11 +9,15 @@ from testcontainers.kafka import KafkaContainer
 
 class TestFastApiSpans(unittest.TestCase):
     def test_kafka_python_instrumentation(self):
+        test_topic = "kafka-python-topic"
         with KafkaContainer("confluentinc/cp-kafka:latest") as kafka_server:
             response = requests.post(
                 "http://localhost:8004/invoke-kafka-producer",
                 data=json.dumps(
-                    {"bootstrap_servers": kafka_server.get_bootstrap_server()}
+                    {
+                        "bootstrap_servers": kafka_server.get_bootstrap_server(),
+                        "topic": test_topic
+                    }
                 ),
             )
 
@@ -26,7 +30,10 @@ class TestFastApiSpans(unittest.TestCase):
             response = requests.post(
                 "http://localhost:8004/invoke-kafka-consumer",
                 data=json.dumps(
-                    {"bootstrap_servers": kafka_server.get_bootstrap_server()}
+                    {
+                        "bootstrap_servers": kafka_server.get_bootstrap_server(),
+                        "topic": test_topic
+                    }
                 ),
             )
 
@@ -44,7 +51,24 @@ class TestFastApiSpans(unittest.TestCase):
             for span in spans_container.spans:
                 print(span)
 
-            # TODO this must be updated once the kafka-python instrumentation is implemented
-            # without the instrumentation, we should have 8 spans (4 for the producer and 4 for the consumer)
-            # that are all related to the http requests to the fastapi server
-            assert len(spans_container.spans) == 8
+            assert len(spans_container.spans) == 10
+
+            for span in spans_container.spans:
+                if span["name"].startswith(test_topic):
+                    if span["name"].endswith("send"):
+                        send_span = span
+                    if span["name"].endswith("receive"):
+                        receive_span = span
+
+            # assert pika spans
+            assert send_span["kind"] == "SpanKind.PRODUCER"
+            assert send_span["attributes"]["messaging.system"] == "kafka"
+            assert send_span["attributes"]["messaging.destination"] == test_topic
+
+            assert receive_span
+            assert receive_span["kind"] == "SpanKind.CONSUMER"
+            assert receive_span["attributes"]["messaging.system"] == "kafka"
+            assert receive_span["attributes"]["messaging.destination"] == test_topic
+
+            assert send_span["attributes"]["messaging.kafka.partition"] == receive_span["attributes"]["messaging.kafka.partition"]
+            assert send_span["attributes"]["messaging.url"] == receive_span["attributes"]["messaging.url"]
