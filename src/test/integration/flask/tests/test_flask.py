@@ -1,9 +1,8 @@
+import time
 import unittest
+from test.test_utils.spans_parser import SpansContainer
 
 import requests
-import time
-
-from test.test_utils.spans_parser import SpansContainer
 
 
 class TestFlaskSpans(unittest.TestCase):
@@ -16,7 +15,7 @@ class TestFlaskSpans(unittest.TestCase):
         self.assertEqual(body, {"message": "Hello Flask!"})
 
         # TODO Do something deterministic
-        time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
+        time.sleep(3)  # Sleep to allow the exporter to catch up
 
         spans_container = SpansContainer.get_spans_from_file()
         self.assertEqual(1, len(spans_container.spans))
@@ -39,7 +38,7 @@ class TestFlaskSpans(unittest.TestCase):
         self.assertIn("https://api.chucknorris.io/jokes/", body["url"])
 
         # TODO Do something deterministic
-        time.sleep(3)  # Sleep for two seconds to allow the exporter to catch up
+        time.sleep(3)  # Sleep to allow the exporter to catch up
 
         spans_container = SpansContainer.get_spans_from_file()
         self.assertEqual(2, len(spans_container.spans))
