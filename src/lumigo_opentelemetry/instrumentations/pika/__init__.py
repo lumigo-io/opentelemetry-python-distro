@@ -1,4 +1,6 @@
+from opentelemetry.trace.span import Span
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import add_body_attribute
 
 
 class PikaInstrumentor(AbstractInstrumentor):
@@ -11,7 +13,16 @@ class PikaInstrumentor(AbstractInstrumentor):
     def install_instrumentation(self) -> None:
         from opentelemetry.instrumentation.pika import PikaInstrumentor
 
-        PikaInstrumentor().instrument()
+        def publish_hook(span: Span, body: bytes, *_):
+            add_body_attribute(span, body, "messaging.publish.body")
+
+        def consume_hook(span: Span, body: bytes, *_):
+            add_body_attribute(span, body, "messaging.consume.body")
+
+        PikaInstrumentor().instrument(
+            publish_hook=publish_hook,
+            consume_hook=consume_hook,
+        )
 
 
 instrumentor: AbstractInstrumentor = PikaInstrumentor()

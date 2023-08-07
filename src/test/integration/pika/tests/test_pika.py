@@ -53,9 +53,6 @@ class TestFastApiSpans(unittest.TestCase):
 
             spans_container = SpansContainer.get_spans_from_file()
 
-            for span in spans_container.spans:
-                print(span)
-
             assert len(spans_container.spans) == 10
 
             for span in spans_container.spans:
@@ -69,11 +66,13 @@ class TestFastApiSpans(unittest.TestCase):
             assert send_span["kind"] == "SpanKind.PRODUCER"
             assert send_span["attributes"]["messaging.system"] == "rabbitmq"
             assert send_span["attributes"]["net.peer.name"] == "localhost"
+            assert send_span["attributes"]["messaging.publish.body"] == "Hello World!"
 
             assert receive_span
             assert receive_span["kind"] == "SpanKind.CONSUMER"
             assert receive_span["attributes"]["messaging.system"] == "rabbitmq"
             assert receive_span["attributes"]["net.peer.name"] == "localhost"
+            assert receive_span["attributes"]["messaging.consume.body"] == "Hello World!"
 
             assert (
                 send_span["attributes"]["net.peer.port"]
