@@ -72,7 +72,9 @@ class TestFastApiSpans(unittest.TestCase):
             assert receive_span["kind"] == "SpanKind.CONSUMER"
             assert receive_span["attributes"]["messaging.system"] == "rabbitmq"
             assert receive_span["attributes"]["net.peer.name"] == "localhost"
-            assert receive_span["attributes"]["messaging.consume.body"] == "Hello World!"
+            assert (
+                receive_span["attributes"]["messaging.consume.body"] == "Hello World!"
+            )
 
             assert (
                 send_span["attributes"]["net.peer.port"]

@@ -4,7 +4,7 @@ from opentelemetry.trace import Span
 
 from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
     add_body_attribute,
-    PAYLOAD_MAX_SIZE
+    PAYLOAD_MAX_SIZE,
 )
 
 
@@ -40,4 +40,14 @@ def test_add_body_attribute_too_long():
     span_mock = Mock(Span)
     add_body_attribute(span_mock, "a" * PAYLOAD_MAX_SIZE * 2, "attribute")
     assert len(span_mock.set_attribute.call_args_list) == 1
-    assert span_mock.set_attribute.call_args_list[0].args == ("attribute", "a" * PAYLOAD_MAX_SIZE)
+    assert span_mock.set_attribute.call_args_list[0].args == (
+        "attribute",
+        "a" * PAYLOAD_MAX_SIZE,
+    )
+
+
+def test_add_body_attribute_non_string_or_bytes():
+    span_mock = Mock(Span)
+    add_body_attribute(span_mock, None, "attribute")
+    assert len(span_mock.set_attribute.call_args_list) == 1
+    assert span_mock.set_attribute.call_args_list[0].args == ("attribute", "None")
