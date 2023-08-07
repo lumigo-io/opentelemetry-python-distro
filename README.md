@@ -204,9 +204,9 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 
 | Instrumentation | Package | Supported Versions |
 | --- | --- | --- |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.15 |
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.20 |
 | fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0 |
-| | | 0.100.0b2~0.100.1 |
+| | | 0.100.0b2~0.101.0 |
 | | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0 |
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5 |
 | grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.57.0rc1 |
