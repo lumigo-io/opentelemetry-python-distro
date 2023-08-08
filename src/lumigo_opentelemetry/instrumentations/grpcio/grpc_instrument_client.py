@@ -2,9 +2,11 @@ from collections.abc import Iterator
 from typing import Any, Iterator as IteratorType
 
 from opentelemetry.instrumentation.grpc._client import OpenTelemetryClientInterceptor
-from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 
-from .common import PAYLOAD_MAX_SIZE, add_payload_in_bulks
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import PAYLOAD_MAX_SIZE
+
+from .common import add_payload_in_bulks
 
 
 def iterator_wrapper(

@@ -7,7 +7,7 @@ import requests
 from testcontainers.kafka import KafkaContainer
 
 
-class TestFastApiSpans(unittest.TestCase):
+class TestKafkaSpans(unittest.TestCase):
     def test_kafka_python_instrumentation(self):
         test_topic = "kafka-python-topic"
         with KafkaContainer("confluentinc/cp-kafka:latest") as kafka_server:
@@ -48,9 +48,6 @@ class TestFastApiSpans(unittest.TestCase):
 
             spans_container = SpansContainer.get_spans_from_file()
 
-            for span in spans_container.spans:
-                print(span)
-
             assert len(spans_container.spans) == 10
 
             for span in spans_container.spans:
@@ -60,15 +57,19 @@ class TestFastApiSpans(unittest.TestCase):
                     if span["name"].endswith("receive"):
                         receive_span = span
 
-            # assert pika spans
+            # assert kafka spans
             assert send_span["kind"] == "SpanKind.PRODUCER"
             assert send_span["attributes"]["messaging.system"] == "kafka"
             assert send_span["attributes"]["messaging.destination"] == test_topic
+            assert send_span["attributes"]["messaging.produce.body"] == "{'foo': 'bar'}"
 
             assert receive_span
             assert receive_span["kind"] == "SpanKind.CONSUMER"
             assert receive_span["attributes"]["messaging.system"] == "kafka"
             assert receive_span["attributes"]["messaging.destination"] == test_topic
+            assert (
+                receive_span["attributes"]["messaging.consume.body"] == "{'foo': 'bar'}"
+            )
 
             assert (
                 send_span["attributes"]["messaging.kafka.partition"]

@@ -4,11 +4,11 @@ from typing import Callable, Any
 from opentelemetry.trace import get_current_span
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry import logger
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import PAYLOAD_MAX_SIZE
 
 SHOULD_INSTRUMENT_PAYLOADS = (
     os.getenv("LUMIGO_INSTRUMENT_GRPC_PAYLOADS", "true").lower() != "false"
 )
-PAYLOAD_MAX_SIZE = 2048
 
 
 def add_payload_in_bulks(attribute_name: str) -> Callable[[str], None]:

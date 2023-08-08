@@ -3,9 +3,11 @@ from typing import Any
 from grpc._utilities import RpcMethodHandler
 from grpc._server import _RequestIterator
 from opentelemetry.instrumentation.grpc._server import OpenTelemetryServerInterceptor
-from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 
-from .common import PAYLOAD_MAX_SIZE, add_payload_in_bulks
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import PAYLOAD_MAX_SIZE
+
+from .common import add_payload_in_bulks
 
 
 def request_wrapper(request: _RequestIterator) -> None:
