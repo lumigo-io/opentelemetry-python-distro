@@ -31,4 +31,4 @@ class DjangoUtil:
             }
             span.set_attributes(attributes)
         except Exception as err:
-            logger.exception("failed getting lumigo_opentelemetry version", exc_info=err)
+            logger.exception("failed extracting django response", exc_info=err)
