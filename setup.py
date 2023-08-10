@@ -26,6 +26,7 @@ setup(
         "opentelemetry-instrumentation==0.36b0",
         "opentelemetry-instrumentation-asgi==0.36b0",
         "opentelemetry-instrumentation-boto==0.36b0",
+        "opentelemetry.instrumentation.django==0.36b0",
         "opentelemetry-instrumentation-fastapi==0.36b0",
         "opentelemetry-instrumentation-flask==0.36b0",
         "opentelemetry-instrumentation-grpc==0.36b0",

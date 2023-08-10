@@ -1,0 +1,7 @@
+#!/bin/sh
+
+pushd "$(dirname "$0")" &> /dev/null
+#  export DJANGO_SETTINGS_MODULE="app/settings.py"
+#  python -m django runserver 0.0.0.0:8000
+  python3 ../manage.py runserver
+popd
