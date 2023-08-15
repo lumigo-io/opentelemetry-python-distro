@@ -840,6 +840,7 @@ def integration_tests_redis(
     session,
     redis_version,
 ):
+    temp_file = create_it_tempfile("redis")
     with TestedVersions.save_tests_result("redis", "redis", redis_version):
         install_package("redis", redis_version, session)
 
@@ -855,6 +856,9 @@ def integration_tests_redis(
                 "--color=yes",
                 "-v",
                 "./tests/test_redis.py",
+                env={
+                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                },
             )
 
 
