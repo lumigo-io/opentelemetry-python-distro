@@ -11,8 +11,11 @@ from test.test_utils.spans_parser import SpansContainer
 class TestRedisSpans(unittest.TestCase):
     def test_redis_instrumentation(self):
         with RedisContainer("redis:latest") as redis_server:
+            example_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "../app/redis_example.py"
+            )
             subprocess.check_output(
-                [sys.executable, "../app/redis_example.py"],
+                [sys.executable, example_path],
                 env={
                     **os.environ,
                     "REDIS_HOST": redis_server.get_container_host_ip(),
