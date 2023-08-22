@@ -12,7 +12,8 @@ class TestRedisSpans(unittest.TestCase):
     def test_redis_instrumentation(self):
         with RedisContainer("redis:latest") as redis_server:
             example_path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "../app/redis_example.py"
+                os.path.dirname(os.path.abspath(__file__)),
+                "../app/redis_set_and_get.py",
             )
             subprocess.check_output(
                 [sys.executable, example_path],
@@ -29,17 +30,18 @@ class TestRedisSpans(unittest.TestCase):
             spans_container = SpansContainer.parse_spans_from_file()
 
             self.assertGreaterEqual(len(spans_container.spans), 2)
-            set, get = spans_container.spans
-            self.assertEqual(set["attributes"]["db.system"], "redis")
+            set_span, get_span = spans_container.spans
+            self.assertEqual(set_span["attributes"]["db.system"], "redis")
             self.assertEqual(
-                set["attributes"]["redis.request.args"], '["SET", "my-key", "my-value"]'
+                set_span["attributes"]["redis.request.args"],
+                '["SET", "my-key", "my-value"]',
             )
-            self.assertEqual(set["attributes"]["redis.request.kwargs"], "{}")
-            self.assertEqual(set["attributes"]["redis.response.body"], "True")
+            self.assertEqual(set_span["attributes"]["redis.request.kwargs"], "{}")
+            self.assertEqual(set_span["attributes"]["redis.response.body"], "True")
 
-            self.assertEqual(get["attributes"]["db.system"], "redis")
+            self.assertEqual(get_span["attributes"]["db.system"], "redis")
             self.assertEqual(
-                get["attributes"]["redis.request.args"], '["GET", "my-key"]'
+                get_span["attributes"]["redis.request.args"], '["GET", "my-key"]'
             )
-            self.assertEqual(get["attributes"]["redis.request.kwargs"], "{}")
-            self.assertEqual(get["attributes"]["redis.response.body"], "my-value")
+            self.assertEqual(get_span["attributes"]["redis.request.kwargs"], "{}")
+            self.assertEqual(get_span["attributes"]["redis.response.body"], "my-value")

@@ -848,18 +848,21 @@ def integration_tests_redis(
 
         with session.chdir("src/test/integration/redis"):
             session.install("-r", OTHER_REQUIREMENTS)
-            session.run(
-                "pytest",
-                "--tb",
-                "native",
-                "--log-cli-level=INFO",
-                "--color=yes",
-                "-v",
-                "./tests/test_redis.py",
-                env={
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                },
-            )
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_redis.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_redis", session)
 
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
