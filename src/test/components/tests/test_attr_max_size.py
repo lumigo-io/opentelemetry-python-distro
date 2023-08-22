@@ -36,5 +36,5 @@ class TestFastApiSpans(unittest.TestCase):
 
     def assert_attribute_length(self, child_attributes: dict, length: int) -> None:
         for k, v in child_attributes.items():
-            if type(v) == str:
+            if isinstance(v, str):
                 assert len(v) == length
