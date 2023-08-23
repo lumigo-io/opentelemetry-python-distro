@@ -34,5 +34,6 @@ setup(
         "opentelemetry-instrumentation-pymongo==0.36b0",
         "opentelemetry-instrumentation-pymysql==0.36b0",
         "opentelemetry-instrumentation-requests==0.36b0",
+        "opentelemetry-instrumentation-redis==0.36b0",
     ],
 )

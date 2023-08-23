@@ -15,6 +15,7 @@ from .pika import instrumentor as pika_instrumentor
 from .pymongo import instrumentor as pymongo_instrumentor
 from .pymysql import instrumentor as pymysql_instrumentor
 from .requests import instrumentor as requests_instrumentor
+from .redis import instrumentor as redis_instrumentor
 
 installed_instrumentations: List[str] = []
 instrumentors: List[AbstractInstrumentor] = [
@@ -28,6 +29,7 @@ instrumentors: List[AbstractInstrumentor] = [
     pymongo_instrumentor,
     pymysql_instrumentor,
     requests_instrumentor,
+    redis_instrumentor,
 ]
 for instrumentor in instrumentors:
     try:
