@@ -204,7 +204,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 
 | Instrumentation | Package | Supported Versions |
 | --- | --- | --- |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.30 |
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.33 |
 | fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0 |
 | | | 0.100.0b2~0.101.1 |
 | | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0 |
@@ -216,13 +216,16 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | | | 1.3.0rc5~1.3.2 |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1 |
 | | | 3.5.0~3.13.0 |
-| | | 4.0.1~4.4.1 |
+| | | 4.0.1~4.5.0 |
 | | | 3.1 |
 | | | 3.2 |
 | | | 4.0 |
 | pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
 | | | 1.0.0~1.0.3 |
 | | | 1.1.0~1.1.0rc2 |
+| redis | [redis](https://pypi.org/project/redis) | 4.1.1~4.2.0 |
+| | | 4.2.1~4.6.0 |
+| | | 5.0.0~5.0.0rc2 |
 
 ## Automated dependency reporting
 
