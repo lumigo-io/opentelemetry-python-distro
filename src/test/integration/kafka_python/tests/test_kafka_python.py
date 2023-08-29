@@ -1,6 +1,6 @@
 import json
-import time
 import unittest
+from test.test_utils.span_exporter import wait_for_exporter
 from test.test_utils.spans_parser import SpansContainer
 
 import requests
@@ -43,8 +43,7 @@ class TestKafkaSpans(unittest.TestCase):
 
             self.assertEqual(body, {"status": "ok"})
 
-            # TODO Do something deterministic
-            time.sleep(3)  # Sleep to allow the exporter to catch up
+            wait_for_exporter()
 
             spans_container = SpansContainer.get_spans_from_file()
 

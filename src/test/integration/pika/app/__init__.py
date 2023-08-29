@@ -46,6 +46,7 @@ async def invoke_pika_consumer(request: Request):
     except Exception as e:
         print(f"Exception while consuming messages: {e}")
         channel.stop_consuming()
+        raise e
     return {"status": "ok"}
 
 

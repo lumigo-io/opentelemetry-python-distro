@@ -1,11 +1,11 @@
 import os
-import sys
-import time
-import unittest
-from testcontainers.redis import RedisContainer
 import subprocess
-
+import sys
+import unittest
+from test.test_utils.span_exporter import wait_for_exporter
 from test.test_utils.spans_parser import SpansContainer
+
+from testcontainers.redis import RedisContainer
 
 
 class TestRedisSpans(unittest.TestCase):
@@ -25,8 +25,9 @@ class TestRedisSpans(unittest.TestCase):
                     "OTEL_SERVICE_NAME": "app",
                 },
             )
-            # TODO Do something deterministic
-            time.sleep(3)  # Sleep to allow the exporter to catch up
+
+            wait_for_exporter()
+
             spans_container = SpansContainer.parse_spans_from_file()
 
             self.assertGreaterEqual(len(spans_container.spans), 2)
