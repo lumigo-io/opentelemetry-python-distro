@@ -34,7 +34,11 @@ def run_redis_sample(sample_name: str, redis_host: str, redis_port: int):
 class TestRedisSpans(unittest.TestCase):
     def test_redis_set_and_get(self):
         with RedisContainer("redis:latest") as redis_server:
-            run_redis_sample("set_and_get", redis_server.get_container_host_ip(), redis_server.get_exposed_port(6379))
+            run_redis_sample(
+                "set_and_get",
+                redis_server.get_container_host_ip(),
+                redis_server.get_exposed_port(6379),
+            )
 
             wait_for_exporter()
 
@@ -50,16 +54,16 @@ class TestRedisSpans(unittest.TestCase):
             self.assertEqual(set_span[ATTRIBUTES][REDIS_RESPONSE_BODY], "True")
 
             self.assertEqual(get_span[ATTRIBUTES][DB_SYSTEM], "redis")
-            self.assertEqual(
-                get_span[ATTRIBUTES][DB_STATEMENT],
-                "GET my-key"
-            )
+            self.assertEqual(get_span[ATTRIBUTES][DB_STATEMENT], "GET my-key")
             self.assertEqual(get_span[ATTRIBUTES][REDIS_RESPONSE_BODY], "my-value")
-
 
     def test_redis_hash(self):
         with RedisContainer("redis:latest") as redis_server:
-            run_redis_sample("hash", redis_server.get_container_host_ip(), redis_server.get_exposed_port(6379))
+            run_redis_sample(
+                "hash",
+                redis_server.get_container_host_ip(),
+                redis_server.get_exposed_port(6379),
+            )
 
             wait_for_exporter()
 
@@ -75,18 +79,19 @@ class TestRedisSpans(unittest.TestCase):
             self.assertEqual(set_span[ATTRIBUTES][REDIS_RESPONSE_BODY], "True")
 
             self.assertEqual(get_span[ATTRIBUTES][DB_SYSTEM], "redis")
-            self.assertEqual(
-                get_span[ATTRIBUTES][DB_STATEMENT],
-                "HGETALL my-key"
-            )
+            self.assertEqual(get_span[ATTRIBUTES][DB_STATEMENT], "HGETALL my-key")
             self.assertEqual(
                 ast.literal_eval(get_span[ATTRIBUTES][REDIS_RESPONSE_BODY]),
-                {b'key1': b'value1', b'key2': b'value2'})
-
+                {b"key1": b"value1", b"key2": b"value2"},
+            )
 
     def test_redis_transaction(self):
         with RedisContainer("redis:latest") as redis_server:
-            run_redis_sample("transaction", redis_server.get_container_host_ip(), redis_server.get_exposed_port(6379))
+            run_redis_sample(
+                "transaction",
+                redis_server.get_container_host_ip(),
+                redis_server.get_exposed_port(6379),
+            )
 
             wait_for_exporter()
 
@@ -98,13 +103,14 @@ class TestRedisSpans(unittest.TestCase):
             self.assertEqual(
                 transaction_span[ATTRIBUTES][DB_STATEMENT].split("\n"),
                 [
-                    'SET my-key pre-key-value',
-                    'GET my-key',
-                    'SET my-key key-value',
-                    'GET my-key',
-                    'GET unknown-key',
-                ]
+                    "SET my-key pre-key-value",
+                    "GET my-key",
+                    "SET my-key key-value",
+                    "GET my-key",
+                    "GET unknown-key",
+                ],
             )
             self.assertEqual(
                 ast.literal_eval(transaction_span[ATTRIBUTES][REDIS_RESPONSE_BODY]),
-                [True, b'pre-key-value', True, b'key-value', None])
+                [True, b"pre-key-value", True, b"key-value", None],
+            )

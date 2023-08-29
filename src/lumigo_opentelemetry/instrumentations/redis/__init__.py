@@ -1,11 +1,11 @@
-import json
 from typing import Any, Dict, List
 
 from opentelemetry.trace.span import Span
 
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
-from lumigo_opentelemetry.instrumentations.instrumentation_utils import \
-    add_body_attribute
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
+    add_body_attribute,
+)
 
 
 class RedisInstrumentor(AbstractInstrumentor):
