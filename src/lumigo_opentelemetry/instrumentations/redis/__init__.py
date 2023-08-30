@@ -1,7 +1,7 @@
-import json
-from typing import List, Any, Dict
+from typing import Any, Dict, List
 
 from opentelemetry.trace.span import Span
+
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
     add_body_attribute,
@@ -22,8 +22,9 @@ class RedisInstrumentor(AbstractInstrumentor):
         def request_hook(
             span: Span, instance: Connection, args: List[Any], kwargs: Dict[Any, Any]
         ) -> None:
-            add_body_attribute(span, json.dumps(args), "redis.request.args")
-            add_body_attribute(span, json.dumps(kwargs), "redis.request.kwargs")
+            # a db.statement attribute is automatically added by the RedisInstrumentor
+            # when this hook is called, so we don't need to add anything manually
+            pass
 
         def response_hook(span: Span, instance: Connection, response: Any) -> None:
             add_body_attribute(span, response, "redis.response.body")
