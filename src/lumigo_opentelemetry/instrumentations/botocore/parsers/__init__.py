@@ -157,11 +157,6 @@ class SqsParser(AwsParser):
     def parse_response(
         span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
-        print("Running SqsParser.parse_response")
-        print(span)
-        print(service_name)
-        print(operation_name)
-        print(result)
         trigger_details = parse_triggers(
             {"service_name": service_name, "operation_name": operation_name, **result}
         )
