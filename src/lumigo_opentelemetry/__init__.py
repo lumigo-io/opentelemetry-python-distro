@@ -89,7 +89,8 @@ def init() -> Dict[str, Any]:
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    from lumigo_opentelemetry.resources.span_processor import LumigoSpanProcessor
 
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
@@ -125,7 +126,7 @@ def init() -> Dict[str, Any]:
 
     if lumigo_token:
         tracer_provider.add_span_processor(
-            BatchSpanProcessor(
+            LumigoSpanProcessor(
                 OTLPSpanExporter(
                     endpoint=lumigo_endpoint,
                     headers={"Authorization": f"LumigoToken {lumigo_token}"},

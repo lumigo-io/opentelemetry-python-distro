@@ -12,6 +12,10 @@ from lumigo_opentelemetry.utils.aws_utils import (
     extract_region_from_arn,
     get_resource_fullname,
 )
+from lumigo_opentelemetry.resources.span_processor import set_span_no_export
+from lumigo_opentelemetry import logger
+from lumigo_opentelemetry.libs.general_utils import get_boolean_env_var
+from lumigo_opentelemetry.libs.environment_variables import AUTO_FILTER_EMPTY_SQS
 
 
 class AwsParser:
@@ -134,6 +138,15 @@ class SqsParser(AwsParser):
         span.set_attributes(attributes)
 
     @staticmethod
+    def _should_skip_empty_sqs_polling_response(operation_name: str, result: Dict[Any, Any]) -> bool:
+        """
+        checks the sqs response & returns true if the request receive messages from SQS but no messages were returned
+        """
+
+        empty_sqs_poll = operation_name == 'ReceiveMessage' and 'Messages' not in result
+        return empty_sqs_poll and get_boolean_env_var(AUTO_FILTER_EMPTY_SQS, True)
+
+    @staticmethod
     def parse_response(
         span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
@@ -144,6 +157,12 @@ class SqsParser(AwsParser):
             span.set_attributes(
                 {"lumigoData": json.dumps({"trigger": trigger_details})}
             )
+
+        # Filter out sqs polls with empty response
+        if SqsParser._should_skip_empty_sqs_polling_response(operation_name, result):
+            logger.debug('Not tracing empty SQS polling requests '
+                         f'(override by setting the {AUTO_FILTER_EMPTY_SQS} env var to false)')
+            set_span_no_export(span)
 
 
 class LambdaParser(AwsParser):
