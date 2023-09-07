@@ -70,3 +70,16 @@ def get_max_size() -> int:
             os.environ.get(OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT, DEFAULT_MAX_ENTRY_SIZE),
         )
     )
+
+
+def get_boolean_env_var(env_var_name: str, default: bool = False) -> bool:
+    """
+    This function return the boolean value of the given environment variable.
+    If this values doesn't exist, return default.
+
+    @param env_var_name: The env var to get (case-sensitive)
+    @param default: Default value if env var is not set
+    @return: The boolean value of the env var
+    """
+
+    return os.environ.get(env_var_name, str(default)).lower() == "true"
