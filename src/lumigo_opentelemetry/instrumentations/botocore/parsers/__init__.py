@@ -138,12 +138,14 @@ class SqsParser(AwsParser):
         span.set_attributes(attributes)
 
     @staticmethod
-    def _should_skip_empty_sqs_polling_response(operation_name: str, result: Dict[Any, Any]) -> bool:
+    def _should_skip_empty_sqs_polling_response(
+        operation_name: str, result: Dict[Any, Any]
+    ) -> bool:
         """
         checks the sqs response & returns true if the request receive messages from SQS but no messages were returned
         """
 
-        empty_sqs_poll = operation_name == 'ReceiveMessage' and 'Messages' not in result
+        empty_sqs_poll = operation_name == "ReceiveMessage" and "Messages" not in result
         return empty_sqs_poll and get_boolean_env_var(AUTO_FILTER_EMPTY_SQS, True)
 
     @staticmethod
@@ -160,8 +162,10 @@ class SqsParser(AwsParser):
 
         # Filter out sqs polls with empty response
         if SqsParser._should_skip_empty_sqs_polling_response(operation_name, result):
-            logger.debug('Not tracing empty SQS polling requests '
-                         f'(override by setting the {AUTO_FILTER_EMPTY_SQS} env var to false)')
+            logger.debug(
+                "Not tracing empty SQS polling requests "
+                f"(override by setting the {AUTO_FILTER_EMPTY_SQS} env var to false)"
+            )
             set_span_no_export(span)
 
 
