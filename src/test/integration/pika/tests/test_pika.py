@@ -1,6 +1,6 @@
 import json
-import time
 import unittest
+from test.test_utils.span_exporter import wait_for_exporter
 from test.test_utils.spans_parser import SpansContainer
 
 import requests
@@ -48,13 +48,9 @@ class TestFastApiSpans(unittest.TestCase):
 
             self.assertEqual(body, {"status": "ok"})
 
-            # TODO Do something deterministic
-            time.sleep(3)  # Sleep to allow the exporter to catch up
+            wait_for_exporter()
 
             spans_container = SpansContainer.get_spans_from_file()
-
-            for span in spans_container.spans:
-                print(span)
 
             assert len(spans_container.spans) == 10
 
@@ -69,11 +65,15 @@ class TestFastApiSpans(unittest.TestCase):
             assert send_span["kind"] == "SpanKind.PRODUCER"
             assert send_span["attributes"]["messaging.system"] == "rabbitmq"
             assert send_span["attributes"]["net.peer.name"] == "localhost"
+            assert send_span["attributes"]["messaging.publish.body"] == "Hello World!"
 
             assert receive_span
             assert receive_span["kind"] == "SpanKind.CONSUMER"
             assert receive_span["attributes"]["messaging.system"] == "rabbitmq"
             assert receive_span["attributes"]["net.peer.name"] == "localhost"
+            assert (
+                receive_span["attributes"]["messaging.consume.body"] == "Hello World!"
+            )
 
             assert (
                 send_span["attributes"]["net.peer.port"]

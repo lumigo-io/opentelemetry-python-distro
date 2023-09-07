@@ -1,7 +1,7 @@
-import time
-import unittest
-import sys
 import os
+import sys
+import unittest
+from test.test_utils.span_exporter import wait_for_exporter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
 
@@ -20,8 +20,7 @@ class TestGrpcioSpans(unittest.TestCase):
             stub.SayHelloUnaryUnary(helloworld_pb2.HelloRequest(name="exit"))
 
     def check_spans(self, method: str, request_payload: str, response_payload: str):
-        # TODO Do something deterministic
-        time.sleep(5)  # allow the exporter to catch up
+        wait_for_exporter(5)
 
         server_file = os.getenv("SERVER_SPANDUMP")
         server_spans = SpansContainer.get_spans_from_file(server_file)

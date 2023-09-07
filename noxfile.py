@@ -827,6 +827,44 @@ def integration_tests_pymysql(
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
+@nox.session(python=python_versions())
+@nox.parametrize(
+    "redis_version",
+    dependency_versions_to_be_tested(
+        directory="redis",
+        dependency_name="redis",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_redis(
+    session,
+    redis_version,
+):
+    temp_file = create_it_tempfile("redis")
+    with TestedVersions.save_tests_result("redis", "redis", redis_version):
+        install_package("redis", redis_version, session)
+
+        session.install(".")
+
+        with session.chdir("src/test/integration/redis"):
+            session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_redis.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_redis", session)
+
+
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
     kill_process(process_name)
     clean_outputs(full_path, session)
