@@ -20,7 +20,7 @@ def should_not_export_span(span: ReadableSpan) -> bool:
     @param span: A readable span to check
     @return: True if the span should not be exported, False otherwise
     """
-    return span.attributes.get("NO_EXPORT") is True
+    return span.attributes.get("NO_EXPORT", False) is True
 
 
 def set_span_no_export(span: Span, no_export: bool = True) -> None:

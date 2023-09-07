@@ -30,20 +30,17 @@ def test_get_max_size_get_default_value():
         ("true", False, True),
         ("True", False, True),
         ("TRUE", False, True),
-
         # Normal false values
         ("false", True, False),
         ("False", True, False),
         ("FALSE", True, False),
-
         # Invalid values, use the default
         ("RandomValue", False, False),
         ("RandomValue", True, True),
-
         # Empty values, use the default
         (None, False, False),
         (None, True, True),
-    ]
+    ],
 )
 def test_get_boolean_env_var(env_var_value, default, expected_result, monkeypatch):
     """Try getting a boolean value from env vars, and check all the different options work"""

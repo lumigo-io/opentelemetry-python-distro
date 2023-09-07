@@ -145,13 +145,23 @@ class SqsParser(AwsParser):
         checks the sqs response & returns true if the request receive messages from SQS but no messages were returned
         """
 
-        empty_sqs_poll = operation_name == "ReceiveMessage" and "Messages" not in result
-        return empty_sqs_poll and get_boolean_env_var(AUTO_FILTER_EMPTY_SQS, True)
+        no_messages = not result or not result.get("Messages", None)
+        sqs_poll = operation_name == "ReceiveMessage"
+        return (
+            sqs_poll
+            and no_messages
+            and get_boolean_env_var(AUTO_FILTER_EMPTY_SQS, True)
+        )
 
     @staticmethod
     def parse_response(
         span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
+        print("Running SqsParser.parse_response")
+        print(span)
+        print(service_name)
+        print(operation_name)
+        print(result)
         trigger_details = parse_triggers(
             {"service_name": service_name, "operation_name": operation_name, **result}
         )
