@@ -82,4 +82,12 @@ def get_boolean_env_var(env_var_name: str, default: bool = False) -> bool:
     @return: The boolean value of the env var
     """
 
-    return os.environ.get(env_var_name, str(default)).lower() == "true"
+    env_var_value = os.environ.get(env_var_name, str(default)).lower()
+    is_truth_value = env_var_value == "true"
+    is_false_value = env_var_value == "false"
+    if not is_truth_value and not is_false_value:
+        logger.debug(f'Invalid boolean value for env var "{env_var_name}", '
+                     f'defaulting to value "{str(default).lower()}"')
+        return default
+
+    return is_truth_value
