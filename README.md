@@ -98,6 +98,7 @@ The `lumigo_opentelemetry` package additionally supports the following configura
   * We support more granular masking using the following parameters. If not given, the above configuration is the fallback: `LUMIGO_SECRET_MASKING_REGEX_HTTP_REQUEST_BODIES`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_REQUEST_HEADERS`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_RESPONSE_BODIES`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_RESPONSE_HEADERS`, `LUMIGO_SECRET_MASKING_REGEX_HTTP_QUERY_PARAMS`, `LUMIGO_SECRET_MASKING_REGEX_ENVIRONMENT`.
 * `LUMIGO_SWITCH_OFF=true`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected.
 * `LUMIGO_REPORT_DEPENDENCIES=false`: This option disables the built-in dependency reporting to Lumigo SaaS. For more information, refer to the [Automated dependency reporting](#automated-dependency-reporting) section.
+* `LUMIGO_AUTO_FILTER_EMPTY_SQS`: This option enables the automatic filtering of empty SQS messages from being sent to Lumigo SaaS.
 
 ### Execution Tags
 
@@ -339,6 +340,15 @@ for message in response.get("Messages", []):
 ```
 
 Without the scope provided by the iterator over `response["Messages"]`, `span_1` would be without a parent span, and that would result in a separate invocation and a separate transaction in Lumigo.
+
+### Filtering out empty SQS messages
+
+A common pattern in SQS-based applications is to continuously poll an SQS queue for messages, 
+and to process them as they arrive.
+In order not to clutter the Lumigo Dashboard with empty SQS polling messages, the default behavior is to filter them 
+out from being sent to Lumigo.
+
+You can change this behavior by setting the environment variable `LUMIGO_AUTO_FILTER_EMPTY_SQS` to `false`.
 
 ## Testing
 
