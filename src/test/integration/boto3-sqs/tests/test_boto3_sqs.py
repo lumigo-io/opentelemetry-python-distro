@@ -25,19 +25,25 @@ class TestBoto3SqsSpans(unittest.TestCase):
         ] = spans_container.spans
 
         # Make sure that all the empty polling spans are marked as skipped
-        for span in [empty_sqs_poll_1_span, empty_sqs_poll_2_span, empty_sqs_poll_3_span]:
+        for span in [
+            empty_sqs_poll_1_span,
+            empty_sqs_poll_2_span,
+            empty_sqs_poll_3_span,
+        ]:
             self.assertIsNotNone(span.get("attributes"))
             self.assertEqual(span["attributes"].get("SKIP_EXPORT"), True)
 
         # Make sure that other spans are not marked as skipped
-        for span in [create_queue_span,
-                     send_message_1_span,
-                     send_message_2_span,
-                     receive_message_1_span,
-                     receive_message_2_span,
-                     consume_message_2_span,
-                     consume_message_1_span,
-                     receive_message_2_span]:
+        for span in [
+            create_queue_span,
+            send_message_1_span,
+            send_message_2_span,
+            receive_message_1_span,
+            receive_message_2_span,
+            consume_message_2_span,
+            consume_message_1_span,
+            receive_message_2_span,
+        ]:
             self.assertNotEqual(span.get("attributes", {}).get("SKIP_EXPORT"), True)
 
         self.assertEqual(create_queue_span["name"], "SQS.CreateQueue")
