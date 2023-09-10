@@ -41,7 +41,7 @@ def test_sqs_skip_sqs_response(
     env_var_value, operation, result, should_skip, monkeypatch
 ):
     if env_var_value is not None:
-        monkeypatch.setenv("AUTO_FILTER_EMPTY_SQS", env_var_value)
+        monkeypatch.setenv("LUMIGO_AUTO_FILTER_EMPTY_SQS", env_var_value)
 
     assert (
         SqsParser._should_skip_empty_sqs_polling_response(operation, result)
