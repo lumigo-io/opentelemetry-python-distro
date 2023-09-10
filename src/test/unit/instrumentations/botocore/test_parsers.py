@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from unittest.mock import Mock, patch
 
@@ -70,9 +72,10 @@ def test_parse_sqs_response_skipping_empty_polls_outputs_log(should_skip_mock, c
         }
     }
 
-    SqsParser.parse_response(span, service_name, operation_name, result)
+    with caplog.at_level(logging.INFO):
+        SqsParser.parse_response(span, service_name, operation_name, result)
 
-    assert "not tracing empty sqs polling requests" in caplog.text.lower()
+        assert "not tracing empty sqs polling requests" in caplog.text.lower()
 
 
 @patch(
@@ -101,3 +104,5 @@ def test_parse_sqs_response_not_skipping_polls_no_output_log(should_skip_mock, c
     SqsParser.parse_response(span, service_name, operation_name, result)
 
     assert "not tracing empty sqs polling requests" not in caplog.text.lower()
+
+    # Make sure that there is an info log
