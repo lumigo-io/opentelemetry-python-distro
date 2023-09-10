@@ -12,7 +12,7 @@ from lumigo_opentelemetry.utils.aws_utils import (
     extract_region_from_arn,
     get_resource_fullname,
 )
-from lumigo_opentelemetry.resources.span_processor import set_span_no_export
+from lumigo_opentelemetry.resources.span_processor import set_span_skip_export
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.general_utils import get_boolean_env_var
 from lumigo_opentelemetry.libs.environment_variables import AUTO_FILTER_EMPTY_SQS
@@ -171,7 +171,7 @@ class SqsParser(AwsParser):
                 "Not tracing empty SQS polling requests "
                 f"(override by setting the {AUTO_FILTER_EMPTY_SQS} env var to false)"
             )
-            set_span_no_export(span)
+            set_span_skip_export(span)
 
 
 class LambdaParser(AwsParser):

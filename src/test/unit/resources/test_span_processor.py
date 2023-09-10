@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from lumigo_opentelemetry.resources.span_processor import (
-    set_span_no_export,
-    should_not_export_span,
+    set_span_skip_export,
+    should_skip_exporting_span,
     LumigoSpanProcessor,
 )
 
@@ -16,15 +16,15 @@ def test_set_span_no_export():
 
     for no_export in [True, False]:
         span_mock = Mock(set_attribute=Mock())
-        set_span_no_export(span_mock, no_export)
+        set_span_skip_export(span_mock, no_export)
         (attributes,) = span_mock.set_attributes.call_args[0]
-        assert attributes == {"NO_EXPORT": no_export}
+        assert attributes == {"SKIP_EXPORT": no_export}
 
     # Check default value
     span_mock = Mock(set_attribute=Mock())
-    set_span_no_export(span_mock)
+    set_span_skip_export(span_mock)
     (attributes,) = span_mock.set_attributes.call_args[0]
-    assert attributes == {"NO_EXPORT": True}
+    assert attributes == {"SKIP_EXPORT": True}
 
 
 @pytest.mark.parametrize(
@@ -33,17 +33,17 @@ def test_set_span_no_export():
         # Default is to export
         ({}, True),
         # Use the value if it is set
-        ({"NO_EXPORT": False}, True),
-        ({"NO_EXPORT": True}, False),
+        ({"SKIP_EXPORT": False}, True),
+        ({"SKIP_EXPORT": True}, False),
     ],
 )
 def test_should_not_export_span(attributes, should_export):
     readable_span_mock = Mock(attributes=attributes)
 
-    assert should_not_export_span(readable_span_mock) is not should_export
+    assert should_skip_exporting_span(readable_span_mock) is not should_export
 
 
-@patch("lumigo_opentelemetry.resources.span_processor.should_not_export_span")
+@patch("lumigo_opentelemetry.resources.span_processor.should_skip_exporting_span")
 @patch("opentelemetry.sdk.trace.export.BatchSpanProcessor.on_end")
 def test_lumigo_span_processor_no_export_set(
     mocked_super_on_end, mocked_should_not_export_span
@@ -57,7 +57,7 @@ def test_lumigo_span_processor_no_export_set(
     mocked_super_on_end.assert_not_called()
 
 
-@patch("lumigo_opentelemetry.resources.span_processor.should_not_export_span")
+@patch("lumigo_opentelemetry.resources.span_processor.should_skip_exporting_span")
 @patch("opentelemetry.sdk.trace.export.BatchSpanProcessor.on_end")
 def test_lumigo_span_processor_no_export_not_set(
     mocked_super_on_end, mocked_should_not_export_span
