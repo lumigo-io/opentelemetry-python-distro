@@ -13,6 +13,11 @@ def run():
     client = boto3.client("sqs", region_name="eu-central-1")
     queue = client.create_queue(QueueName="test")
 
+    # Simulate polling an empty sqs queue
+    client.receive_message(QueueUrl=queue["QueueUrl"], MaxNumberOfMessages=1)
+    client.receive_message(QueueUrl=queue["QueueUrl"], MaxNumberOfMessages=1)
+    client.receive_message(QueueUrl=queue["QueueUrl"], MaxNumberOfMessages=1)
+
     client.send_message(
         QueueUrl=queue["QueueUrl"],
         MessageBody="Message_1",
