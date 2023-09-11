@@ -520,7 +520,7 @@ def integration_tests_flask(session, flask_version):
     "django_version",
     dependency_versions_to_be_tested(
         directory="django",
-        dependency_name="Django",
+        dependency_name="django",
         test_untested_versions=should_test_only_untested_versions(),
     ),
 )
