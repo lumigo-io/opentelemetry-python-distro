@@ -515,7 +515,7 @@ def integration_tests_flask(session, flask_version):
                 kill_process_and_clean_outputs(temp_file, "flask", session)
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=python_versions())
 @nox.parametrize(
     "django_version",
     dependency_versions_to_be_tested(
