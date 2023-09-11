@@ -1,4 +1,4 @@
 #!/bin/sh
 
-pushd app || exit 1
+cd app || exit 1
 python manage.py runserver 5003  &

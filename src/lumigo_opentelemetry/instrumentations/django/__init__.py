@@ -2,7 +2,9 @@ from opentelemetry.trace.span import Span
 
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
-from lumigo_opentelemetry.instrumentations.instrumentation_utils import add_body_attribute
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
+    add_body_attribute,
+)
 from lumigo_opentelemetry.libs.json_utils import dump_with_context
 
 
@@ -19,15 +21,23 @@ class DjangoInstrumentorWrapper(AbstractInstrumentor):
 
         def request_hook(span: Span, request: HttpRequest):
             with lumigo_safe_execute("django request_hook"):
-                span.set_attribute("http.request.headers", dump_with_context("requestHeaders", request.headers))
+                span.set_attribute(
+                    "http.request.headers",
+                    dump_with_context("requestHeaders", request.headers),
+                )
                 add_body_attribute(span, request.body, "http.request.body")
 
         def response_hook(span: Span, request: HttpRequest, response: HttpResponse):
             with lumigo_safe_execute("django response_hook"):
-                span.set_attribute("http.response.headers", dump_with_context("responseHeaders", response.headers))
+                span.set_attribute(
+                    "http.response.headers",
+                    dump_with_context("responseHeaders", response.headers),
+                )
                 add_body_attribute(span, response.content, "http.response.body")
 
-        DjangoInstrumentor().instrument(request_hook=request_hook, response_hook=response_hook)
+        DjangoInstrumentor().instrument(
+            request_hook=request_hook, response_hook=response_hook
+        )
 
 
 instrumentor: AbstractInstrumentor = DjangoInstrumentorWrapper()

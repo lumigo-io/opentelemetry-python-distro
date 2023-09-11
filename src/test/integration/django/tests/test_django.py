@@ -1,4 +1,3 @@
-import json
 import unittest
 from test.test_utils.span_exporter import wait_for_exporter
 from test.test_utils.spans_parser import SpansContainer
@@ -25,9 +24,11 @@ class TestDjangoSpans(unittest.TestCase):
         self.assertIsNotNone(root)
         self.assertEqual(root["kind"], "SpanKind.SERVER")
         self.assertEqual(root["attributes"]["http.status_code"], 200)
-        self.assertEqual(root["attributes"]["http.request.body"], '{"support": "django"}')
+        self.assertEqual(
+            root["attributes"]["http.request.body"], '{"support": "django"}'
+        )
         self.assertIsNotNone(root["attributes"]["http.request.headers"])
-        self.assertIsNotNone(root["attributes"]['http.response.headers'])
-        self.assertIsNotNone(root["attributes"]['http.response.body'])
+        self.assertIsNotNone(root["attributes"]["http.response.headers"])
+        self.assertIsNotNone(root["attributes"]["http.response.body"])
         self.assertEqual(root["attributes"]["http.method"], "GET")
         self.assertEqual(root["attributes"]["http.host"], "localhost:5003")

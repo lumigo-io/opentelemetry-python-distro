@@ -19,13 +19,21 @@ class FlaskInstrumentorWrapper(AbstractInstrumentor):
 
         def request_hook(span: Span, flask_request_environ: Dict[str, Any]):
             with lumigo_safe_execute("flask_request_hook"):
-                span.set_attribute("http.request.headers", dump_with_context("requestHeaders", flask_request_environ))
+                span.set_attribute(
+                    "http.request.headers",
+                    dump_with_context("requestHeaders", flask_request_environ),
+                )
 
         def response_hook(span: Span, status, response_headers):
             with lumigo_safe_execute("flask_response_hook"):
-                span.set_attribute("http.response.headers", dump_with_context("responseHeaders", response_headers))
+                span.set_attribute(
+                    "http.response.headers",
+                    dump_with_context("responseHeaders", response_headers),
+                )
 
-        FlaskInstrumentor().instrument(request_hook=request_hook, response_hook=response_hook)
+        FlaskInstrumentor().instrument(
+            request_hook=request_hook, response_hook=response_hook
+        )
 
 
 instrumentor: AbstractInstrumentor = FlaskInstrumentorWrapper()

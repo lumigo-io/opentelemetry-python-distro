@@ -48,7 +48,7 @@ for instrumentor in instrumentors:
             "An error occurred while applying the '%s' instrumentation: %s",
             instrumentor.instrumentation_id,
             str(e),
-            exc_info=True
+            exc_info=True,
         )
 
 logger.debug(
