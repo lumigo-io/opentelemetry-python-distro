@@ -345,7 +345,7 @@ Without the scope provided by the iterator over `response["Messages"]`, `span_1`
 
 A common pattern in SQS-based applications is to continuously poll an SQS queue for messages, 
 and to process them as they arrive.
-In order not to clutter the Lumigo Platform with empty SQS polling messages, the default behavior is to filter them 
+In order not to clutter the Lumigo platform with empty SQS polling messages, the default behavior is to filter them 
 out from being sent to Lumigo.
 
 You can change this behavior by setting the boolean environment variable `LUMIGO_AUTO_FILTER_EMPTY_SQS` to `false`.
