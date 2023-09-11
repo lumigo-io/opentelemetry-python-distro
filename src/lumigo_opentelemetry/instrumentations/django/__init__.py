@@ -19,7 +19,7 @@ class DjangoInstrumentorWrapper(AbstractInstrumentor):
         from opentelemetry.instrumentation.django import DjangoInstrumentor
         from django.http import HttpRequest, HttpResponse
 
-        def request_hook(span: Span, request: HttpRequest):
+        def request_hook(span: Span, request: HttpRequest) -> None:
             with lumigo_safe_execute("django request_hook"):
                 span.set_attribute(
                     "http.request.headers",
@@ -27,7 +27,9 @@ class DjangoInstrumentorWrapper(AbstractInstrumentor):
                 )
                 add_body_attribute(span, request.body, "http.request.body")
 
-        def response_hook(span: Span, request: HttpRequest, response: HttpResponse):
+        def response_hook(
+            span: Span, request: HttpRequest, response: HttpResponse
+        ) -> None:
             with lumigo_safe_execute("django response_hook"):
                 span.set_attribute(
                     "http.response.headers",
