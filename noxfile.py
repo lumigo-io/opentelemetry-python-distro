@@ -515,6 +515,56 @@ def integration_tests_flask(session, flask_version):
                 kill_process_and_clean_outputs(temp_file, "flask", session)
 
 
+@nox.session(python=["3.9"])
+@nox.parametrize(
+    "django_version",
+    dependency_versions_to_be_tested(
+        directory="django",
+        dependency_name="Django",
+        test_untested_versions=should_test_only_untested_versions(),
+    ),
+)
+def integration_tests_django(session, django_version):
+    with TestedVersions.save_tests_result("django", "django", django_version):
+        install_package("django", django_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("django")
+        with session.chdir("src/test/integration/django"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_django",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                # TODO Make this deterministic
+                # Wait 1s to give time for app to start
+                time.sleep(8)
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_django.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "django", session)
+
+
 @nox.session(python=python_versions())
 @nox.parametrize(
     "grpcio_version",

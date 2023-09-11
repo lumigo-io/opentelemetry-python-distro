@@ -27,7 +27,7 @@ class RedisInstrumentor(AbstractInstrumentor):
             pass
 
         def response_hook(span: Span, instance: Connection, response: Any) -> None:
-            add_body_attribute(span, response, "redis.response.body")
+            add_body_attribute(span, response, "db.response.body")
 
         RedisInstrumentor().instrument(
             request_hook=request_hook,
