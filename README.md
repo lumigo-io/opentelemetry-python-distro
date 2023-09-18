@@ -199,7 +199,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 
 ## Supported runtimes
 
-* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x
+* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x, 3.11.x
 
 ## Supported packages
 
@@ -343,13 +343,14 @@ Without the scope provided by the iterator over `response["Messages"]`, `span_1`
 
 ### Filtering out empty SQS messages
 
-A common pattern in SQS-based applications is to continuously poll an SQS queue for messages, 
+A common pattern in SQS-based applications is to continuously poll an SQS queue for messages,
 and to process them as they arrive.
-In order not to clutter the Lumigo platform with empty SQS polling messages, the default behavior is to filter them 
+In order not to clutter the Lumigo platform with empty SQS polling messages, the default behavior is to filter them
 out from being sent to Lumigo.
 
 You can change this behavior by setting the boolean environment variable `LUMIGO_AUTO_FILTER_EMPTY_SQS` to `false`.
 The possible variations are:
+
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS=true` filter out empty SQS polling messages
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS=false` do not filter out empty SQS polling messages
 * No environment variable set (default): filter out empty SQS polling messages
