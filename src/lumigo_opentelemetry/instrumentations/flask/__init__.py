@@ -1,4 +1,10 @@
+from typing import Any, Dict
+
+from opentelemetry.trace.span import Span
+
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
+from lumigo_opentelemetry.libs.json_utils import dump_with_context
 
 
 class FlaskInstrumentorWrapper(AbstractInstrumentor):
@@ -9,19 +15,27 @@ class FlaskInstrumentorWrapper(AbstractInstrumentor):
         import flask  # noqa
 
     def install_instrumentation(self) -> None:
-        import wrapt
-        from lumigo_opentelemetry import logger
+        from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
-        @wrapt.patch_function_wrapper("flask", "Flask.__init__")
-        def init_otel_flask_instrumentation(wrapped, instance, args, kwargs):  # type: ignore
-            try:
-                from opentelemetry.instrumentation.flask import FlaskInstrumentor
+        def request_hook(span: Span, flask_request_environ: Dict[str, Any]) -> None:
+            with lumigo_safe_execute("flask_request_hook"):
+                span.set_attribute(
+                    "http.request.headers",
+                    dump_with_context("requestHeaders", flask_request_environ),
+                )
 
-                return_value = wrapped(*args, **kwargs)
-                FlaskInstrumentor().instrument_app(instance)
-                return return_value
-            except Exception as e:
-                logger.exception("failed instrumenting Flask", exc_info=e)
+        def response_hook(
+            span: Span, status: int, response_headers: Dict[str, Any]
+        ) -> None:
+            with lumigo_safe_execute("flask_response_hook"):
+                span.set_attribute(
+                    "http.response.headers",
+                    dump_with_context("responseHeaders", response_headers),
+                )
+
+        FlaskInstrumentor().instrument(
+            request_hook=request_hook, response_hook=response_hook
+        )
 
 
 instrumentor: AbstractInstrumentor = FlaskInstrumentorWrapper()

@@ -9,6 +9,7 @@ from .boto import instrumentor as boto_instrumentor
 from .botocore import instrumentor as botocore_instrumentor
 from .fastapi import instrumentor as fastapi_instrumentor
 from .flask import instrumentor as flask_instrumentor
+from .django import instrumentor as django_instrumentor
 from .grpcio import instrumentor as grpc_instrumentor
 from .kafka_python import instrumentor as kafka_python_instrumentor
 from .pika import instrumentor as pika_instrumentor
@@ -23,6 +24,7 @@ instrumentors: List[AbstractInstrumentor] = [
     botocore_instrumentor,
     fastapi_instrumentor,
     flask_instrumentor,
+    django_instrumentor,
     grpc_instrumentor,
     kafka_python_instrumentor,
     pika_instrumentor,
@@ -46,6 +48,7 @@ for instrumentor in instrumentors:
             "An error occurred while applying the '%s' instrumentation: %s",
             instrumentor.instrumentation_id,
             str(e),
+            exc_info=True,
         )
 
 logger.debug(
@@ -58,6 +61,7 @@ frameworks = list(
         in [
             fastapi_instrumentor.instrumentation_id,
             flask_instrumentor.instrumentation_id,
+            django_instrumentor.instrumentation_id,
         ],
         installed_instrumentations,
     )

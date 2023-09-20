@@ -35,5 +35,6 @@ setup(
         "opentelemetry-instrumentation-pymysql==0.36b0",
         "opentelemetry-instrumentation-requests==0.36b0",
         "opentelemetry-instrumentation-redis==0.36b0",
+        "opentelemetry-instrumentation-django==0.36b0",
     ],
 )

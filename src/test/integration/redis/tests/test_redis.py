@@ -11,7 +11,7 @@ from testcontainers.redis import RedisContainer
 ATTRIBUTES = "attributes"
 DB_STATEMENT = "db.statement"
 DB_SYSTEM = "db.system"
-REDIS_RESPONSE_BODY = "redis.response.body"
+REDIS_RESPONSE_BODY = "db.response.body"
 
 
 def run_redis_sample(sample_name: str, redis_host: str, redis_port: int):
