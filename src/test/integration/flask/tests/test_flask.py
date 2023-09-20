@@ -24,6 +24,8 @@ class TestFlaskSpans(unittest.TestCase):
         self.assertIsNotNone(root)
         self.assertEqual(root["kind"], "SpanKind.SERVER")
         self.assertEqual(root["attributes"]["http.status_code"], 200)
+        self.assertIsNotNone(root["attributes"]["http.request.headers"])
+        self.assertIsNotNone(root["attributes"]["http.response.headers"])
         self.assertEqual(root["attributes"]["http.method"], "GET")
         self.assertEqual(root["attributes"]["http.host"], "localhost:5000")
         self.assertEqual(root["attributes"]["http.route"], "/")
@@ -48,6 +50,8 @@ class TestFlaskSpans(unittest.TestCase):
         self.assertEqual(root["attributes"]["http.status_code"], 200)
         self.assertEqual(root["attributes"]["http.host"], "localhost:5000")
         self.assertEqual(root["attributes"]["http.route"], "/invoke-requests")
+        self.assertIsNotNone(root["attributes"]["http.request.headers"])
+        self.assertIsNotNone(root["attributes"]["http.response.headers"])
 
         # assert child spans
         children = spans_container.get_non_internal_children()

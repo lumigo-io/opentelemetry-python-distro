@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd app || exit 1
+python manage.py runserver 5003  &
