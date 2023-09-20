@@ -36,5 +36,7 @@ setup(
         "opentelemetry-instrumentation-requests==0.36b0",
         "opentelemetry-instrumentation-redis==0.36b0",
         "opentelemetry-instrumentation-django==0.36b0",
+        # v4.7.1 is the last version that supports python 3.7
+        "typing_extensions==4.7.1; python_version<'3.8'",
     ],
 )
