@@ -31,9 +31,9 @@ jobs:
           name: ${{ matrix.python-version }}
           path: versions_artifact
 
-  push-branch:
+  create-pr-for-new-versions:
     runs-on: ubuntu-latest
-    name: push-branch
+    name: create-pr-for-new-versions
     needs: check-new-versions-of-instrumented-packages
     steps:
       - uses: actions/checkout@v3
@@ -91,3 +91,6 @@ jobs:
           base: main
           labels: version-testing, automerge
           reviewers: GuyMoses,saartochner,shanishiri,mmanciop
+      - name: remove previous version testing branches
+        run: |
+          scripts/delete_old_version_testing_branches.sh
