@@ -370,8 +370,13 @@ def _generate_support_matrix_markdown_row(
                 )
 
     res = []
+    is_instrumentation_written = False
     for package_name in versions:
-        first_row = f"| {instrumentation} | [{package_name}]({package_url_template.format(package_name)}) | "
+        displayed_instrumentation = ""
+        if not is_instrumentation_written:
+            displayed_instrumentation = instrumentation
+            is_instrumentation_written = True
+        first_row = f"| {displayed_instrumentation} | [{package_name}]({package_url_template.format(package_name)}) | "
         for runtime in package_support_version_runtimes:
             if len(versions[package_name][runtime]) > 0:
                 first_row += versions[package_name][runtime][0] + "|"
