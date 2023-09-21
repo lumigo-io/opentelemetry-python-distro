@@ -94,7 +94,11 @@ def get_new_version_from_pypi(
 
 
 def dependency_versions_to_be_tested(
-    python: str, directory: str, dependency_name: str, test_untested_versions: bool, session: nox.sessions.Session = None,
+    python: str,
+    directory: str,
+    dependency_name: str,
+    test_untested_versions: bool,
+    session: nox.sessions.Session = None,
 ) -> List[str]:
     """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
@@ -180,7 +184,7 @@ def list_integration_tests_ci(session):
             dependency_name="boto3",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_boto3_sqs(
     session,
@@ -237,7 +241,7 @@ def integration_tests_boto3_sqs(
             dependency_name="boto3",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_boto3(
     session,
@@ -297,7 +301,7 @@ def integration_tests_boto3(
             dependency_name="fastapi",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_fastapi_fastapi(
     session,
@@ -323,7 +327,7 @@ def integration_tests_fastapi_fastapi(
             dependency_name="uvicorn",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_fastapi_uvicorn(
     session,
@@ -503,7 +507,7 @@ def component_tests_execution_tags(
             dependency_name="flask",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_flask(session, flask_version):
     with TestedVersions.save_tests_result("flask", "flask", flask_version):
@@ -614,7 +618,7 @@ def integration_tests_django(session, django_version):
             dependency_name="grpcio",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_grpcio(
     session,
@@ -688,7 +692,7 @@ def integration_tests_grpcio(
             dependency_name="kafka_python",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_kafka_python(
     session,
@@ -753,7 +757,7 @@ def integration_tests_kafka_python(
             dependency_name="pika",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_pika(
     session,
@@ -816,7 +820,7 @@ def integration_tests_pika(
             dependency_name="pymongo",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_pymongo(
     session,
@@ -892,7 +896,7 @@ def integration_tests_pymongo(
             dependency_name="pymysql",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_pymysql(
     session,
@@ -951,7 +955,7 @@ def integration_tests_pymysql(
             dependency_name="redis",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_redis(
     session,
@@ -992,7 +996,9 @@ def kill_process(process_name: str) -> None:
     cmd_line = "undefined"
     try:
         # Kill all processes with the given name
-        for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"], ad_value=None):
+        for proc in psutil.process_iter(
+            attrs=["pid", "name", "cmdline"], ad_value=None
+        ):
             proc_name = proc.name()
             if proc.status() == psutil.STATUS_ZOMBIE:
                 continue
@@ -1008,9 +1014,13 @@ def kill_process(process_name: str) -> None:
                     )
                     proc.kill()
     except psutil.ZombieProcess as zp:
-        print(f"Failed to kill zombie process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(zp)}")
+        print(
+            f"Failed to kill zombie process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(zp)}"
+        )
     except psutil.NoSuchProcess as nsp:
-        print(f"Failed to kill process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(nsp)}")
+        print(
+            f"Failed to kill process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(nsp)}"
+        )
 
 
 def clean_outputs(full_path: str, session) -> None:
