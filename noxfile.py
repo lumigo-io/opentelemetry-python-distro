@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 import os
-import psutil
 import re
 import sys
 import tempfile
 import time
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 from xml.etree import ElementTree
 
 import nox
+import psutil
 import requests
 import yaml
 
@@ -17,12 +18,9 @@ repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
 
-from src.ci.tested_versions_utils import (  # noqa: E402
-    NonSemanticVersion,
-    SemanticVersion,
-    TestedVersions,
-    should_test_only_untested_versions,
-)
+from src.ci.tested_versions_utils import (NonSemanticVersion,  # noqa: E402
+                                          SemanticVersion, TestedVersions,
+                                          should_test_only_untested_versions)
 
 OTHER_REQUIREMENTS = "requirements_others.txt"
 
@@ -90,7 +88,7 @@ def get_new_version_from_pypi(
 
 
 def dependency_versions_to_be_tested(
-    directory: str, dependency_name: str, test_untested_versions: bool
+    python: str, directory: str, dependency_name: str, test_untested_versions: bool, session: nox.sessions.Session = None,
 ) -> List[str]:
     """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
@@ -161,14 +159,19 @@ def list_integration_tests_ci(session):
         print(i)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "boto3_version",
-    dependency_versions_to_be_tested(
-        directory="boto3",
-        dependency_name="boto3",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,boto3_version",
+    [
+        (python, boto3_version)
+        for python in python_versions()
+        for boto3_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="boto3",
+            dependency_name="boto3",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_boto3_sqs(
     session,
@@ -213,14 +216,19 @@ def integration_tests_boto3_sqs(
                 kill_process_and_clean_outputs(temp_file, "run_app", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "boto3_version",
-    dependency_versions_to_be_tested(
-        directory="boto3",
-        dependency_name="boto3",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,boto3_version",
+    [
+        (python, boto3_version)
+        for python in python_versions()
+        for boto3_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="boto3",
+            dependency_name="boto3",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_boto3(
     session,
@@ -268,14 +276,19 @@ def integration_tests_boto3(
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "fastapi_version",
-    dependency_versions_to_be_tested(
-        directory="fastapi",
-        dependency_name="fastapi",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,fastapi_version",
+    [
+        (python, fastapi_version)
+        for python in python_versions()
+        for fastapi_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="fastapi",
+            dependency_name="fastapi",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_fastapi_fastapi(
     session,
@@ -289,14 +302,19 @@ def integration_tests_fastapi_fastapi(
         )
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "uvicorn_version",
-    dependency_versions_to_be_tested(
-        directory="fastapi",
-        dependency_name="uvicorn",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,uvicorn_version",
+    [
+        (python, uvicorn_version)
+        for python in python_versions()
+        for uvicorn_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="fastapi",
+            dependency_name="uvicorn",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_fastapi_uvicorn(
     session,
@@ -464,14 +482,19 @@ def component_tests_execution_tags(
             kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "flask_version",
-    dependency_versions_to_be_tested(
-        directory="flask",
-        dependency_name="flask",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,flask_version",
+    [
+        (python, flask_version)
+        for python in python_versions()
+        for flask_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="flask",
+            dependency_name="flask",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_flask(session, flask_version):
     with TestedVersions.save_tests_result("flask", "flask", flask_version):
@@ -515,14 +538,19 @@ def integration_tests_flask(session, flask_version):
                 kill_process_and_clean_outputs(temp_file, "flask", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "django_version",
-    dependency_versions_to_be_tested(
-        directory="django",
-        dependency_name="django",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,django_version",
+    [
+        (python, django_version)
+        for python in python_versions()
+        for django_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="django",
+            dependency_name="django",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_django(session, django_version):
     with TestedVersions.save_tests_result("django", "django", django_version):
@@ -565,14 +593,19 @@ def integration_tests_django(session, django_version):
                 kill_process_and_clean_outputs(temp_file, "django", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "grpcio_version",
-    dependency_versions_to_be_tested(
-        directory="grpcio",
-        dependency_name="grpcio",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,grpcio_version",
+    [
+        (python, grpcio_version)
+        for python in python_versions()
+        for grpcio_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="grpcio",
+            dependency_name="grpcio",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_grpcio(
     session,
@@ -634,14 +667,19 @@ def integration_tests_grpcio(
                 clean_outputs(client_spans, session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "kafka_python_version",
-    dependency_versions_to_be_tested(
-        directory="kafka_python",
-        dependency_name="kafka_python",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,kafka_python_version",
+    [
+        (python, kafka_python_version)
+        for python in python_versions()
+        for kafka_python_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="kafka_python",
+            dependency_name="kafka_python",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_kafka_python(
     session,
@@ -694,14 +732,19 @@ def integration_tests_kafka_python(
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "pika_version",
-    dependency_versions_to_be_tested(
-        directory="pika",
-        dependency_name="pika",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,pika_version",
+    [
+        (python, pika_version)
+        for python in python_versions()
+        for pika_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="pika",
+            dependency_name="pika",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_pika(
     session,
@@ -752,14 +795,19 @@ def integration_tests_pika(
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "pymongo_version",
-    dependency_versions_to_be_tested(
-        directory="pymongo",
-        dependency_name="pymongo",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,pymongo_version",
+    [
+        (python, pymongo_version)
+        for python in python_versions()
+        for pymongo_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="pymongo",
+            dependency_name="pymongo",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_pymongo(
     session,
@@ -823,14 +871,19 @@ def integration_tests_pymongo(
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "pymysql_version",
-    dependency_versions_to_be_tested(
-        directory="pymysql",
-        dependency_name="pymysql",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,pymysql_version",
+    [
+        (python, pymysql_version)
+        for python in python_versions()
+        for pymysql_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="pymysql",
+            dependency_name="pymysql",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_pymysql(
     session,
@@ -877,14 +930,19 @@ def integration_tests_pymysql(
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
-@nox.session(python=python_versions())
+@nox.session()
 @nox.parametrize(
-    "redis_version",
-    dependency_versions_to_be_tested(
-        directory="redis",
-        dependency_name="redis",
-        test_untested_versions=should_test_only_untested_versions(),
-    ),
+    "python,redis_version",
+    [
+        (python, redis_version)
+        for python in python_versions()
+        for redis_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="redis",
+            dependency_name="redis",
+            test_untested_versions=should_test_only_untested_versions(),
+        )
+    ]
 )
 def integration_tests_redis(
     session,

@@ -31,7 +31,7 @@ python3 -m nox -e integration_tests_flask
 # Run a given test for a given version of Python and all dependency versions
 python -m nox -e integration_tests_grpcio --python 3.9
 # Run a given test for a given version of Python and a given dependency version
-python -m nox --session "integration_tests_grpcio-3.9(grpcio_version='1.56.0')"
+python -m nox --session "integration_tests_grpcio(python='3.9', grpcio_version='1.56.0')"
 ```
 
 ## Adding support for a new package
