@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         # If this key gets renamed, nox.py needs to be adjusted
-        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
     name: check-new-versions-of-instrumented-packages
     steps:
       - uses: actions/checkout@v3
@@ -62,6 +62,11 @@ jobs:
         with:
           name: '3.10'
           path: versions_artifacts/3.10
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: '3.11'
+          path: versions_artifacts/3.11
       - run: python3 -m pip install -r requirements.txt
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff

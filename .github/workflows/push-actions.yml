@@ -11,7 +11,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           architecture: x64
       - name: Install jq
         run:
@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false # Prevent a single failure in the matrix from stopping all other jobs
       matrix:
-        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
         integration-test-family: ${{ fromJson(needs.list-instrumentations.outputs.integration-tests) }}
     name: ITest ${{ matrix.integration-test-family }} / Python ${{ matrix.python-version }}
     steps:
@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false # Prevent a single failure in the matrix from stopping all other jobs
       matrix:
-        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
     name: Component Test for Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v3
