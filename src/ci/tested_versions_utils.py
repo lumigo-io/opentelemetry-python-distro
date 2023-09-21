@@ -312,7 +312,7 @@ def generate_support_matrix_markdown(
                         if runtime not in package_support_version_runtimes
                         else []
                     )
-    # convert package_support_version_runtimes to floats
+
     package_support_version_runtimes = sort_runtime_array(
         package_support_version_runtimes
     )
@@ -320,6 +320,7 @@ def generate_support_matrix_markdown(
     res = [
         # add on one less than the number of runtimes because "supported versions" is the first runtime's column
         f"| Instrumentation | Package | Supported Versions |{'|'.join([' ' for _ in package_support_version_runtimes[:-1]])}|",
+        # | | | :---: | :---: | ... |
         f"| --- | --- | {' | '.join([':---:' for _ in package_support_version_runtimes])} |",
         # | | | 3.7 | 3.8 | ... |
         f"| | | {' | '.join(package_support_version_runtimes)} |",
@@ -349,8 +350,8 @@ def _generate_support_matrix_markdown_row(
     # like fastapi and uvicorn
     instrumentation = os.path.basename(os.path.dirname(tested_versions_directory))
 
-    versions: Dict[str, Dict[str, List[str]]] = {}
     # initialize versions dict for all the packages we find
+    versions: Dict[str, Dict[str, List[str]]] = {}
     for runtime in package_support_version_runtimes:
         runtime_path = os.path.join(tested_versions_directory, runtime)
         # if we have a folder in the tested_versions_directory that matches the runtime,
@@ -363,11 +364,14 @@ def _generate_support_matrix_markdown_row(
                         package_support_version_runtime: []
                         for package_support_version_runtime in package_support_version_runtimes
                     }
-                versions[package_name][runtime] = _get_supported_version_ranges(
-                    TestedVersions.from_file(
-                        os.path.join(tested_versions_directory, runtime, package_name)
-                    )
+                tested_versions_path = os.path.join(
+                    tested_versions_directory, runtime, package_name
                 )
+                # if tested_versions_path exists then we have a package that is tested for this runtime
+                if os.path.exists(tested_versions_path):
+                    versions[package_name][runtime] = _get_supported_version_ranges(
+                        TestedVersions.from_file(tested_versions_path)
+                    )
 
     res = []
     is_instrumentation_written = False
@@ -376,6 +380,7 @@ def _generate_support_matrix_markdown_row(
         if not is_instrumentation_written:
             displayed_instrumentation = instrumentation
             is_instrumentation_written = True
+
         first_row = f"| {displayed_instrumentation} | [{package_name}]({package_url_template.format(package_name)}) | "
         for runtime in package_support_version_runtimes:
             if len(versions[package_name][runtime]) > 0:
