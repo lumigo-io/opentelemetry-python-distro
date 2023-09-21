@@ -355,11 +355,6 @@ The possible variations are:
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS=false` do not filter out empty SQS polling messages
 * No environment variable set (default): filter out empty SQS polling messages
 
-## Testing
+## Contributing
 
-We use [nox](https://pypi.org/project/nox/) for setting up and running our tests.
-
-```sh
-python3 -m nox
-python3 -m nox -e integration_tests_flask
-```
+For guidelines on contributing, please see [CONTRIBUTING.md](./CONTRIBUTING.md).

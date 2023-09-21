@@ -5,13 +5,13 @@ on:
     - cron: "0 7 * * *"
 jobs:
   # If this key gets renamed, noxfile.py needs to be updated accordingly
-  check-new-versions-of-instrumented-packages:
+  test-untested-versions:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # If this key gets renamed, noxfile.py needs to be updated accordingly
         python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
-    name: check-new-versions-of-instrumented-packages
+    name: test-untested-versions
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -34,7 +34,7 @@ jobs:
   create-pr-for-new-versions:
     runs-on: ubuntu-latest
     name: create-pr-for-new-versions
-    needs: check-new-versions-of-instrumented-packages
+    needs: test-untested-versions
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python

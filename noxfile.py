@@ -79,9 +79,9 @@ def python_versions() -> Optional[List[str]]:
         os.path.dirname(__file__) + "/.github/workflows/version-testing.yml"
     ) as f:
         github_workflow = yaml.load(f, Loader=yaml.FullLoader)
-        return github_workflow["jobs"]["check-new-versions-of-instrumented-packages"][
-            "strategy"
-        ]["matrix"]["python-version"]
+        return github_workflow["jobs"]["test-untested-versions"]["strategy"]["matrix"][
+            "python-version"
+        ]
 
 
 def get_new_version_from_pypi(
