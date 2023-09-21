@@ -91,6 +91,5 @@ jobs:
           base: main
           labels: version-testing, automerge
           reviewers: GuyMoses,saartochner,shanishiri
-      - name: remove previous version testing branches
-        run: |
+      - run: |  # remove all the version testing branches that aren't from today
           ./scripts/delete_old_version_testing_branches.sh
