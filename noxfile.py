@@ -19,9 +19,13 @@ repo_dir = os.path.dirname(__file__)
 if repo_dir not in sys.path:
     sys.path.append(repo_dir)
 
-from src.ci.tested_versions_utils import (NonSemanticVersion,  # noqa: E402
-                                          SemanticVersion, TestedVersions,
-                                          should_test_only_untested_versions)
+from src.ci.tested_versions_utils import (  # noqa: E402
+    NonSemanticVersion,
+    SemanticVersion,
+    TestedVersions,
+    parse_version,
+    should_test_only_untested_versions,
+)
 
 OTHER_REQUIREMENTS = "requirements_others.txt"
 
@@ -68,7 +72,8 @@ def python_versions() -> Optional[List[str]]:
     # In local, try all supported python versions.
     # Anyway create a venv.
     if os.getenv("CI", str(False)).lower() == "true":
-        return [platform.python_version()]
+        python_version = parse_version(platform.python_version())
+        return [f"{python_version.major}.{python_version.minor}"]
 
     with open(
         os.path.dirname(__file__) + "/.github/workflows/version-testing.yml"
