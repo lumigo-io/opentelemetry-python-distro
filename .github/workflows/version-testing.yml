@@ -93,4 +93,4 @@ jobs:
           reviewers: GuyMoses,saartochner,shanishiri
       - name: remove previous version testing branches
         run: |
-          scripts/delete_old_version_testing_branches.sh
+          ./scripts/delete_old_version_testing_branches.sh
