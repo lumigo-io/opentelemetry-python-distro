@@ -97,7 +97,6 @@ def dependency_versions_to_be_tested(
     python: str,
     directory: str,
     dependency_name: str,
-    test_untested_versions: bool,
     session: nox.sessions.Session = None,
 ) -> List[str]:
     """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
@@ -105,7 +104,7 @@ def dependency_versions_to_be_tested(
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, python, dependency_name)
     )
-    if test_untested_versions:
+    if should_test_only_untested_versions():
         return get_new_version_from_pypi(dependency_name, tested_versions)
 
     # To avoid unbearable build times, we only retest the last patch of each minor.
@@ -160,6 +159,11 @@ def dependency_versions_to_be_tested(
     ]
 
 
+def wait_for_app_start():
+    # TODO Make this deterministic
+    time.sleep(8)
+
+
 @nox.session()
 def list_integration_tests_ci(session):
     integration_tests = {
@@ -182,15 +186,15 @@ def list_integration_tests_ci(session):
             python=python,
             directory="boto3",
             dependency_name="boto3",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_boto3_sqs(
     session,
+    python,
     boto3_version,
 ):
-    with TestedVersions.save_tests_result("boto3-sqs", "boto3", boto3_version):
+    with TestedVersions.save_tests_result("boto3-sqs", python, "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
         session.install(".")
@@ -239,15 +243,15 @@ def integration_tests_boto3_sqs(
             python=python,
             directory="boto3",
             dependency_name="boto3",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_boto3(
     session,
+    python,
     boto3_version,
 ):
-    with TestedVersions.save_tests_result("boto3", "boto3", boto3_version):
+    with TestedVersions.save_tests_result("boto3", python, "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
         session.install(".")
@@ -269,9 +273,7 @@ def integration_tests_boto3(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -299,15 +301,17 @@ def integration_tests_boto3(
             python=python,
             directory="fastapi",
             dependency_name="fastapi",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_fastapi_fastapi(
     session,
+    python,
     fastapi_version,
 ):
-    with TestedVersions.save_tests_result("fastapi", "fastapi", fastapi_version):
+    with TestedVersions.save_tests_result(
+        "fastapi", python, "fastapi", fastapi_version
+    ):
         integration_tests_fastapi(
             session=session,
             fastapi_version=fastapi_version,
@@ -325,15 +329,17 @@ def integration_tests_fastapi_fastapi(
             python=python,
             directory="fastapi",
             dependency_name="uvicorn",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_fastapi_uvicorn(
     session,
+    python,
     uvicorn_version,
 ):
-    with TestedVersions.save_tests_result("fastapi", "uvicorn", uvicorn_version):
+    with TestedVersions.save_tests_result(
+        "fastapi", python, "uvicorn", uvicorn_version
+    ):
         integration_tests_fastapi(
             session=session,
             fastapi_version="0.78.0",  # arbitrary version
@@ -367,9 +373,7 @@ def integration_tests_fastapi(
                 external=True,
             )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-            # TODO Make this deterministic
-            # Wait 1s to give time for app to start
-            time.sleep(8)
+            wait_for_app_start()
 
             session.run(
                 "pytest",
@@ -428,9 +432,7 @@ def component_tests_attr_max_size(
                 external=True,
             )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-            # TODO Make this deterministic
-            # Wait 1s to give time for app to start
-            time.sleep(8)
+            wait_for_app_start()
 
             session.run(
                 "pytest",
@@ -475,9 +477,7 @@ def component_tests_execution_tags(
                 external=True,
             )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-            # TODO Make this deterministic
-            # Wait 1s to give time for app to start
-            time.sleep(8)
+            wait_for_app_start()
 
             session.run(
                 "pytest",
@@ -505,12 +505,11 @@ def component_tests_execution_tags(
             python=python,
             directory="flask",
             dependency_name="flask",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
-def integration_tests_flask(session, flask_version):
-    with TestedVersions.save_tests_result("flask", "flask", flask_version):
+def integration_tests_flask(session, python, flask_version):
+    with TestedVersions.save_tests_result("flask", python, "flask", flask_version):
         install_package("flask", flask_version, session)
 
         session.install(".")
@@ -531,9 +530,7 @@ def integration_tests_flask(session, flask_version):
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -561,12 +558,11 @@ def integration_tests_flask(session, flask_version):
             python=python,
             directory="django",
             dependency_name="django",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
-def integration_tests_django(session, django_version):
-    with TestedVersions.save_tests_result("django", "django", django_version):
+def integration_tests_django(session, python, django_version):
+    with TestedVersions.save_tests_result("django", python, "django", django_version):
         install_package("django", django_version, session)
 
         session.install(".")
@@ -586,9 +582,7 @@ def integration_tests_django(session, django_version):
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -616,15 +610,15 @@ def integration_tests_django(session, django_version):
             python=python,
             directory="grpcio",
             dependency_name="grpcio",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_grpcio(
     session,
+    python,
     grpcio_version,
 ):
-    with TestedVersions.save_tests_result("grpcio", "grpcio", grpcio_version):
+    with TestedVersions.save_tests_result("grpcio", python, "grpcio", grpcio_version):
         install_package("grpcio", grpcio_version, session)
 
         session.install(".")
@@ -655,9 +649,7 @@ def integration_tests_grpcio(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -690,16 +682,16 @@ def integration_tests_grpcio(
             python=python,
             directory="kafka_python",
             dependency_name="kafka_python",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_kafka_python(
     session,
+    python,
     kafka_python_version,
 ):
     with TestedVersions.save_tests_result(
-        "kafka_python", "kafka_python", kafka_python_version
+        "kafka_python", python, "kafka_python", kafka_python_version
     ):
         install_package("kafka_python", kafka_python_version, session)
 
@@ -725,9 +717,7 @@ def integration_tests_kafka_python(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -755,15 +745,15 @@ def integration_tests_kafka_python(
             python=python,
             directory="pika",
             dependency_name="pika",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_pika(
     session,
+    python,
     pika_version,
 ):
-    with TestedVersions.save_tests_result("pika", "pika", pika_version):
+    with TestedVersions.save_tests_result("pika", python, "pika", pika_version):
         install_package("pika", pika_version, session)
 
         session.install(".")
@@ -788,9 +778,7 @@ def integration_tests_pika(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -818,15 +806,17 @@ def integration_tests_pika(
             python=python,
             directory="pymongo",
             dependency_name="pymongo",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_pymongo(
     session,
+    python,
     pymongo_version,
 ):
-    with TestedVersions.save_tests_result("pymongo", "pymongo", pymongo_version):
+    with TestedVersions.save_tests_result(
+        "pymongo", python, "pymongo", pymongo_version
+    ):
         if (
             str(pymongo_version).startswith("3.")  # is 3.x
             and not re.match(r"3\.\d{2}.*", str(pymongo_version))  # not 3.10.x or above
@@ -864,9 +854,7 @@ def integration_tests_pymongo(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -894,15 +882,17 @@ def integration_tests_pymongo(
             python=python,
             directory="pymysql",
             dependency_name="pymysql",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_pymysql(
     session,
+    python,
     pymysql_version,
 ):
-    with TestedVersions.save_tests_result("pymysql", "pymysql", pymysql_version):
+    with TestedVersions.save_tests_result(
+        "pymysql", python, "pymysql", pymysql_version
+    ):
         install_package("PyMySQL", pymysql_version, session)
 
         session.install(".")
@@ -923,9 +913,7 @@ def integration_tests_pymysql(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Wait 1s to give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -953,20 +941,20 @@ def integration_tests_pymysql(
             python=python,
             directory="redis",
             dependency_name="redis",
-            test_untested_versions=should_test_only_untested_versions(),
         )
     ],
 )
 def integration_tests_redis(
     session,
+    python,
     redis_version,
 ):
-    temp_file = create_it_tempfile("redis")
-    with TestedVersions.save_tests_result("redis", "redis", redis_version):
+    with TestedVersions.save_tests_result("redis", python, "redis", redis_version):
         install_package("redis", redis_version, session)
 
         session.install(".")
 
+        temp_file = create_it_tempfile("redis")
         with session.chdir("src/test/integration/redis"):
             session.install("-r", OTHER_REQUIREMENTS)
             try:

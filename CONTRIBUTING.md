@@ -26,12 +26,33 @@ Run `./scripts/checks.sh` in the root folder.
 python3 -m nox
 # List all the tests
 python3 -m nox -l
+```
+
+To run specific tests and/or specify Python versions:
+
+* Use `--python PYTHON_VERSION` to specify a Python version eg.
+
+    `--python 3.9`
+* Use `-e` to specify a dependency to test eg.
+
+    `python3 -m nox -e integration_tests_flask`
+* Use `--session` to specify a dependency and version eg.
+
+    `--session "integration_tests_grpcio(python='3.9', grpcio_version='1.56.0')"`
+
+```sh
 # Run a given test with the entire parameter matrix
 python3 -m nox -e integration_tests_flask
 # Run a given test for a given version of Python and all dependency versions
 python -m nox -e integration_tests_grpcio --python 3.9
 # Run a given test for a given version of Python and a given dependency version
 python -m nox --session "integration_tests_grpcio(python='3.9', grpcio_version='1.56.0')"
+```
+
+To run version testing locally, prefix the test command with `TEST_ONLY_UNTESTED_NEW_VERSIONS=true` eg.
+
+```sh
+TEST_ONLY_UNTESTED_NEW_VERSIONS=true python3 -m nox -e integration_tests_flask`
 ```
 
 ## Adding support for a new package

@@ -159,9 +159,15 @@ class TestedVersions:
 
     @staticmethod
     def _add_version_to_file(
-        directory: str, dependency_name: str, dependency_version: str, supported: bool
+        directory: str,
+        python: str,
+        dependency_name: str,
+        dependency_version: str,
+        supported: bool,
     ) -> None:
-        dependency_file_path = TestedVersions.get_file_path(directory, dependency_name)
+        dependency_file_path = TestedVersions.get_file_path(
+            directory, python, dependency_name
+        )
         TestedVersions.add_version_to_file(
             dependency_file_path, dependency_version, supported
         )
@@ -214,18 +220,18 @@ class TestedVersions:
     @staticmethod
     @contextmanager
     def save_tests_result(
-        directory: str, dependency_name: str, dependency_version: str
+        directory: str, python: str, dependency_name: str, dependency_version: str
     ) -> Generator[None, None, None]:
         if should_test_only_untested_versions():
             try:
                 yield
             except Exception:
                 TestedVersions._add_version_to_file(
-                    directory, dependency_name, dependency_version, False
+                    directory, python, dependency_name, dependency_version, False
                 )
                 raise
             TestedVersions._add_version_to_file(
-                directory, dependency_name, dependency_version, True
+                directory, python, dependency_name, dependency_version, True
             )
         else:
             yield
