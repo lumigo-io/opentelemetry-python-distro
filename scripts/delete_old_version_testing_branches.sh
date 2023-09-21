@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eo pipefail
 
 today=$(date +%Y%m%d)
 echo "today: $today"
