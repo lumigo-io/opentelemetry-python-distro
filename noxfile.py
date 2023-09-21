@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import re
 import sys
 import tempfile
@@ -67,7 +68,7 @@ def python_versions() -> Optional[List[str]]:
     # In local, try all supported python versions.
     # Anyway create a venv.
     if os.getenv("CI", str(False)).lower() == "true":
-        return None
+        return [platform.python_version()]
 
     with open(
         os.path.dirname(__file__) + "/.github/workflows/version-testing.yml"
