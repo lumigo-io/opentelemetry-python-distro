@@ -90,7 +90,7 @@ jobs:
           body: ${{ env.new_versions }}
           base: main
           labels: version-testing, automerge
-          reviewers: GuyMoses,saartochner,shanishiri,mmanciop
+          reviewers: GuyMoses,saartochner,shanishiri
       - name: remove previous version testing branches
         run: |
           scripts/delete_old_version_testing_branches.sh
