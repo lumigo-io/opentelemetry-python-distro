@@ -921,26 +921,29 @@ def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -
 
 
 def kill_process(process_name: str) -> None:
+    proc_name = "undefined"
+    cmd_line = "undefined"
     try:
         # Kill all processes with the given name
-        for proc in psutil.process_iter():
+        for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"], ad_value=None):
+            proc_name = proc.name()
             if proc.status() == psutil.STATUS_ZOMBIE:
                 continue
-            # The python process is names "Python" os OS X and "uvicorn" on CircleCI
-            if proc.name() == process_name:
-                print(f"Killing process with name {proc.name()}...")
+            # The python process is named "Python" on OS X and "uvicorn" on CircleCI
+            if proc_name == process_name:
+                print(f"Killing process with name {proc_name}...")
                 proc.kill()
-            elif proc.name().lower().startswith("python"):
-                cmdline = proc.cmdline()
-                if len(cmdline) > 1 and cmdline[1].endswith("/" + process_name):
+            elif proc_name.lower().startswith("python"):
+                cmd_line = proc.cmdline()
+                if len(cmd_line) > 1 and cmd_line[1].endswith("/" + process_name):
                     print(
-                        f"Killing process with name {proc.name()} and cmdline {cmdline}..."
+                        f"Killing process with name {proc_name} and cmdline {cmd_line}..."
                     )
                     proc.kill()
     except psutil.ZombieProcess as zp:
-        print(f"Failed to kill zombie process for {process_name}: {str(zp)}")
+        print(f"Failed to kill zombie process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(zp)}")
     except psutil.NoSuchProcess as nsp:
-        print(f"Failed to kill process for {process_name}: {str(nsp)}")
+        print(f"Failed to kill process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(nsp)}")
 
 
 def clean_outputs(full_path: str, session) -> None:
