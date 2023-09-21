@@ -563,7 +563,7 @@ def integration_tests_flask(session, flask_version):
             dependency_name="django",
             test_untested_versions=should_test_only_untested_versions(),
         )
-    ]
+    ],
 )
 def integration_tests_django(session, django_version):
     with TestedVersions.save_tests_result("django", "django", django_version):
