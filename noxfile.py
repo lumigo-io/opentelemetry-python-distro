@@ -94,7 +94,7 @@ def dependency_versions_to_be_tested(
     """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
-        TestedVersions.get_file_path(directory, dependency_name)
+        TestedVersions.get_file_path(directory, python, dependency_name)
     )
     if test_untested_versions:
         return get_new_version_from_pypi(dependency_name, tested_versions)
@@ -110,9 +110,12 @@ def dependency_versions_to_be_tested(
         )
     )
 
+    if len(supported_versions) == 0:
+        return []
+
     if len(supported_versions) == 1:
         # Only one version? We surely want to test it!
-        return supported_versions
+        return [supported_versions[0].version]
 
     supported_versions_to_test = []
     for i in range(len(supported_versions))[1:]:

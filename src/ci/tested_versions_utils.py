@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import attr
 import os
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import List, Optional, Union, cast, Any, Generator
+from typing import Any, Generator, List, Optional, Union, cast
+
+import attr
 
 # This regexp splits the version line across three capture groups:
 # `(!)?` captures whether or not the version is supported (if supported, the `!` character is missing)
@@ -230,10 +231,10 @@ class TestedVersions:
             yield
 
     @staticmethod
-    def get_file_path(directory: str, dependency_name: str) -> str:
+    def get_file_path(directory: str, python: str, dependency_name: str) -> str:
         return (
             os.path.dirname(os.path.dirname(__file__))
-            + f"/test/integration/{directory}/tested_versions/{dependency_name}"
+            + f"/test/integration/{directory}/tested_versions/{python}/{dependency_name}"
         )
 
     @staticmethod
