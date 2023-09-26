@@ -4,14 +4,14 @@ on:
   schedule:
     - cron: "0 7 * * *"
 jobs:
-  # If this key gets renamed, nox.py needs to be adjusted
-  check-new-versions-of-instrumented-packages:
+  # If this key gets renamed, noxfile.py needs to be updated accordingly
+  test-untested-versions:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # If this key gets renamed, nox.py needs to be adjusted
-        python-version: [ '3.7', '3.8', '3.9', '3.10' ]
-    name: check-new-versions-of-instrumented-packages
+        # If this key gets renamed, noxfile.py needs to be updated accordingly
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+    name: test-untested-versions
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -31,10 +31,10 @@ jobs:
           name: ${{ matrix.python-version }}
           path: versions_artifact
 
-  push-branch:
+  create-pr-for-new-versions:
     runs-on: ubuntu-latest
-    name: push-branch
-    needs: check-new-versions-of-instrumented-packages
+    name: create-pr-for-new-versions
+    needs: test-untested-versions
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -62,6 +62,11 @@ jobs:
         with:
           name: '3.10'
           path: versions_artifacts/3.10
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: '3.11'
+          path: versions_artifacts/3.11
       - run: python3 -m pip install -r requirements.txt
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
@@ -76,6 +81,7 @@ jobs:
           echo "$new_versions" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Create Pull Request
+        # WARNING: the create pull request action must be the last action in the job, it changes the current branch
         uses: peter-evans/create-pull-request@v4
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
@@ -85,4 +91,14 @@ jobs:
           body: ${{ env.new_versions }}
           base: main
           labels: version-testing, automerge
-          reviewers: GuyMoses,saartochner,shanishiri,mmanciop
+          reviewers: GuyMoses,saartochner,shanishiri
+        # WARNING: the create pull request action must be the last action in the job, it changes the current branch
+
+  delete-old-version-testing-branches:
+    runs-on: ubuntu-latest
+    name: delete-old-version-testing-branches
+    needs: create-pr-for-new-versions
+    steps:
+      - uses: actions/checkout@v3
+      - run: |  # remove all the version testing branches that aren't from today
+          ./scripts/delete_old_version_testing_branches.sh

@@ -1,7 +1,7 @@
-pytest
-json-stream
-requests
-psutil
-testcontainers
-sqlalchemy
 cryptography
+json-stream
+psutil
+pytest
+requests
+sqlalchemy
+testcontainers

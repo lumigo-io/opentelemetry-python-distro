@@ -199,34 +199,36 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 
 ## Supported runtimes
 
-* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x
+* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x, 3.11.x
 
 ## Supported packages
 
-| Instrumentation | Package | Supported Versions |
-| --- | --- | --- |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.40 |
-| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0 |
-| | | 0.100.0b2~0.103.1 |
-| | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0 |
-| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5 |
-| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.58.0rc1 |
-| kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2 |
-| pika | [pika](https://pypi.org/project/pika) | 1.0.0 |
-| | | 1.0.1~1.3.0 |
-| | | 1.3.0rc5~1.3.2 |
-| pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1 |
-| | | 3.5.0~3.13.0 |
-| | | 4.0.1~4.5.0 |
-| | | 3.1 |
-| | | 3.2 |
-| | | 4.0 |
-| pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1 |
-| | | 1.0.0~1.0.3 |
-| | | 1.1.0~1.1.0rc2 |
-| redis | [redis](https://pypi.org/project/redis) | 4.1.1~4.2.0 |
-| | | 4.2.1~4.6.0 |
-| | | 5.0.0~5.0.0rc2 |
+| Instrumentation | Package | Supported Versions | | | | |
+| --- | --- | :---: | :---: | :---: | :---: | :---: |
+| | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.40|1.17.22~1.28.40|1.17.22~1.28.40|1.17.22~1.28.40| |
+| django | [django](https://pypi.org/project/django) |  |4.2.5|4.2.5|4.2.5|4.2.5|
+| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
+| | | 0.100.0b2~0.103.1| 0.100.0b2~0.103.1| 0.100.0b2~0.103.1| 0.100.0b2~0.103.1| 0.100.0b2~0.103.1|
+|  | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|
+| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|
+| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.58.0rc1|1.45.0~1.58.0rc1|1.45.0~1.58.0rc1|1.45.0~1.58.0rc1|1.49.0~1.58.0rc1|
+| kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2| |
+| pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0| |
+| | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| |
+| | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| |
+| pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|
+| | | 3.5.0~3.13.0| 3.5.0~3.13.0| 3.5.0~3.13.0| 3.5.0~3.13.0| 3.5.0~3.9.0|
+| | | 4.0.1~4.5.0| 4.0.1~4.5.0| 4.0.1~4.5.0| 4.0.1~4.5.0| 3.1|
+| | | 3.1| 3.1| 3.1| 3.1| 3.2|
+| | | 3.2| 3.2| 3.2| 3.2| |
+| | | 4.0| 4.0| 4.0| 4.0| |
+| pymysql | [pymysql](https://pypi.org/project/pymysql) | 0.9.0~0.10.1|0.9.0~0.10.1|0.9.0~0.10.1|0.9.0~0.10.1| |
+| | | 1.0.0~1.0.3| 1.0.0~1.0.3| 1.0.0~1.0.3| 1.0.0~1.0.3| |
+| | | 1.1.0~1.1.0rc2| 1.1.0~1.1.0rc2| 1.1.0~1.1.0rc2| 1.1.0~1.1.0rc2| |
+| redis | [redis](https://pypi.org/project/redis) | 4.1.1~4.2.0|4.1.1~4.2.0|4.1.1~4.2.0|4.1.1~4.2.0|4.1.1~4.2.0|
+| | | 4.2.1~4.6.0| 4.2.1~4.6.0| 4.2.1~4.6.0| 4.2.1~4.6.0| 4.2.1~4.6.0|
+| | | 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2|
 
 ## Automated dependency reporting
 
@@ -343,22 +345,18 @@ Without the scope provided by the iterator over `response["Messages"]`, `span_1`
 
 ### Filtering out empty SQS messages
 
-A common pattern in SQS-based applications is to continuously poll an SQS queue for messages, 
+A common pattern in SQS-based applications is to continuously poll an SQS queue for messages,
 and to process them as they arrive.
-In order not to clutter the Lumigo platform with empty SQS polling messages, the default behavior is to filter them 
+In order not to clutter the Lumigo platform with empty SQS polling messages, the default behavior is to filter them
 out from being sent to Lumigo.
 
 You can change this behavior by setting the boolean environment variable `LUMIGO_AUTO_FILTER_EMPTY_SQS` to `false`.
 The possible variations are:
+
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS=true` filter out empty SQS polling messages
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS=false` do not filter out empty SQS polling messages
 * No environment variable set (default): filter out empty SQS polling messages
 
-## Testing
+## Contributing
 
-We use [nox](https://pypi.org/project/nox/) for setting up and running our tests.
-
-```sh
-python3 -m nox
-python3 -m nox -e integration_tests_flask
-```
+For guidelines on contributing, please see [CONTRIBUTING.md](./CONTRIBUTING.md).
