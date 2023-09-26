@@ -328,16 +328,20 @@ tracer_provider.force_flush()
 
 ### Consuming SQS messages with Boto3 receive_message
 
-Messaging instrumentations that retrieve messages from queues tend to be counter-intuitive for end-users: when retrieving one of more messages from the queue, one would naturally expect that all calls done _using data from those messages_, e.g., sending their content to a database or another queue, would result in spans that are children of the describing the retrieving of those messages.
+Messaging instrumentations that retrieve messages from queues tend to be counter-intuitive for end-users: when retrieving one or more messages from the queue, one would naturally expect that all calls done _using data from those messages_, e.g., sending their content to a database or another queue, would result in spans that are children of the describing the retrieving of those messages.
 
 Consider the following scenario, which is supported by the `boto3` SQS `receive_message` instrumentation of the Lumigo OpenTelemetry Distro for Python:
 
 ```python
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
+
 response = client.receive_message(...)  # Instrumentation creates a `span_0` span
 
 for message in response.get("Messages", []):
   # The SQS.ReceiveMessage span is active in this scope
-  with trace.start_as_current_span("span_1"):  # span_0 is the parent of span_1
+  with tracer.start_as_current_span("span_1"):  # span_0 is the parent of span_1
     do_something()
 ```
 
