@@ -99,7 +99,7 @@ def dependency_versions_to_be_tested(
     dependency_name: str,
     session: nox.sessions.Session = None,
 ) -> List[str]:
-    """Dependency versions are listed in the 'tested_versions/<dependency_name>' files of the instrumentation
+    """Dependency versions are listed in the 'tested_versions/<python_runtime>/<dependency_name>' files of the instrumentation
     packages, and symlinked under the relevant integration tests. There are also versions in pypi"""
     tested_versions = TestedVersions.from_file(
         TestedVersions.get_file_path(directory, python, dependency_name)
@@ -122,7 +122,8 @@ def dependency_versions_to_be_tested(
         return []
 
     if len(supported_versions) == 1:
-        # Only one version? We surely want to test it!
+        # if we only have one supported entry in the supported versions
+        # file, return its version number so that we'll test it
         return [supported_versions[0].version]
 
     supported_versions_to_test = []
