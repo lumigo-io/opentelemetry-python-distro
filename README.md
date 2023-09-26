@@ -206,11 +206,12 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | Instrumentation | Package | Supported Versions | | | | |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
 | | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.40|1.17.22~1.28.40|1.17.22~1.28.40|1.17.22~1.28.40| |
-| django | [django](https://pypi.org/project/django) |  |4.2.5|4.2.5|4.2.5|4.2.5|
-| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.54|1.17.22~1.28.54|1.17.22~1.28.54|1.17.22~1.28.54| |
+| django | [django](https://pypi.org/project/django) | 3.2.18|3.2.18|4.2a1|4.1.4|4.1.5|
+| | | | 4.2.5| 4.2.5| 4.2.5| 4.2.5|
+| fastapi | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|
+|  | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
 | | | 0.100.0b2~0.103.1| 0.100.0b2~0.103.1| 0.100.0b2~0.103.1| 0.100.0b2~0.103.1| 0.100.0b2~0.103.1|
-|  | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|
 | grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.58.0rc1|1.45.0~1.58.0rc1|1.45.0~1.58.0rc1|1.45.0~1.58.0rc1|1.49.0~1.58.0rc1|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2| |
@@ -228,7 +229,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | | | 1.1.0~1.1.0rc2| 1.1.0~1.1.0rc2| 1.1.0~1.1.0rc2| 1.1.0~1.1.0rc2| |
 | redis | [redis](https://pypi.org/project/redis) | 4.1.1~4.2.0|4.1.1~4.2.0|4.1.1~4.2.0|4.1.1~4.2.0|4.1.1~4.2.0|
 | | | 4.2.1~4.6.0| 4.2.1~4.6.0| 4.2.1~4.6.0| 4.2.1~4.6.0| 4.2.1~4.6.0|
-| | | 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2| 5.0.0~5.0.0rc2|
+| | | 5.0.0~5.0.1| 5.0.0~5.0.1| 5.0.0~5.0.1| 5.0.0~5.0.1| 5.0.0~5.0.1|
 
 ## Automated dependency reporting
 
