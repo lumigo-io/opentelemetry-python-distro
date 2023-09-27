@@ -875,6 +875,49 @@ def integration_tests_pymongo(
 
 @nox.session()
 @nox.parametrize(
+    "python,motor_version",
+    [
+        (python, motor_version)
+        for python in python_versions()
+        for motor_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="motor",
+            dependency_name="motor",
+        )
+    ],
+)
+def integration_tests_motor(
+    session,
+    python,
+    motor_version,
+):
+    with TestedVersions.save_tests_result("motor", python, "motor", motor_version):
+        install_package("motor", motor_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("motor")
+        with session.chdir("src/test/integration/motor"):
+            session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_motor.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_motor", session)
+
+
+@nox.session()
+@nox.parametrize(
     "python,pymysql_version",
     [
         (python, pymysql_version)
