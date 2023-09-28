@@ -21,7 +21,9 @@ cursor.execute("SELECT VERSION()")
 cursor.execute(
     "CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))"
 )
-cursor.execute("INSERT INTO users (name, email) VALUES (%s, %s)", (TEST_NAME, TEST_EMAIL))
+cursor.execute(
+    "INSERT INTO users (name, email) VALUES (%s, %s)", (TEST_NAME, TEST_EMAIL)
+)
 cursor.execute("SELECT * FROM users")
 result = cursor.fetchall()
 connection.commit()
