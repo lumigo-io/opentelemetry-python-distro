@@ -1,6 +1,4 @@
-pytest
-uvicorn[standard]==0.16.0
 fastapi==0.70.1
-json-stream
+pytest
 requests
-psutil
+uvicorn[standard]==0.18.0

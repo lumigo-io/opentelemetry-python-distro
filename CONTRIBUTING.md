@@ -57,11 +57,8 @@ TEST_ONLY_UNTESTED_NEW_VERSIONS=true python3 -m nox -e integration_tests_flask`
 
 ## Adding support for a new package
 
-The `tested_versions` folder must be present and updated both under `src/lumigo_opentelemetry/instrumentations` and in the tested package's folder under `src/test`. For this to work, create a symlink from the package's `src/test` folder.
+The `tested_versions` folder must be present and updated both under `src/lumigo_opentelemetry/instrumentations` and in the tested package's folder under `src/test`. For this to work, you'll need a symlink from the package's `src/test` folder. It's recommended to use the script below to initialize your `tested_versions` folders:
 
 ```sh
-mkdir -p src/lumigo_opentelemetry/instrumentations/<PACKAGE_NAME>/tested_versions
-touch src/lumigo_opentelemetry/instrumentations/<PACKAGE_NAME>/tested_versions/<PACKAGE_NAME>
-cd src/test/integration/<PACKAGE_NAME>
-ln -s ../../../lumigo_opentelemetry/instrumentations/<PACKAGE_NAME>/tested_versions tested_versions
+./scripts/init_tested_versions.sh
 ```

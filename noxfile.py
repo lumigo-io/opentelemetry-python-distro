@@ -397,12 +397,12 @@ def component_tests(session):
     component_tests_attr_max_size(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version="0.16.0",  # arbitrary version
+        uvicorn_version="0.18.0",  # lowest version with httptools compatible with 3.11
     )
     component_tests_execution_tags(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version="0.16.0",  # arbitrary version
+        uvicorn_version="0.18.0",  # lowest version with httptools compatible with 3.11
     )
 
 
