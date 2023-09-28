@@ -23,17 +23,17 @@ installed_instrumentations: List[str] = []
 instrumentors: List[AbstractInstrumentor] = [
     boto_instrumentor,
     botocore_instrumentor,
+    django_instrumentor,
     fastapi_instrumentor,
     flask_instrumentor,
-    django_instrumentor,
     grpc_instrumentor,
     kafka_python_instrumentor,
     pika_instrumentor,
     psycopg2_instrumentor,
     pymongo_instrumentor,
     pymysql_instrumentor,
-    requests_instrumentor,
     redis_instrumentor,
+    requests_instrumentor,
 ]
 for instrumentor in instrumentors:
     try:

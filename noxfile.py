@@ -799,6 +799,65 @@ def integration_tests_pika(
 
 @nox.session()
 @nox.parametrize(
+    "python,psycopg2_version",
+    [
+        (python, psycopg2_version)
+        for python in python_versions()
+        for psycopg2_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="psycopg2",
+            dependency_name="psycopg2",
+        )
+    ],
+)
+def integration_tests_psycopg2(
+    session,
+    python,
+    psycopg2_version,
+):
+    with TestedVersions.save_tests_result(
+        "psycopg2", python, "psycopg2", psycopg2_version
+    ):
+        install_package("psycopg2", psycopg2_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("psycopg2")
+        with session.chdir("src/test/integration/psycopg2"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_uvicorn",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                wait_for_app_start()
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_psycopg2.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process("uvicorn")
+
+
+@nox.session()
+@nox.parametrize(
     "python,pymongo_version",
     [
         (python, pymongo_version)

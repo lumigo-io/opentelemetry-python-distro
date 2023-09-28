@@ -41,7 +41,7 @@ class TestBoto3Spans(unittest.TestCase):
         self.assertEqual(4, len(spans_container.spans))
 
         # assert root
-        root = spans_container.get_root()
+        root = spans_container.get_first_root()
         self.assertEqual(root["attributes"]["http.method"], "POST")
         self.assertEqual(
             root["resource"]["attributes"]["process.runtime.name"], "cpython"

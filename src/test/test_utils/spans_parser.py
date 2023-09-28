@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
-
+from typing import Any, Dict, List, Optional
 
 SPANS_FILE_FULL_PATH = os.environ["LUMIGO_DEBUG_SPANDUMP"]
 
@@ -36,21 +35,26 @@ class SpansContainer:
         spans = SpansContainer.parse_spans_from_file(path).spans
         return SpansContainer(spans=spans[spanCounter.counter :])  # noqa
 
-    def get_root(self) -> Dict[str, Any]:
-        return list(filter(lambda item: item["parent_id"] is None, self.spans))[0]
+    def get_first_root(self) -> Dict[str, Any]:
+        return self.get_root_spans()[0]
 
-    def get_children(self) -> List[Dict[str, Any]]:
+    def get_root_spans(self) -> List[Dict[str, Any]]:
+        return list(filter(lambda item: item["parent_id"] is None, self.spans))
+
+    def get_children(self, root_span: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        root_span = self.get_first_root() if root_span is None else root_span
         return list(
             filter(
-                lambda item: item["parent_id"] == self.get_root()["context"]["span_id"],
+                lambda item: item["parent_id"] == root_span["context"]["span_id"],
                 self.spans,
             )
         )
 
-    def get_internals(self) -> List[Dict[str, Any]]:
+    def get_internals(self, root_span: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         return list(
             filter(
-                lambda item: item["kind"] == "SpanKind.INTERNAL", self.get_children()
+                lambda item: item["kind"] == "SpanKind.INTERNAL",
+                self.get_children(root_span=root_span),
             )
         )
 
@@ -61,10 +65,12 @@ class SpansContainer:
                 break
 
     def get_non_internal_children(
-        self, name_filter: Optional[str] = None
+        self, name_filter: Optional[str] = None, root_span: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         children = [
-            item for item in self.get_children() if item not in self.get_internals()
+            item
+            for item in self.get_children(root_span=root_span)
+            if item not in self.get_internals(root_span=root_span)
         ]
         if not name_filter:
             return children

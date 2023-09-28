@@ -20,7 +20,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(3, len(spans_container.spans))
 
         # assert root
-        root = spans_container.get_root()
+        root = spans_container.get_first_root()
         self.assertIsNotNone(root)
         self.assertEqual(root["kind"], "SpanKind.SERVER")
         self.assertEqual(root["attributes"]["http.status_code"], 200)
@@ -55,7 +55,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(4, len(spans_container.spans))
 
         # assert root
-        root = spans_container.get_root()
+        root = spans_container.get_first_root()
         self.assertIsNotNone(root)
         self.assertEqual(root["kind"], "SpanKind.SERVER")
         self.assertEqual(root["attributes"]["http.status_code"], 200)
@@ -90,7 +90,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(4, len(spans_container.spans))
 
         # assert root
-        root = spans_container.get_root()
+        root = spans_container.get_first_root()
         self.assertIsNotNone(root)
         root_attributes = root["attributes"]
         self.assertEqual(root_attributes["http.status_code"], 200)

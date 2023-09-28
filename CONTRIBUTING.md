@@ -15,7 +15,17 @@ Getting your machine ready to develop against the package is a straightforward p
 1. Run the setup script: `python setup.py develop`.
 1. Run `pre-commit install` in your repository to install pre-commit hooks
 
-**Note**: If you are using pycharm, ensure that you set it to use the virtualenv virtual environment manager. This is available in the menu under `PyCharm -> Preferences -> Project -> Interpreter`
+### MacOS Users
+
+Psycopg2 cannot be installed without the `pg_config` executable available, for which you'll need to install `postgres`.
+
+You can do this with `brew update && brew install postgresql`.
+
+It might be necessary to throw in a `brew tap homebrew/core` along the way.
+
+### PyCharm Users
+
+If you are using pycharm, ensure that you set it to use the virtualenv virtual environment manager. This is available in the menu under `PyCharm -> Preferences -> Project -> Interpreter`
 
 ## Running the test suite
 
