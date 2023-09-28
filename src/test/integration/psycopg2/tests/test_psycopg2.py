@@ -1,92 +1,85 @@
+import os
+import subprocess
+import sys
 import unittest
+from os import path
 from test.test_utils.span_exporter import wait_for_exporter
 from test.test_utils.spans_parser import SpansContainer
 
-import requests
 from testcontainers.postgres import PostgresContainer
 
 APP_HOST = "http://localhost:8006"
 
 
+def run_psycopg2_sample(
+    sample_name: str, connection_url: str, test_name: str, test_email: str
+):
+    sample_path = path.join(
+        path.dirname(path.abspath(__file__)),
+        f"../app/psycopg2_{sample_name}.py",
+    )
+    subprocess.check_output(
+        [sys.executable, sample_path],
+        env={
+            **os.environ,
+            "CONNECTION_URL": connection_url,
+            "TEST_NAME": test_name,
+            "TEST_EMAIL": test_email,
+            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+            "OTEL_SERVICE_NAME": f"psycopg2_{sample_name}-app",
+        },
+    )
+
+
 class TestPsycopg2Spans(unittest.TestCase):
-    def test_psycopg2_instrumentation(self):
+    def test_psycopg2_create_add_select(self):
         with PostgresContainer("postgres:latest") as postgres:
-            response = requests.post(
-                f"{APP_HOST}/init",
-                json={"connection_url": postgres.get_connection_url()},
+            test_name = "Bob"
+            test_email = "bob@psycopg.to"
+            run_psycopg2_sample(
+                "create_insert_select",
+                connection_url=postgres.get_connection_url(),
+                test_name=test_name,
+                test_email=test_email,
             )
-            response.raise_for_status()
-
-            body = response.json()
-            self.assertEqual(body, {"status": "ok"})
-
-            response = requests.post(
-                f"{APP_HOST}/add-user", json={"name": "Bob", "email": "bob@psycopg.to"}
-            )
-            response.raise_for_status()
-
-            body = response.json()
-            self.assertEqual(body, {"status": "ok"})
-
-            response = requests.get(f"{APP_HOST}/users")
-            response.raise_for_status()
-
-            body = response.json()
-            self.assertTrue("users" in body)
 
             wait_for_exporter()
 
             spans_container = SpansContainer.get_spans_from_file()
 
             root_spans = spans_container.get_root_spans()
-            self.assertEqual(len(root_spans), 3)
+            self.assertEqual(len(root_spans), 4, "There should be 4 root spans")
 
-            init_trace_span_root = root_spans[0]
+            select_version_span = root_spans[0]
 
-            select_spans = spans_container.get_non_internal_children(
-                name_filter="SELECT", root_span=init_trace_span_root
-            )
-            self.assertEqual(len(select_spans), 1)
-            self.assertEqual(select_spans[0]["attributes"]["db.system"], "postgresql")
             self.assertEqual(
-                select_spans[0]["attributes"]["db.statement"], "SELECT VERSION()"
+                select_version_span["attributes"]["db.system"], "postgresql"
+            )
+            self.assertEqual(
+                select_version_span["attributes"]["db.statement"], "SELECT VERSION()"
             )
 
-            create_table_spans = spans_container.get_non_internal_children(
-                name_filter="CREATE", root_span=init_trace_span_root
-            )
-            self.assertEqual(len(create_table_spans), 1)
-            self.assertEqual(
-                create_table_spans[0]["attributes"]["db.system"], "postgresql"
-            )
+            create_table_span = root_spans[1]
+
+            self.assertEqual(create_table_span["attributes"]["db.system"], "postgresql")
             self.assertTrue(
-                create_table_spans[0]["attributes"]["db.statement"].startswith(
+                create_table_span["attributes"]["db.statement"].startswith(
                     "CREATE TABLE users"
                 )
             )
 
-            add_user_trace_span_root = root_spans[1]
+            insert_user_span = root_spans[2]
 
-            add_user_spans = spans_container.get_non_internal_children(
-                name_filter="INSERT", root_span=add_user_trace_span_root
-            )
-            self.assertEqual(len(add_user_spans), 1)
-            self.assertEqual(add_user_spans[0]["attributes"]["db.system"], "postgresql")
+            self.assertEqual(insert_user_span["attributes"]["db.system"], "postgresql")
             self.assertTrue(
-                add_user_spans[0]["attributes"]["db.statement"].startswith(
+                insert_user_span["attributes"]["db.statement"].startswith(
                     "INSERT INTO users"
                 )
             )
 
-            get_users_trace_span_root = root_spans[2]
+            select_users_span = root_spans[3]
 
-            get_users_spans = spans_container.get_non_internal_children(
-                name_filter="SELECT", root_span=get_users_trace_span_root
-            )
-            self.assertEqual(len(get_users_spans), 1)
+            self.assertEqual(select_users_span["attributes"]["db.system"], "postgresql")
             self.assertEqual(
-                get_users_spans[0]["attributes"]["db.system"], "postgresql"
-            )
-            self.assertEqual(
-                get_users_spans[0]["attributes"]["db.statement"], "SELECT * FROM users"
+                select_users_span["attributes"]["db.statement"], "SELECT * FROM users"
             )

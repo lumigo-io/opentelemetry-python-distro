@@ -828,19 +828,6 @@ def integration_tests_psycopg2(
 
             try:
                 session.run(
-                    "sh",
-                    "./scripts/start_uvicorn",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                wait_for_app_start()
-
-                session.run(
                     "pytest",
                     "--tb",
                     "native",
@@ -853,7 +840,7 @@ def integration_tests_psycopg2(
                     },
                 )
             finally:
-                kill_process("uvicorn")
+                kill_process_and_clean_outputs(temp_file, "test_psycopg2", session)
 
 
 @nox.session()
@@ -1060,6 +1047,7 @@ def integration_tests_redis(
         temp_file = create_it_tempfile("redis")
         with session.chdir("src/test/integration/redis"):
             session.install("-r", OTHER_REQUIREMENTS)
+
             try:
                 session.run(
                     "pytest",
