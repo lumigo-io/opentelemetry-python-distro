@@ -5,7 +5,7 @@ from test.test_utils.spans_parser import SpansContainer
 import requests
 
 
-class TestFastApiSpans(unittest.TestCase):
+class TestLargeSpans(unittest.TestCase):
     def test_large_span_attribute_size_max_size_env_var_was_set(self):
         response = requests.get("http://localhost:8020/invoke-requests-large-response")
         response.raise_for_status()
@@ -20,7 +20,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(4, len(spans_container.spans))
 
         # assert root
-        root = spans_container.get_root()
+        root = spans_container.get_first_root()
         self.assertIsNotNone(root)
         root_attributes = root["attributes"]
         self.assertEqual(root_attributes["http.status_code"], 200)

@@ -5,7 +5,7 @@ from test.test_utils.spans_parser import SpansContainer
 import requests
 
 
-class TestMongoSpans(unittest.TestCase):
+class TestPyMongoSpans(unittest.TestCase):
     def test_mongo_instrumentation(self):
         response = requests.get("http://localhost:8002/invoke-mongo")
 

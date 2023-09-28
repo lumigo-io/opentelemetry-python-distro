@@ -1,5 +1,5 @@
 pytest==7.1.1
-uvicorn[standard]==0.16.0
+uvicorn[standard]==0.18.0
 fastapi==0.70.1
 json-stream==1.4.2
 requests==2.27.1

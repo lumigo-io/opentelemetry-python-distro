@@ -7,7 +7,7 @@ import requests
 from testcontainers.rabbitmq import RabbitMqContainer
 
 
-class TestFastApiSpans(unittest.TestCase):
+class TestPikaSpans(unittest.TestCase):
     def test_pika_instrumentation(self):
         test_topic = "test-pika-topic"
         with RabbitMqContainer("rabbitmq:latest") as rabbitmq_server:

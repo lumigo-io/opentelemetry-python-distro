@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import unittest
+from os import path
 from test.test_utils.span_exporter import wait_for_exporter
 from test.test_utils.spans_parser import SpansContainer
 
@@ -15,8 +16,8 @@ REDIS_RESPONSE_BODY = "db.response.body"
 
 
 def run_redis_sample(sample_name: str, redis_host: str, redis_port: int):
-    sample_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
+    sample_path = path.join(
+        path.dirname(path.abspath(__file__)),
         f"../app/redis_{sample_name}.py",
     )
     subprocess.check_output(

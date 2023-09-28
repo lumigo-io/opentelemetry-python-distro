@@ -397,12 +397,12 @@ def component_tests(session):
     component_tests_attr_max_size(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version="0.16.0",  # arbitrary version
+        uvicorn_version="0.16.0",  # TODO don't update, see https://lumigo.atlassian.net/browse/RD-11466
     )
     component_tests_execution_tags(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version="0.16.0",  # arbitrary version
+        uvicorn_version="0.16.0",  # TODO don't update, see https://lumigo.atlassian.net/browse/RD-11466
     )
 
 
@@ -799,6 +799,52 @@ def integration_tests_pika(
 
 @nox.session()
 @nox.parametrize(
+    "python,psycopg2_version",
+    [
+        (python, psycopg2_version)
+        for python in python_versions()
+        for psycopg2_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="psycopg2",
+            dependency_name="psycopg2",
+        )
+    ],
+)
+def integration_tests_psycopg2(
+    session,
+    python,
+    psycopg2_version,
+):
+    with TestedVersions.save_tests_result(
+        "psycopg2", python, "psycopg2", psycopg2_version
+    ):
+        install_package("psycopg2", psycopg2_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("psycopg2")
+        with session.chdir("src/test/integration/psycopg2"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_psycopg2.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_psycopg2", session)
+
+
+@nox.session()
+@nox.parametrize(
     "python,pymongo_version",
     [
         (python, pymongo_version)
@@ -1001,6 +1047,7 @@ def integration_tests_redis(
         temp_file = create_it_tempfile("redis")
         with session.chdir("src/test/integration/redis"):
             session.install("-r", OTHER_REQUIREMENTS)
+
             try:
                 session.run(
                     "pytest",

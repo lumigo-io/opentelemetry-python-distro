@@ -6,7 +6,7 @@ from test.test_utils.spans_parser import SpansContainer
 import requests
 
 
-class TestFastApiSpans(unittest.TestCase):
+class TestBoto3Spans(unittest.TestCase):
     def assert_is_version(self, version: str):
         major, minor, patch = version.split(".")
         self.assertTrue(major.isdigit())
@@ -41,7 +41,7 @@ class TestFastApiSpans(unittest.TestCase):
         self.assertEqual(4, len(spans_container.spans))
 
         # assert root
-        root = spans_container.get_root()
+        root = spans_container.get_first_root()
         self.assertEqual(root["attributes"]["http.method"], "POST")
         self.assertEqual(
             root["resource"]["attributes"]["process.runtime.name"], "cpython"
