@@ -6,7 +6,7 @@ from test.test_utils.spans_parser import SpansContainer
 import requests
 
 
-class TestFastApiSpans(unittest.TestCase):
+class TestBoto3Spans(unittest.TestCase):
     def assert_is_version(self, version: str):
         major, minor, patch = version.split(".")
         self.assertTrue(major.isdigit())
