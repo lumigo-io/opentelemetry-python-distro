@@ -799,26 +799,31 @@ def integration_tests_pika(
 
 @nox.session()
 @nox.parametrize(
-    "python,psycopg2_version",
+    "python,dependency_name,psycopg2_version",
     [
-        (python, psycopg2_version)
+        (python, dependency_name, psycopg2_version)
         for python in python_versions()
+        for dependency_name in ["psycopg2", "psycopg2-binary"]
         for psycopg2_version in dependency_versions_to_be_tested(
             python=python,
             directory="psycopg2",
-            dependency_name="psycopg2",
+            dependency_name=dependency_name,
         )
     ],
 )
 def integration_tests_psycopg2(
     session,
     python,
+    dependency_name,
     psycopg2_version,
 ):
     with TestedVersions.save_tests_result(
-        "psycopg2", python, "psycopg2", psycopg2_version
+        "psycopg2",
+        python,
+        dependency_name=dependency_name,
+        dependency_version=psycopg2_version,
     ):
-        install_package("psycopg2", psycopg2_version, session)
+        install_package(dependency_name, psycopg2_version, session)
 
         session.install(".")
 

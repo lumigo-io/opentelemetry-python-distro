@@ -11,7 +11,9 @@ class Psycopg2Instrumentor(AbstractInstrumentor):
     def install_instrumentation(self) -> None:
         from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 
-        Psycopg2Instrumentor().instrument()
+        # if we don't skip the dependency check, the instrumentor will fail
+        # because it can't detect psycopg2-binary
+        Psycopg2Instrumentor().instrument(skip_dep_check=True)
 
 
 instrumentor: AbstractInstrumentor = Psycopg2Instrumentor()
