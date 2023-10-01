@@ -498,6 +498,58 @@ def component_tests_execution_tags(
 
 @nox.session()
 @nox.parametrize(
+    "python,django_version",
+    [
+        (python, django_version)
+        for python in python_versions()
+        for django_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="django",
+            dependency_name="django",
+        )
+    ],
+)
+def integration_tests_django(session, python, django_version):
+    with TestedVersions.save_tests_result("django", python, "django", django_version):
+        install_package("django", django_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("django")
+        with session.chdir("src/test/integration/django"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_django",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                wait_for_app_start()
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_django.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "manage.py", session)
+
+
+@nox.session()
+@nox.parametrize(
     "python,flask_version",
     [
         (python, flask_version)
@@ -547,58 +599,6 @@ def integration_tests_flask(session, python, flask_version):
                 )
             finally:
                 kill_process_and_clean_outputs(temp_file, "flask", session)
-
-
-@nox.session()
-@nox.parametrize(
-    "python,django_version",
-    [
-        (python, django_version)
-        for python in python_versions()
-        for django_version in dependency_versions_to_be_tested(
-            python=python,
-            directory="django",
-            dependency_name="django",
-        )
-    ],
-)
-def integration_tests_django(session, python, django_version):
-    with TestedVersions.save_tests_result("django", python, "django", django_version):
-        install_package("django", django_version, session)
-
-        session.install(".")
-
-        temp_file = create_it_tempfile("django")
-        with session.chdir("src/test/integration/django"):
-            session.install("-r", OTHER_REQUIREMENTS)
-
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_django",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                wait_for_app_start()
-
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_django.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(temp_file, "django", session)
 
 
 @nox.session()
@@ -734,6 +734,49 @@ def integration_tests_kafka_python(
                 )
             finally:
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+
+
+@nox.session()
+@nox.parametrize(
+    "python,motor_version",
+    [
+        (python, motor_version)
+        for python in python_versions()
+        for motor_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="motor",
+            dependency_name="motor",
+        )
+    ],
+)
+def integration_tests_motor(
+    session,
+    python,
+    motor_version,
+):
+    with TestedVersions.save_tests_result("motor", python, "motor", motor_version):
+        install_package("motor", motor_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("motor")
+        with session.chdir("src/test/integration/motor"):
+            session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_motor.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_motor", session)
 
 
 @nox.session()
@@ -926,49 +969,6 @@ def integration_tests_pymongo(
 
 @nox.session()
 @nox.parametrize(
-    "python,motor_version",
-    [
-        (python, motor_version)
-        for python in python_versions()
-        for motor_version in dependency_versions_to_be_tested(
-            python=python,
-            directory="motor",
-            dependency_name="motor",
-        )
-    ],
-)
-def integration_tests_motor(
-    session,
-    python,
-    motor_version,
-):
-    with TestedVersions.save_tests_result("motor", python, "motor", motor_version):
-        install_package("motor", motor_version, session)
-
-        session.install(".")
-
-        temp_file = create_it_tempfile("motor")
-        with session.chdir("src/test/integration/motor"):
-            session.install("-r", OTHER_REQUIREMENTS)
-            try:
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_motor.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(temp_file, "test_motor", session)
-
-
-@nox.session()
-@nox.parametrize(
     "python,pymysql_version",
     [
         (python, pymysql_version)
@@ -1091,10 +1091,22 @@ def kill_process(process_name: str) -> None:
                 print(f"Killing process with name {proc_name}...")
                 proc.kill()
             elif proc_name.lower().startswith("python"):
-                cmd_line = proc.cmdline()
-                if len(cmd_line) > 1 and cmd_line[1].endswith("/" + process_name):
+                # drop the first argument, which is the python executable
+                python_command_parts = proc.cmdline()[1:]
+                # the initial command part is the last part of the path
+                python_command_parts[0] = python_command_parts[0].split("/")[-1]
+                # combine the remaining arguments
+                command = " ".join(python_command_parts)
+                print(
+                    f"Evaluating process with name '{proc_name}' and command '{command}'..."
+                )
+                if (
+                    len(cmd_line) > 1
+                    and "nox" not in command
+                    and process_name in command
+                ):
                     print(
-                        f"Killing process with name {proc_name} and cmdline {cmd_line}..."
+                        f"Killing process with name '{proc_name}' and command '{command}'..."
                     )
                     proc.kill()
     except psutil.ZombieProcess as zp:
