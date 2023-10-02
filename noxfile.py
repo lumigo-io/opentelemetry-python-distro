@@ -192,9 +192,9 @@ def list_integration_tests_ci(session):
 )
 def integration_tests_boto3_sqs(
     session,
-    python,
     boto3_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("boto3-sqs", python, "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
@@ -249,9 +249,9 @@ def integration_tests_boto3_sqs(
 )
 def integration_tests_boto3(
     session,
-    python,
     boto3_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("boto3", python, "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
@@ -307,9 +307,9 @@ def integration_tests_boto3(
 )
 def integration_tests_fastapi_fastapi(
     session,
-    python,
     fastapi_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "fastapi", python, "fastapi", fastapi_version
     ):
@@ -335,9 +335,9 @@ def integration_tests_fastapi_fastapi(
 )
 def integration_tests_fastapi_uvicorn(
     session,
-    python,
     uvicorn_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "fastapi", python, "uvicorn", uvicorn_version
     ):
@@ -509,7 +509,8 @@ def component_tests_execution_tags(
         )
     ],
 )
-def integration_tests_django(session, python, django_version):
+def integration_tests_django(session, django_version):
+    python = session.python
     with TestedVersions.save_tests_result("django", python, "django", django_version):
         install_package("django", django_version, session)
 
@@ -561,7 +562,8 @@ def integration_tests_django(session, python, django_version):
         )
     ],
 )
-def integration_tests_flask(session, python, flask_version):
+def integration_tests_flask(session, flask_version):
+    python = session.python
     with TestedVersions.save_tests_result("flask", python, "flask", flask_version):
         install_package("flask", flask_version, session)
 
@@ -570,6 +572,13 @@ def integration_tests_flask(session, python, flask_version):
         temp_file = create_it_tempfile("flask")
         with session.chdir("src/test/integration/flask"):
             session.install("-r", OTHER_REQUIREMENTS)
+
+            # override the default Werkzeug version for flask v2 compatibility
+            if flask_version.startswith("2."):
+                if python == "3.7":
+                    session.install("werkzeug==2.2.3")
+                else:
+                    session.install("werkzeug==2.3.7")
 
             try:
                 session.run(
@@ -616,9 +625,9 @@ def integration_tests_flask(session, python, flask_version):
 )
 def integration_tests_grpcio(
     session,
-    python,
     grpcio_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("grpcio", python, "grpcio", grpcio_version):
         install_package("grpcio", grpcio_version, session)
 
@@ -688,9 +697,9 @@ def integration_tests_grpcio(
 )
 def integration_tests_kafka_python(
     session,
-    python,
     kafka_python_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "kafka_python", python, "kafka_python", kafka_python_version
     ):
@@ -751,9 +760,9 @@ def integration_tests_kafka_python(
 )
 def integration_tests_motor(
     session,
-    python,
     motor_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("motor", python, "motor", motor_version):
         install_package("motor", motor_version, session)
 
@@ -794,9 +803,9 @@ def integration_tests_motor(
 )
 def integration_tests_pika(
     session,
-    python,
     pika_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("pika", python, "pika", pika_version):
         install_package("pika", pika_version, session)
 
@@ -856,10 +865,10 @@ def integration_tests_pika(
 )
 def integration_tests_psycopg2(
     session,
-    python,
     dependency_name,
     psycopg2_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "psycopg2",
         python,
@@ -906,9 +915,9 @@ def integration_tests_psycopg2(
 )
 def integration_tests_pymongo(
     session,
-    python,
     pymongo_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "pymongo", python, "pymongo", pymongo_version
     ):
@@ -982,9 +991,9 @@ def integration_tests_pymongo(
 )
 def integration_tests_pymysql(
     session,
-    python,
     pymysql_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "pymysql", python, "pymysql", pymysql_version
     ):
@@ -1041,9 +1050,9 @@ def integration_tests_pymysql(
 )
 def integration_tests_redis(
     session,
-    python,
     redis_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("redis", python, "redis", redis_version):
         install_package("redis", redis_version, session)
 
