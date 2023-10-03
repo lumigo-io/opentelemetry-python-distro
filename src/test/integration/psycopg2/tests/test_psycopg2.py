@@ -48,7 +48,7 @@ class TestPsycopg2Spans(unittest.TestCase):
             spans_container = SpansContainer.get_spans_from_file()
 
             root_spans = spans_container.get_root_spans()
-            self.assertEqual(len(root_spans), 4, "There should be 4 root spans")
+            self.assertEqual(len(root_spans), 5, "There should be 5 root spans")
 
             select_version_span = root_spans[0]
 
@@ -76,10 +76,23 @@ class TestPsycopg2Spans(unittest.TestCase):
                     "INSERT INTO users"
                 )
             )
+            print(insert_user_span["attributes"]["db.statement.parameters"])
+            self.assertIn(
+                f"('{test_name}', '{test_email}')",
+                insert_user_span["attributes"]["db.statement.parameters"],
+            )
 
             select_users_span = root_spans[3]
 
             self.assertEqual(select_users_span["attributes"]["db.system"], "postgresql")
             self.assertEqual(
                 select_users_span["attributes"]["db.statement"], "SELECT * FROM users"
+            )
+
+            fetch_all_span = root_spans[4]
+
+            self.assertEqual(fetch_all_span["attributes"]["db.system"], "postgresql")
+            self.assertIn(
+                f'[[1, "{test_name}", "{test_email}"]]',
+                fetch_all_span["attributes"]["db.response.body"],
             )
