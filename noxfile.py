@@ -192,9 +192,9 @@ def list_integration_tests_ci(session):
 )
 def integration_tests_boto3_sqs(
     session,
-    python,
     boto3_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("boto3-sqs", python, "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
@@ -249,9 +249,9 @@ def integration_tests_boto3_sqs(
 )
 def integration_tests_boto3(
     session,
-    python,
     boto3_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("boto3", python, "boto3", boto3_version):
         install_package("boto3", boto3_version, session)
 
@@ -307,9 +307,9 @@ def integration_tests_boto3(
 )
 def integration_tests_fastapi_fastapi(
     session,
-    python,
     fastapi_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "fastapi", python, "fastapi", fastapi_version
     ):
@@ -335,9 +335,9 @@ def integration_tests_fastapi_fastapi(
 )
 def integration_tests_fastapi_uvicorn(
     session,
-    python,
     uvicorn_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "fastapi", python, "uvicorn", uvicorn_version
     ):
@@ -498,59 +498,6 @@ def component_tests_execution_tags(
 
 @nox.session()
 @nox.parametrize(
-    "python,flask_version",
-    [
-        (python, flask_version)
-        for python in python_versions()
-        for flask_version in dependency_versions_to_be_tested(
-            python=python,
-            directory="flask",
-            dependency_name="flask",
-        )
-    ],
-)
-def integration_tests_flask(session, python, flask_version):
-    with TestedVersions.save_tests_result("flask", python, "flask", flask_version):
-        install_package("flask", flask_version, session)
-
-        session.install(".")
-
-        temp_file = create_it_tempfile("flask")
-        with session.chdir("src/test/integration/flask"):
-            session.install("-r", OTHER_REQUIREMENTS)
-
-            try:
-                session.run(
-                    "sh",
-                    "./scripts/start_flask",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                wait_for_app_start()
-
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_flask.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(temp_file, "flask", session)
-
-
-@nox.session()
-@nox.parametrize(
     "python,django_version",
     [
         (python, django_version)
@@ -562,7 +509,8 @@ def integration_tests_flask(session, python, flask_version):
         )
     ],
 )
-def integration_tests_django(session, python, django_version):
+def integration_tests_django(session, django_version):
+    python = session.python
     with TestedVersions.save_tests_result("django", python, "django", django_version):
         install_package("django", django_version, session)
 
@@ -598,7 +546,68 @@ def integration_tests_django(session, python, django_version):
                     },
                 )
             finally:
-                kill_process_and_clean_outputs(temp_file, "django", session)
+                kill_process_and_clean_outputs(temp_file, "manage.py", session)
+
+
+@nox.session()
+@nox.parametrize(
+    "python,flask_version",
+    [
+        (python, flask_version)
+        for python in python_versions()
+        for flask_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="flask",
+            dependency_name="flask",
+        )
+    ],
+)
+def integration_tests_flask(session, flask_version):
+    python = session.python
+    with TestedVersions.save_tests_result("flask", python, "flask", flask_version):
+        install_package("flask", flask_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("flask")
+        with session.chdir("src/test/integration/flask"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            # override the default Werkzeug version for flask v2 compatibility
+            if flask_version.startswith("2."):
+                if python == "3.7":
+                    session.install("werkzeug==2.2.3")
+                else:
+                    session.install("werkzeug==2.3.7")
+
+            try:
+                session.run(
+                    "sh",
+                    "./scripts/start_flask",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
+
+                wait_for_app_start()
+
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_flask.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "flask", session)
 
 
 @nox.session()
@@ -616,9 +625,9 @@ def integration_tests_django(session, python, django_version):
 )
 def integration_tests_grpcio(
     session,
-    python,
     grpcio_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("grpcio", python, "grpcio", grpcio_version):
         install_package("grpcio", grpcio_version, session)
 
@@ -688,9 +697,9 @@ def integration_tests_grpcio(
 )
 def integration_tests_kafka_python(
     session,
-    python,
     kafka_python_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "kafka_python", python, "kafka_python", kafka_python_version
     ):
@@ -738,6 +747,49 @@ def integration_tests_kafka_python(
 
 @nox.session()
 @nox.parametrize(
+    "python,motor_version",
+    [
+        (python, motor_version)
+        for python in python_versions()
+        for motor_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="motor",
+            dependency_name="motor",
+        )
+    ],
+)
+def integration_tests_motor(
+    session,
+    motor_version,
+):
+    python = session.python
+    with TestedVersions.save_tests_result("motor", python, "motor", motor_version):
+        install_package("motor", motor_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("motor")
+        with session.chdir("src/test/integration/motor"):
+            session.install("-r", OTHER_REQUIREMENTS)
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_motor.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_motor", session)
+
+
+@nox.session()
+@nox.parametrize(
     "python,pika_version",
     [
         (python, pika_version)
@@ -751,9 +803,9 @@ def integration_tests_kafka_python(
 )
 def integration_tests_pika(
     session,
-    python,
     pika_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("pika", python, "pika", pika_version):
         install_package("pika", pika_version, session)
 
@@ -813,10 +865,10 @@ def integration_tests_pika(
 )
 def integration_tests_psycopg2(
     session,
-    python,
     dependency_name,
     psycopg2_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "psycopg2",
         python,
@@ -863,9 +915,9 @@ def integration_tests_psycopg2(
 )
 def integration_tests_pymongo(
     session,
-    python,
     pymongo_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "pymongo", python, "pymongo", pymongo_version
     ):
@@ -926,49 +978,6 @@ def integration_tests_pymongo(
 
 @nox.session()
 @nox.parametrize(
-    "python,motor_version",
-    [
-        (python, motor_version)
-        for python in python_versions()
-        for motor_version in dependency_versions_to_be_tested(
-            python=python,
-            directory="motor",
-            dependency_name="motor",
-        )
-    ],
-)
-def integration_tests_motor(
-    session,
-    python,
-    motor_version,
-):
-    with TestedVersions.save_tests_result("motor", python, "motor", motor_version):
-        install_package("motor", motor_version, session)
-
-        session.install(".")
-
-        temp_file = create_it_tempfile("motor")
-        with session.chdir("src/test/integration/motor"):
-            session.install("-r", OTHER_REQUIREMENTS)
-            try:
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_motor.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    },
-                )
-            finally:
-                kill_process_and_clean_outputs(temp_file, "test_motor", session)
-
-
-@nox.session()
-@nox.parametrize(
     "python,pymysql_version",
     [
         (python, pymysql_version)
@@ -982,9 +991,9 @@ def integration_tests_motor(
 )
 def integration_tests_pymysql(
     session,
-    python,
     pymysql_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result(
         "pymysql", python, "pymysql", pymysql_version
     ):
@@ -1041,9 +1050,9 @@ def integration_tests_pymysql(
 )
 def integration_tests_redis(
     session,
-    python,
     redis_version,
 ):
+    python = session.python
     with TestedVersions.save_tests_result("redis", python, "redis", redis_version):
         install_package("redis", redis_version, session)
 
@@ -1091,10 +1100,22 @@ def kill_process(process_name: str) -> None:
                 print(f"Killing process with name {proc_name}...")
                 proc.kill()
             elif proc_name.lower().startswith("python"):
-                cmd_line = proc.cmdline()
-                if len(cmd_line) > 1 and cmd_line[1].endswith("/" + process_name):
+                # drop the first argument, which is the python executable
+                python_command_parts = proc.cmdline()[1:]
+                # the initial command part is the last part of the path
+                python_command_parts[0] = python_command_parts[0].split("/")[-1]
+                # combine the remaining arguments
+                command = " ".join(python_command_parts)
+                print(
+                    f"Evaluating process with name '{proc_name}' and command '{command}'..."
+                )
+                if (
+                    len(cmd_line) > 1
+                    and "nox" not in command
+                    and process_name in command
+                ):
                     print(
-                        f"Killing process with name {proc_name} and cmdline {cmd_line}..."
+                        f"Killing process with name '{proc_name}' and command '{command}'..."
                     )
                     proc.kill()
     except psutil.ZombieProcess as zp:
