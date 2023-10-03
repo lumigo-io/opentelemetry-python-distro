@@ -76,7 +76,6 @@ class TestPsycopg2Spans(unittest.TestCase):
                     "INSERT INTO users"
                 )
             )
-            print(insert_user_span["attributes"]["db.statement.parameters"])
             self.assertIn(
                 f"('{test_name}', '{test_email}')",
                 insert_user_span["attributes"]["db.statement.parameters"],
