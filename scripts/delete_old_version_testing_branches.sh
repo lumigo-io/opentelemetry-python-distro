@@ -14,11 +14,13 @@ if [ -z "$version_testing_branches" ]; then
     echo "No version testing branches found."
     exit 0
 fi
+echo "Unfiltered version testing branches: $version_testing_branches"
 today_branches=$(echo "$version_testing_branches" | grep "$today" || echo "")
 if [ -z "$today_branches" ]; then
     echo "No version testing branch from today needs to be protected."
     branches_for_deletion=$version_testing_branches
 else
+    echo "Today's version testing branches: $today_branches"
     echo "Removing today's version testing branch from the list of branches to be deleted..."
     branches_for_deletion=$( \
         git branch -r \
