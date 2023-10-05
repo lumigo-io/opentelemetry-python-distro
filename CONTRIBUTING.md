@@ -15,11 +15,11 @@ Getting your machine ready to develop against the package is a straightforward p
 1. Run the setup script: `python setup.py develop`.
 1. Run `pre-commit install` in your repository to install pre-commit hooks
 
-### MacOS Users
+### Psycopg2 installation requirements for MacOS
 
-Psycopg2 cannot be installed without the `pg_config` executable available, for which you'll need to install `postgres`.
+`Psycopg2` cannot be installed without the `pg_config` executable available, for which you'll need to install `postgres`. For some versions of `Psycopg2`, `libpq` is also required.
 
-You can do this with `brew update && brew install postgresql`.
+You can do this with `brew update && brew install postgresql libpq`.
 
 It might be necessary to throw in a `brew tap homebrew/core` along the way.
 

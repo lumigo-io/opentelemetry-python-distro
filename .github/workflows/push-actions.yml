@@ -44,6 +44,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
+      - run: |
+          # install dependencies for (some) psycopg2 builds
+          apt install python3-dev libpq-dev
       - run: pip3 install -r requirements.txt
       - run: python3 -m nox -e "${{ matrix.integration-test-family }}"
 

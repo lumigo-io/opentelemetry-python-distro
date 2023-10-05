@@ -579,6 +579,8 @@ def integration_tests_flask(session, flask_version):
                     session.install("werkzeug==2.2.3")
                 else:
                     session.install("werkzeug==2.3.7")
+            if flask_version.startswith("3."):
+                session.install("werkzeug==3.0.0")
 
             try:
                 session.run(
