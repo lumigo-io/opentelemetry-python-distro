@@ -20,7 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: |
           # install dependencies for (some) psycopg2 builds
-          apt install python3-dev libpq-dev
+          sudo apt install -y python3-dev libpq-dev
       - run: pip3 install -r requirements.txt
       - run: python3 -m nox
         continue-on-error: true
