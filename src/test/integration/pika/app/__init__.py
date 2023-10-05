@@ -24,6 +24,11 @@ async def invoke_pika_consumer(request: Request):
     print(f"connection_params: {connection_params}")
     topic = request_body["topic"]
     print(f"topic: {topic}")
+    queue = request_body["queue"]
+    print(f"queue: {queue}")
+    routing_key = request_body["routing-key"]
+    print(f"routing-key: {routing_key}")
+
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
             host=connection_params["host"], port=connection_params["port"]
@@ -32,15 +37,18 @@ async def invoke_pika_consumer(request: Request):
     print("consumer connection created")
     channel = connection.channel()
     print(f"consumer connection.is_open: {connection.is_open}")
+    channel.exchange_declare(exchange=topic, exchange_type="topic")
 
-    queue_status = channel.queue_declare(queue=topic)
+    # redeclare the queue to get the message count
+    queue_status = channel.queue_declare(queue=queue)
+    channel.queue_bind(queue=queue, exchange=topic, routing_key=routing_key)
     # WARNING: this works, but the value of message_count is only accurate as
     # of the last time the queue was declared. The only methods to determine
     # the number of messages in a queue don't appear to work,
     # see https://stackoverflow.com/a/13629296/2860309
     assert queue_status.method.message_count > 0
 
-    channel.basic_consume(topic, on_message)
+    channel.basic_consume(queue, on_message)
     try:
         channel.start_consuming()
     except Exception as e:
@@ -57,6 +65,11 @@ async def invoke_pika_producer(request: Request):
     print(f"connection_params: {connection_params}")
     topic = request_body["topic"]
     print(f"topic: {topic}")
+    queue = request_body["queue"]
+    print(f"queue: {queue}")
+    routing_key = request_body["routing-key"]
+    print(f"routing-key: {routing_key}")
+
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
             host=connection_params["host"], port=connection_params["port"]
@@ -65,8 +78,10 @@ async def invoke_pika_producer(request: Request):
     print("producer connection created")
     channel = connection.channel()
     print(f"producer connection.is_open: {connection.is_open}")
-    channel.queue_declare(queue=topic)
-    channel.basic_publish(exchange="", routing_key=topic, body=test_message)
+    channel.exchange_declare(exchange=topic, exchange_type="topic")
+    channel.queue_declare(queue=queue)
+    channel.queue_bind(queue=queue, exchange=topic, routing_key=routing_key)
+    channel.basic_publish(exchange=topic, routing_key=routing_key, body=test_message)
 
     connection.close()
 

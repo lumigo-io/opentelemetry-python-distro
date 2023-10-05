@@ -10,6 +10,8 @@ from testcontainers.rabbitmq import RabbitMqContainer
 class TestPikaSpans(unittest.TestCase):
     def test_pika_instrumentation(self):
         test_topic = "test-pika-topic"
+        test_queue = "test-pika-queue"
+        test_routing_key = "test-pika-routing-key"
         with RabbitMqContainer("rabbitmq:latest") as rabbitmq_server:
             connection_params = {
                 "host": rabbitmq_server.get_container_host_ip(),
@@ -22,6 +24,8 @@ class TestPikaSpans(unittest.TestCase):
                     {
                         "connection_params": connection_params,
                         "topic": test_topic,
+                        "queue": test_queue,
+                        "routing-key": test_routing_key,
                     }
                 ),
             )
@@ -38,6 +42,8 @@ class TestPikaSpans(unittest.TestCase):
                     {
                         "connection_params": connection_params,
                         "topic": test_topic,
+                        "queue": test_queue,
+                        "routing-key": test_routing_key,
                     }
                 ),
             )
@@ -62,6 +68,7 @@ class TestPikaSpans(unittest.TestCase):
                         receive_span = span
 
             # assert pika spans
+            assert send_span
             assert send_span["kind"] == "SpanKind.PRODUCER"
             assert send_span["attributes"]["messaging.system"] == "rabbitmq"
             assert send_span["attributes"]["net.peer.name"] == "localhost"
