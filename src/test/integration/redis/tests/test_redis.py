@@ -104,11 +104,11 @@ class TestRedisSpans(unittest.TestCase):
             self.assertEqual(
                 transaction_span[ATTRIBUTES][DB_STATEMENT].split("\n"),
                 [
-                    "SET my-key pre-key-value",
-                    "GET my-key",
-                    "SET my-key key-value",
-                    "GET my-key",
-                    "GET unknown-key",
+                    "SET ? ?",
+                    "GET ?",
+                    "SET ? ?",
+                    "GET ?",
+                    "GET ?",
                 ],
             )
             self.assertEqual(
