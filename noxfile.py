@@ -6,13 +6,14 @@ import re
 import sys
 import tempfile
 import time
-from src.test.test_utils.processes import kill_process
 from typing import List, Optional, Union
 from xml.etree import ElementTree
 
 import nox
 import requests
 import yaml
+
+from src.test.test_utils.processes import kill_process
 
 # Ensure nox can load local packages
 repo_dir = os.path.dirname(__file__)
@@ -409,20 +410,6 @@ def component_tests_attr_max_size(
 
         try:
             session.run(
-                "sh",
-                "./scripts/start_uvicorn",
-                env={
-                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SERVICE_NAME": "app",
-                    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
-                },
-                external=True,
-            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-            wait_for_app_start()
-
-            session.run(
                 "pytest",
                 "--tb",
                 "native",
@@ -436,7 +423,7 @@ def component_tests_attr_max_size(
                 },
             )
         finally:
-            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+            clean_outputs(temp_file, session)
 
 
 def component_tests_execution_tags(
@@ -455,19 +442,6 @@ def component_tests_execution_tags(
 
         try:
             session.run(
-                "sh",
-                "./scripts/start_uvicorn",
-                env={
-                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SERVICE_NAME": "app",
-                },
-                external=True,
-            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-            wait_for_app_start()
-
-            session.run(
                 "pytest",
                 "--tb",
                 "native",
@@ -480,7 +454,7 @@ def component_tests_execution_tags(
                 },
             )
         finally:
-            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+            clean_outputs(temp_file, session)
 
 
 @nox.session()
