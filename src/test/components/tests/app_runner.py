@@ -18,7 +18,11 @@ class FastApiSample(object):
         print(f"env = {env}")
         venv_bin_path = Path(sys.executable).parent
         print(f"venv_bin_path = {venv_bin_path}")
-        cmd = f". {venv_bin_path}/activate; uvicorn app:app --port 8000"
+        cmd = (
+            f". {venv_bin_path}/activate;"
+            "uvicorn fastapi_external_apis.app:app --port 8021 &"
+            "uvicorn app:app --port 8020 &"
+        )
         print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
@@ -30,11 +34,10 @@ class FastApiSample(object):
         )
         is_app_running = False
         for line in self.process.stderr:
+            print(line)
             if "Uvicorn running" in str(line):
-                print(f"FastApiSample app: {line}")
                 is_app_running = True
                 break
-            print(line)
         if not is_app_running:
             raise Exception("FastApiSample app failed to start")
 

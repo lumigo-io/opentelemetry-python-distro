@@ -18,7 +18,7 @@ class FastApiSample(object):
         print(f"env = {env}")
         venv_bin_path = Path(sys.executable).parent
         print(f"venv_bin_path = {venv_bin_path}")
-        cmd = f". {venv_bin_path}/activate; uvicorn app:app --port 8000"
+        cmd = f". {venv_bin_path}/activate; uvicorn app:app --port 8000 &"
         print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
