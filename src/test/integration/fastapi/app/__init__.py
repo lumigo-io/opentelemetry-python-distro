@@ -22,3 +22,6 @@ def invoke_requests_big_response():
     )
     response.raise_for_status()
     return response.json()
+
+
+print("FastAPI app started")

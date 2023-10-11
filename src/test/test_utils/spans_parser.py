@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -31,9 +32,17 @@ class SpansContainer:
         return SpansContainer(spans=spans)
 
     @staticmethod
-    def get_spans_from_file(path: Optional[str] = None) -> SpansContainer:
-        spans = SpansContainer.parse_spans_from_file(path).spans
-        return SpansContainer(spans=spans[spanCounter.counter :])  # noqa
+    def get_spans_from_file(
+        path: Optional[str] = None, wait_time_sec: int = 3, expected_span_count: int = 0
+    ) -> SpansContainer:
+        waited_time_in_sec = 0
+        while waited_time_in_sec < wait_time_sec:
+            spans = SpansContainer.parse_spans_from_file(path).spans
+            if len(spans) >= expected_span_count:
+                return SpansContainer(spans=spans)  # noqa
+            time.sleep(1)
+            waited_time_in_sec += 1
+        return SpansContainer(spans=spans)  # noqa
 
     def get_first_root(self) -> Dict[str, Any]:
         return self.get_root_spans()[0]
