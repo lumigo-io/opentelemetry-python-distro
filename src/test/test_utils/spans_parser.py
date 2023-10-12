@@ -37,9 +37,14 @@ class SpansContainer:
     ) -> SpansContainer:
         waited_time_in_sec = 0
         while waited_time_in_sec < wait_time_sec:
-            spans = SpansContainer.parse_spans_from_file(path).spans
-            if len(spans) >= expected_span_count:
-                return SpansContainer(spans=spans)  # noqa
+            try:
+                spans = SpansContainer.parse_spans_from_file(path).spans
+                if len(spans) >= expected_span_count:
+                    return SpansContainer(spans=spans)  # noqa
+            except Exception as err:
+                print(
+                    f"Failed to parse spans from file after {waited_time_in_sec}s: {err}"
+                )
             time.sleep(1)
             waited_time_in_sec += 1
         return SpansContainer(spans=spans)  # noqa

@@ -1,7 +1,11 @@
+from typing import List, Union
+
 import psutil
 
 
-def kill_process(process_name: str) -> None:
+def kill_process(process_names: Union[str, List[str]]) -> None:
+    if isinstance(process_names, str):
+        process_names = [process_names]
     proc_name = "undefined"
     cmd_line = "undefined"
     try:
@@ -13,7 +17,7 @@ def kill_process(process_name: str) -> None:
             if proc.status() == psutil.STATUS_ZOMBIE:
                 continue
             # The python process is named "Python" on OS X and "uvicorn" on CircleCI
-            if proc_name == process_name:
+            if is_process_match(proc_name, process_names):
                 print(f"Killing process with name {proc_name}...")
                 proc.kill()
             elif proc_name.lower().startswith("python"):
@@ -29,7 +33,7 @@ def kill_process(process_name: str) -> None:
                 if (
                     len(cmd_line) > 1
                     and "nox" not in command
-                    and process_name in command
+                    and is_process_match(command, process_names)
                 ):
                     print(
                         f"Killing process with name '{proc_name}' and command '{command}'..."
@@ -37,9 +41,23 @@ def kill_process(process_name: str) -> None:
                     proc.kill()
     except psutil.ZombieProcess as zp:
         print(
-            f"Failed to kill zombie process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(zp)}"
+            f"Failed to kill zombie process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(zp)}"
         )
     except psutil.NoSuchProcess as nsp:
         print(
-            f"Failed to kill process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(nsp)}"
+            f"Failed to kill process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(nsp)}"
         )
+
+
+def is_process_match(command: str, process_names: List[str]) -> bool:
+    if len(process_names) == 1 and command == process_names[0]:
+        return True
+    if len(process_names) > 1 and all(
+        [process_name in command for process_name in process_names]
+    ):
+        return True
+    return False
+
+
+def print_process_identifier(proc_name: str, cmd_line: str, process_names: List[str]):
+    return f"process '{proc_name}' (looking for {','.join(process_names)}) with command line '{cmd_line}'"
