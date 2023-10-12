@@ -11,15 +11,13 @@ async def root():
 
 @app.get("/invoke-requests")
 def invoke_requests():
-    response = requests.get("https://api.chucknorris.io/jokes/random")
+    response = requests.get("http://localhost:8021/little-response")
     return response.json()
 
 
 @app.get("/invoke-requests-large-response")
 def invoke_requests_big_response():
-    response = requests.get(
-        "http://universities.hipolabs.com/search?country=United+States"
-    )
+    response = requests.get("http://localhost:8021/big-response")
     response.raise_for_status()
     return response.json()
 

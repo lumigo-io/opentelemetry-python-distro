@@ -3,13 +3,18 @@ from test.test_utils.spans_parser import SpansContainer
 
 import requests
 
-from .app_runner import FastApiSample
+from .app_runner import FastApiApp
+
+APP_PORT = 8020
+EXTERNAL_APP_PORT = 8021
 
 
 class TestExecutionTags(unittest.TestCase):
     def test_execution_tag(self):
-        with FastApiSample():
-            response = requests.get("http://localhost:8020/invoke-request")
+        with FastApiApp("app:app", APP_PORT), FastApiApp(
+            "fastapi_external_apis.app:app", EXTERNAL_APP_PORT
+        ):
+            response = requests.get(f"http://localhost:{APP_PORT}/invoke-request")
             response.raise_for_status()
 
             body = response.json()

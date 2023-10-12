@@ -5,8 +5,8 @@ from pathlib import Path
 from test.test_utils.processes import kill_process
 
 
-class FastApiSample(object):
-    def __init__(self):
+class FastApiApp(object):
+    def __init__(self, app: str, port: int):
         cwd = Path(__file__).parent.parent
         print(f"cwd = {cwd}")
         env = {
@@ -16,7 +16,8 @@ class FastApiSample(object):
             "OTEL_SERVICE_NAME": "fastapi_test_app",
         }
         print(f"env = {env}")
-        cmd = [sys.executable, "start_uvicorn.py"]
+        print(f"venv bin path = {Path(sys.executable).parent}")
+        cmd = [sys.executable, "start_uvicorn.py", "--app", app, "--port", str(port)]
         print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
@@ -27,13 +28,12 @@ class FastApiSample(object):
         )
         is_app_running = False
         for line in self.process.stderr:
+            print(line)
             if "Uvicorn running" in str(line):
-                print(f"FastApiSample app: {line}")
                 is_app_running = True
                 break
-            print(line)
         if not is_app_running:
-            raise Exception("FastApiSample app failed to start")
+            raise Exception(f"FastApiApp app '{app}' failed to start on port {port}")
 
     def __enter__(self):
         return self

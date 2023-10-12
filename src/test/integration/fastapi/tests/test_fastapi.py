@@ -3,13 +3,16 @@ from test.test_utils.spans_parser import SpansContainer
 
 import requests
 
-from .app_runner import FastApiSample
+from .app_runner import FastApiApp
+
+APP_PORT = 8020
+EXTERNAL_APP_PORT = 8021
 
 
 class TestFastApiSpans(unittest.TestCase):
     def test_200_OK(self):
-        with FastApiSample():
-            response = requests.get("http://localhost:8000/")
+        with FastApiApp("app:app", APP_PORT):
+            response = requests.get(f"http://localhost:{APP_PORT}/")
             response.raise_for_status()
 
             body = response.json()
@@ -27,7 +30,9 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(root["kind"], "SpanKind.SERVER")
             self.assertEqual(root["attributes"]["http.status_code"], 200)
             self.assertEqual(root["attributes"]["http.method"], "GET")
-            self.assertEqual(root["attributes"]["http.url"], "http://127.0.0.1:8000/")
+            self.assertEqual(
+                root["attributes"]["http.url"], f"http://127.0.0.1:{APP_PORT}/"
+            )
 
             # assert internal spans
             internals = spans_container.get_internals()
@@ -44,13 +49,17 @@ class TestFastApiSpans(unittest.TestCase):
             )
 
     def test_requests_instrumentation(self):
-        with FastApiSample():
-            response = requests.get("http://localhost:8000/invoke-requests")
+        with FastApiApp("app:app", APP_PORT), FastApiApp(
+            "fastapi_external_apis.app:app", EXTERNAL_APP_PORT
+        ):
+            response = requests.get(f"http://localhost:{APP_PORT}/invoke-requests")
             response.raise_for_status()
 
             body = response.json()
 
-            self.assertIn("https://api.chucknorris.io/jokes/", body["url"])
+            expected_url = f"http://localhost:{EXTERNAL_APP_PORT}/little-response"
+
+            self.assertIn(expected_url, body["url"])
 
             spans_container = SpansContainer.get_spans_from_file(
                 wait_time_sec=10, expected_span_count=4
@@ -64,7 +73,8 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(root["attributes"]["http.status_code"], 200)
             self.assertIsNotNone(root["attributes"]["http.request.headers"])
             self.assertEqual(
-                root["attributes"]["http.url"], "http://127.0.0.1:8000/invoke-requests"
+                root["attributes"]["http.url"],
+                f"http://127.0.0.1:{APP_PORT}/invoke-requests",
             )
 
             # assert external request span
@@ -74,7 +84,7 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(external_request_span["attributes"]["http.method"], "GET")
             self.assertEqual(
                 external_request_span["attributes"]["http.url"],
-                "https://api.chucknorris.io/jokes/random",
+                expected_url,
             )
             self.assertEqual(
                 external_request_span["attributes"]["http.status_code"], 200
@@ -102,9 +112,11 @@ class TestFastApiSpans(unittest.TestCase):
             )
 
     def test_large_span_attribute_size_default_max_size(self):
-        with FastApiSample():
+        with FastApiApp("app:app", APP_PORT), FastApiApp(
+            "fastapi_external_apis.app:app", EXTERNAL_APP_PORT
+        ):
             response = requests.get(
-                "http://localhost:8000/invoke-requests-large-response"
+                f"http://localhost:{APP_PORT}/invoke-requests-large-response"
             )
             response.raise_for_status()
 
@@ -124,7 +136,7 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(root_attributes["http.status_code"], 200)
             self.assertEqual(
                 root_attributes["http.url"],
-                "http://127.0.0.1:8000/invoke-requests-large-response",
+                f"http://127.0.0.1:{APP_PORT}/invoke-requests-large-response",
             )
             self.assertEqual(root_attributes["http.method"], "GET")
 
@@ -135,7 +147,7 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(external_request_span["attributes"]["http.method"], "GET")
             self.assertEqual(
                 external_request_span["attributes"]["http.url"],
-                "http://universities.hipolabs.com/search?country=United+States",
+                f"http://localhost:{EXTERNAL_APP_PORT}/big-response",
             )
             self.assertEqual(
                 external_request_span["attributes"]["http.status_code"], 200

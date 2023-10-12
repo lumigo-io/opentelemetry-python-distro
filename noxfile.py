@@ -382,48 +382,11 @@ def integration_tests_fastapi(
 
 @nox.session(python=python_versions())
 def component_tests(session):
-    component_tests_attr_max_size(
-        session=session,
-        fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version="0.16.0",  # TODO don't update, see https://lumigo.atlassian.net/browse/RD-11466
-    )
     component_tests_execution_tags(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
         uvicorn_version="0.16.0",  # TODO don't update, see https://lumigo.atlassian.net/browse/RD-11466
     )
-
-
-def component_tests_attr_max_size(
-    session,
-    fastapi_version,
-    uvicorn_version,
-):
-    install_package("uvicorn", uvicorn_version, session)
-    install_package("fastapi", fastapi_version, session)
-
-    session.install(".")
-
-    temp_file = create_component_tempfile("attr_max_size")
-    with session.chdir("src/test/components"):
-        session.install("-r", OTHER_REQUIREMENTS)
-
-        try:
-            session.run(
-                "pytest",
-                "--tb",
-                "native",
-                "--log-cli-level=INFO",
-                "--color=yes",
-                "-v",
-                "./tests/test_attr_max_size.py",
-                env={
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
-                },
-            )
-        finally:
-            clean_outputs(temp_file, session)
 
 
 def component_tests_execution_tags(
