@@ -206,7 +206,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | Instrumentation | Package | Supported Versions | | | | |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
 | | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.62|1.17.22~1.28.62|1.17.22~1.28.62|1.17.22~1.28.62|1.17.22~1.28.62|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.63|1.17.22~1.28.63|1.17.22~1.28.63|1.17.22~1.28.63|1.17.22~1.28.63|
 | django | [django](https://pypi.org/project/django) | 3.2.1~3.2.22|3.2.1~3.2.22|3.2.1~3.2.22|3.2.1~3.2.22|3.2.1~3.2.22|
 | | | 3.2| 4.0.1~4.2.6| 4.0.1~4.2.6| 4.0.1~4.2.6| 4.0.1~4.2.6|
 | | | | 3.2| 3.2| 5.0a1| 5.0a1|
