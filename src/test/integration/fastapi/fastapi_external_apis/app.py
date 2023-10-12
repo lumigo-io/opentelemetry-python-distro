@@ -10,7 +10,4 @@ def get_big_response():
 
 @app.get("/little-response")
 def get_little_response(request: Request):
-    return {
-        "url": str(request.url),
-        "data": "a" * 100
-    }
+    return {"url": str(request.url), "data": "a" * 100}
