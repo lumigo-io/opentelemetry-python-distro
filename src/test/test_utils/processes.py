@@ -50,8 +50,10 @@ def kill_process(process_names: Union[str, List[str]]) -> None:
 
 
 def is_process_match(command: str, process_names: List[str]) -> bool:
-    if len(process_names) == 1 and command == process_names[0]:
-        return True
+    if len(process_names) == 1:
+        command_parts = command.split(" ")
+        if command_parts[0] == process_names[0]:
+            return True
     if len(process_names) > 1 and all(
         [process_name in command for process_name in process_names]
     ):
