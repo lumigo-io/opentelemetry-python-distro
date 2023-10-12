@@ -16,15 +16,12 @@ class FastApiSample(object):
             "OTEL_SERVICE_NAME": "fastapi_test_app",
         }
         print(f"env = {env}")
-        venv_bin_path = Path(sys.executable).parent
-        print(f"venv_bin_path = {venv_bin_path}")
-        cmd = f". {venv_bin_path}/activate; uvicorn app:app --port 8000 &"
+        cmd = [sys.executable, "start_uvicorn.py"]
         print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
             cwd=cwd,
             env=env,
-            shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
