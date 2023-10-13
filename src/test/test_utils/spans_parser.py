@@ -47,7 +47,7 @@ class SpansContainer:
                 )
             time.sleep(1)
             waited_time_in_sec += 1
-        return SpansContainer(spans=spans)  # noqa
+        return SpansContainer(spans=spans if spans else [])  # noqa
 
     def get_first_root(self) -> Dict[str, Any]:
         return self.get_root_spans()[0]
