@@ -13,7 +13,7 @@ import nox
 import requests
 import yaml
 
-from src.test.test_utils.processes import kill_process
+from src.test.test_utils.processes import kill_process, wait_for_app_start
 
 # Ensure nox can load local packages
 repo_dir = os.path.dirname(__file__)
@@ -42,10 +42,10 @@ def create_component_tempfile(name: str):
     return temp_file.name
 
 
-def create_it_tempfile(name: str):
+def create_it_tempfile(name: str, prefix: str = "temp_"):
     temp_file = tempfile.NamedTemporaryFile(
         suffix=".txt",
-        prefix="temp_",
+        prefix=prefix,
         dir=os.path.abspath(f"src/test/integration/{name}/"),
         delete=False,
     )
@@ -159,11 +159,6 @@ def dependency_versions_to_be_tested(
         supported_version_to_test.version
         for supported_version_to_test in supported_versions_to_test
     ]
-
-
-def wait_for_app_start():
-    # TODO Make this deterministic
-    time.sleep(8)
 
 
 @nox.session()
@@ -562,29 +557,15 @@ def integration_tests_grpcio(
             "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
         )
 
-        server_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=create_it_tempfile("grpcio")
-        ).name
-        client_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=create_it_tempfile("grpcio")
-        ).name
+        base_span_file = create_it_tempfile("grpcio")
+        clean_outputs(base_span_file, session)
+
+        server_spans = create_it_tempfile("grpcio", prefix=base_span_file)
+        client_spans = create_it_tempfile("grpcio", prefix=base_span_file)
         with session.chdir("src/test/integration/grpcio"):
             session.install("-r", OTHER_REQUIREMENTS)
 
             try:
-                session.run(
-                    "sh",
-                    "./scripts/start_server",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": server_spans,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                wait_for_app_start()
-
                 session.run(
                     "pytest",
                     "--tb",
@@ -601,7 +582,6 @@ def integration_tests_grpcio(
                     },
                 )
             finally:
-                kill_process("greeter_server.py")
                 clean_outputs(server_spans, session)
                 clean_outputs(client_spans, session)
 

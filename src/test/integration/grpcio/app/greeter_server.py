@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """The Python implementation of the GRPC helloworld.Greeter server."""
+import logging
 import threading
 from concurrent import futures
-import logging
 from typing import Iterable
 
 import grpc
@@ -26,8 +26,6 @@ done = threading.Event()
 
 class Greeter(helloworld_pb2_grpc.GreeterServicer):
     def SayHelloUnaryUnary(self, request, context):
-        if request.name == "exit":
-            done.set()
         return helloworld_pb2.HelloReply(message="Hello, %s!" % request.name)
 
     def SayHelloUnaryStream(
@@ -54,6 +52,7 @@ def serve():
     server.add_insecure_port("[::]:" + port)
     server.start()
     print("Server started, listening on " + port)
+    # wait until the server process is killed
     done.wait()
     server.stop(1).wait()
 

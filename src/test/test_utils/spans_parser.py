@@ -10,7 +10,7 @@ SPANS_FILE_FULL_PATH = os.environ["LUMIGO_DEBUG_SPANDUMP"]
 
 
 class SpansCounter:
-    counter = 0
+    counters = {}
 
 
 spanCounter = SpansCounter()
@@ -21,26 +21,35 @@ class SpansContainer:
     spans: List[Dict[str, Any]]
 
     @staticmethod
-    def increment_spans():
-        spanCounter.counter = sum(1 for line in open(SPANS_FILE_FULL_PATH))
+    def update_span_offset(path: str = SPANS_FILE_FULL_PATH):
+        spanCounter.counters[path] = sum(1 for _ in open(path))
 
     @staticmethod
-    def parse_spans_from_file(path: Optional[str] = None) -> SpansContainer:
-        with open(path or SPANS_FILE_FULL_PATH) as file:
+    def get_span_offset(path: str = SPANS_FILE_FULL_PATH) -> int:
+        return spanCounter.counters.get(path, 0)
+
+    @staticmethod
+    def parse_spans_from_file(
+        path: Optional[str] = SPANS_FILE_FULL_PATH,
+    ) -> SpansContainer:
+        with open(path) as file:
             spans = [json.loads(line) for line in file.readlines()]
 
         return SpansContainer(spans=spans)
 
     @staticmethod
     def get_spans_from_file(
-        path: Optional[str] = None, wait_time_sec: int = 3, expected_span_count: int = 0
+        path: Optional[str] = SPANS_FILE_FULL_PATH,
+        wait_time_sec: int = 3,
+        expected_span_count: int = 0,
     ) -> SpansContainer:
         waited_time_in_sec = 0
+        span_offset = SpansContainer.get_span_offset(path)
         while waited_time_in_sec < wait_time_sec:
             try:
                 spans = SpansContainer.parse_spans_from_file(path).spans
-                if len(spans) >= expected_span_count:
-                    return SpansContainer(spans=spans)  # noqa
+                if len(spans) >= expected_span_count + span_offset:
+                    return SpansContainer(spans=spans[span_offset:])  # noqa
             except Exception as err:
                 print(
                     f"Failed to parse spans from file after {waited_time_in_sec}s: {err}"
@@ -49,8 +58,9 @@ class SpansContainer:
             waited_time_in_sec += 1
         return SpansContainer(spans=spans if spans else [])  # noqa
 
-    def get_first_root(self) -> Dict[str, Any]:
-        return self.get_root_spans()[0]
+    def get_first_root(self) -> Optional[Dict[str, Any]]:
+        root_spans = self.get_root_spans()
+        return root_spans[0] if root_spans else None
 
     def get_root_spans(self) -> List[Dict[str, Any]]:
         return list(filter(lambda item: item["parent_id"] is None, self.spans))

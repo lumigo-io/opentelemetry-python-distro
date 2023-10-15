@@ -1,7 +1,8 @@
 import os
 import sys
 import unittest
-from test.test_utils.span_exporter import wait_for_exporter
+
+from .app_runner import GreeterServerApp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
 
@@ -13,27 +14,23 @@ import helloworld_pb2_grpc  # noqa: E402
 
 
 class TestGrpcioSpans(unittest.TestCase):
-    @classmethod
-    def tearDownClass(cls) -> None:
-        with grpc.insecure_channel("localhost:50051") as channel:
-            stub = helloworld_pb2_grpc.GreeterStub(channel)
-            stub.SayHelloUnaryUnary(helloworld_pb2.HelloRequest(name="exit"))
-
     def check_spans(self, method: str, request_payload: str, response_payload: str):
-        wait_for_exporter(5)
-
-        server_file = os.getenv("SERVER_SPANDUMP")
-        server_spans = SpansContainer.get_spans_from_file(server_file)
-        client_spans = SpansContainer.get_spans_from_file()
-
+        server_spans = SpansContainer.get_spans_from_file(
+            path=os.environ["SERVER_SPANDUMP"], wait_time_sec=10, expected_span_count=1
+        )
         assert len(server_spans.spans) == 1
+
         server_span = server_spans.spans[0]
         assert server_span["kind"] == "SpanKind.SERVER"
         assert server_span["attributes"]["rpc.method"] == method
         assert server_span["attributes"]["rpc.service"] == "helloworld.Greeter"
         assert server_span["attributes"]["rpc.system"] == "grpc"
 
+        client_spans = SpansContainer.get_spans_from_file(
+            wait_time_sec=10, expected_span_count=1
+        )
         assert len(client_spans.spans) == 1
+
         client_span = client_spans.spans[0]
         assert client_span["kind"] == "SpanKind.CLIENT"
         assert client_span["attributes"]["rpc.method"] == method
@@ -55,34 +52,34 @@ class TestGrpcioSpans(unittest.TestCase):
         return server_span, client_span
 
     def test_grpcio_instrumentation_unary_unary(self):
-        with grpc.insecure_channel("localhost:50051") as channel:
+        with GreeterServerApp(), grpc.insecure_channel("localhost:50051") as channel:
             stub = helloworld_pb2_grpc.GreeterStub(channel)
             response = stub.SayHelloUnaryUnary(helloworld_pb2.HelloRequest(name="you"))
 
-        self.assertEqual(response.message, "Hello, you!")
-        self.check_spans(
-            method="SayHelloUnaryUnary",
-            request_payload='name: "you"\n',
-            response_payload='message: "Hello, you!"\n',
-        )
+            self.assertEqual(response.message, "Hello, you!")
+            self.check_spans(
+                method="SayHelloUnaryUnary",
+                request_payload='name: "you"\n',
+                response_payload='message: "Hello, you!"\n',
+            )
 
     def test_grpcio_instrumentation_unary_stream(self):
-        with grpc.insecure_channel("localhost:50051") as channel:
+        with GreeterServerApp(), grpc.insecure_channel("localhost:50051") as channel:
             stub = helloworld_pb2_grpc.GreeterStub(channel)
             response = stub.SayHelloUnaryStream(helloworld_pb2.HelloRequest(name="you"))
             all_responses = list(response)
 
-        self.assertEqual(len(all_responses), 2)
-        self.assertEqual(all_responses[0].message, "First hello, you!")
-        self.assertEqual(all_responses[1].message, "Second hello, you!")
-        self.check_spans(
-            method="SayHelloUnaryStream",
-            request_payload='name: "you"\n',
-            response_payload='message: "First hello, you!"\n,message: "Second hello, you!"\n',
-        )
+            self.assertEqual(len(all_responses), 2)
+            self.assertEqual(all_responses[0].message, "First hello, you!")
+            self.assertEqual(all_responses[1].message, "Second hello, you!")
+            self.check_spans(
+                method="SayHelloUnaryStream",
+                request_payload='name: "you"\n',
+                response_payload='message: "First hello, you!"\n,message: "Second hello, you!"\n',
+            )
 
     def test_grpcio_instrumentation_stream_unary(self):
-        with grpc.insecure_channel("localhost:50051") as channel:
+        with GreeterServerApp(), grpc.insecure_channel("localhost:50051") as channel:
             stub = helloworld_pb2_grpc.GreeterStub(channel)
             response = stub.SayHelloStreamUnary(
                 iter(
@@ -93,15 +90,15 @@ class TestGrpcioSpans(unittest.TestCase):
                 )
             )
 
-        self.assertEqual(response.message, "Hello, you1,you2!")
-        self.check_spans(
-            method="SayHelloStreamUnary",
-            request_payload='name: "you1"\n,name: "you2"\n',
-            response_payload='message: "Hello, you1,you2!"\n',
-        )
+            self.assertEqual(response.message, "Hello, you1,you2!")
+            self.check_spans(
+                method="SayHelloStreamUnary",
+                request_payload='name: "you1"\n,name: "you2"\n',
+                response_payload='message: "Hello, you1,you2!"\n',
+            )
 
     def test_grpcio_instrumentation_stream_stream(self):
-        with grpc.insecure_channel("localhost:50051") as channel:
+        with GreeterServerApp(), grpc.insecure_channel("localhost:50051") as channel:
             stub = helloworld_pb2_grpc.GreeterStub(channel)
             response = stub.SayHelloStreamStream(
                 iter(
@@ -113,11 +110,11 @@ class TestGrpcioSpans(unittest.TestCase):
             )
             all_responses = list(response)
 
-        self.assertEqual(len(all_responses), 2)
-        self.assertEqual(all_responses[0].message, "First hello, you1,you2!")
-        self.assertEqual(all_responses[1].message, "Second hello, you1,you2!")
-        self.check_spans(
-            method="SayHelloStreamStream",
-            request_payload='name: "you1"\n,name: "you2"\n',
-            response_payload='message: "First hello, you1,you2!"\n,message: "Second hello, you1,you2!"\n',
-        )
+            self.assertEqual(len(all_responses), 2)
+            self.assertEqual(all_responses[0].message, "First hello, you1,you2!")
+            self.assertEqual(all_responses[1].message, "Second hello, you1,you2!")
+            self.check_spans(
+                method="SayHelloStreamStream",
+                request_payload='name: "you1"\n,name: "you2"\n',
+                response_payload='message: "First hello, you1,you2!"\n,message: "Second hello, you1,you2!"\n',
+            )

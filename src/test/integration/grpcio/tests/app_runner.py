@@ -2,28 +2,24 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from test.test_utils.processes import kill_process
+from test.test_utils.processes import kill_process, wait_for_app_start
 
 
-class FastApiApp(object):
-    def __init__(self, app: str, port: int):
-        self.app = app
-        self.port = port
-        cwd = Path(__file__).parent.parent
+class GreeterServerApp(object):
+    def __init__(self):
+        self.app = "greeter_server.py"
+        cwd = Path(__file__).parent.parent / "app"
         print(f"cwd = {cwd}")
         env = {
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-            "OTEL_SERVICE_NAME": "fastapi_test_app",
+            "LUMIGO_DEBUG_SPANDUMP": os.environ["SERVER_SPANDUMP"],
+            "OTEL_SERVICE_NAME": "grpcio_test_app",
         }
         print(f"venv bin path = {Path(sys.executable).parent}")
         cmd = [
             sys.executable,
-            "start_uvicorn.py",
-            "--app",
             self.app,
-            "--port",
-            str(self.port),
         ]
         print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
@@ -33,16 +29,9 @@ class FastApiApp(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        is_app_running = False
-        for line in self.process.stderr:
-            print(line)
-            if "Uvicorn running" in str(line):
-                is_app_running = True
-                break
-        if not is_app_running:
-            raise Exception(
-                f"FastApiApp app '{self.app}' failed to start on port {self.port}"
-            )
+        # checking the stderr stream for the "Server started" message breaks the
+        # pycharm debugger
+        wait_for_app_start()
 
     def __enter__(self):
         return self
@@ -50,4 +39,4 @@ class FastApiApp(object):
     def __exit__(self, *args):
         # because we need a shell to run uvicorn we need to kill multiple processs,
         # but not the process group because that includes the test process as well
-        kill_process(["uvicorn", self.app, str(self.port)])
+        kill_process(self.app)

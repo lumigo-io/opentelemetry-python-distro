@@ -1,3 +1,4 @@
+import time
 from typing import List, Union
 
 import psutil
@@ -63,3 +64,8 @@ def is_process_match(command: str, process_names: List[str]) -> bool:
 
 def print_process_identifier(proc_name: str, cmd_line: str, process_names: List[str]):
     return f"process '{proc_name}' (looking for {','.join(process_names)}) with command line '{cmd_line}'"
+
+
+def wait_for_app_start():
+    # TODO Make this deterministic
+    time.sleep(8)
