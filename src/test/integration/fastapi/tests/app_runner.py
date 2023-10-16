@@ -15,6 +15,7 @@ class FastApiApp(object):
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "OTEL_SERVICE_NAME": "fastapi_test_app",
+            "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],
         }
         print(f"venv bin path = {Path(sys.executable).parent}")
         cmd = [

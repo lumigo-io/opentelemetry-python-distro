@@ -9,11 +9,9 @@ def kill_process(process_names: Union[str, List[str]]) -> None:
         process_names = [process_names]
     proc_name = "undefined"
     cmd_line = "undefined"
-    try:
-        # Kill all processes with the given name
-        for proc in psutil.process_iter(
-            attrs=["pid", "name", "cmdline"], ad_value=None
-        ):
+    # Kill all processes with the given name
+    for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"], ad_value=None):
+        try:
             proc_name = proc.name()
             if proc.status() == psutil.STATUS_ZOMBIE:
                 continue
@@ -40,14 +38,14 @@ def kill_process(process_names: Union[str, List[str]]) -> None:
                         f"Killing process with name '{proc_name}' and command '{command}'..."
                     )
                     proc.kill()
-    except psutil.ZombieProcess as zp:
-        print(
-            f"Failed to kill zombie process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(zp)}"
-        )
-    except psutil.NoSuchProcess as nsp:
-        print(
-            f"Failed to kill process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(nsp)}"
-        )
+        except psutil.ZombieProcess as zp:
+            print(
+                f"Failed to kill zombie process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(zp)}"
+            )
+        except psutil.NoSuchProcess as nsp:
+            print(
+                f"Failed to kill process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(nsp)}"
+            )
 
 
 def is_process_match(command: str, process_names: List[str]) -> bool:
