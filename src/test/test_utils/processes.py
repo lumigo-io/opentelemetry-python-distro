@@ -9,50 +9,43 @@ def kill_process(process_names: Union[str, List[str]]) -> None:
         process_names = [process_names]
     proc_name = "undefined"
     cmd_line = "undefined"
-    # we need a try / catch surrounding the entire function, because process_iter
-    # itself can bug out when it encounters certain processes
-    try:
-        # Kill all processes with the given name
-        for proc in psutil.process_iter(
-            attrs=["pid", "name", "cmdline"], ad_value=None
-        ):
-            try:
-                proc_name = proc.name()
-                if proc.status() == psutil.STATUS_ZOMBIE:
-                    continue
-                # The python process is named "Python" on OS X and "uvicorn" on CircleCI
-                if is_process_match(proc_name, process_names):
-                    print(f"Killing process with name {proc_name}...")
-                    proc.kill()
-                elif proc_name.lower().startswith("python"):
-                    # drop the first argument, which is the python executable
-                    python_command_parts = proc.cmdline()[1:]
-                    # the initial command part is the last part of the path
-                    python_command_parts[0] = python_command_parts[0].split("/")[-1]
-                    # combine the remaining arguments
-                    command = " ".join(python_command_parts)
+    # Kill all processes with the given name
+    for proc in psutil.process_iter(attrs=["pid", "name", "cmdline"], ad_value=None):
+        try:
+            proc_name = proc.name()
+            if proc.status() == psutil.STATUS_ZOMBIE:
+                continue
+            # The python process is named "Python" on OS X and "uvicorn" on CircleCI
+            if is_process_match(proc_name, process_names):
+                print(f"Killing process with name {proc_name}...")
+                proc.kill()
+            elif proc_name.lower().startswith("python"):
+                # drop the first argument, which is the python executable
+                python_command_parts = proc.cmdline()[1:]
+                # the initial command part is the last part of the path
+                python_command_parts[0] = python_command_parts[0].split("/")[-1]
+                # combine the remaining arguments
+                command = " ".join(python_command_parts)
+                print(
+                    f"Evaluating process with name '{proc_name}' and command '{command}'..."
+                )
+                if (
+                    len(cmd_line) > 1
+                    and "nox" not in command
+                    and is_process_match(command, process_names)
+                ):
                     print(
-                        f"Evaluating process with name '{proc_name}' and command '{command}'..."
+                        f"Killing process with name '{proc_name}' and command '{command}'..."
                     )
-                    if (
-                        len(cmd_line) > 1
-                        and "nox" not in command
-                        and is_process_match(command, process_names)
-                    ):
-                        print(
-                            f"Killing process with name '{proc_name}' and command '{command}'..."
-                        )
-                        proc.kill()
-            except psutil.ZombieProcess as zp:
-                print(
-                    f"Failed to kill zombie process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(zp)}"
-                )
-            except psutil.NoSuchProcess as nsp:
-                print(
-                    f"Failed to kill process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(nsp)}"
-                )
-    except Exception as process_iter_err:
-        print(f"Failed to iterate through processes: {str(process_iter_err)}")
+                    proc.kill()
+        except psutil.ZombieProcess as zp:
+            print(
+                f"Failed to kill zombie process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(zp)}"
+            )
+        except psutil.NoSuchProcess as nsp:
+            print(
+                f"Failed to kill process {print_process_identifier(proc_name, cmd_line, process_names)}: {str(nsp)}"
+            )
 
 
 def is_process_match(command: str, process_names: List[str]) -> bool:
