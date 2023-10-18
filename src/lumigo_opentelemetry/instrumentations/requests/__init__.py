@@ -2,7 +2,9 @@ from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from opentelemetry.trace import Span
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import dump_with_context
-from lumigo_opentelemetry.instrumentations.instrumentation_utils import add_body_attribute
+from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
+    add_body_attribute,
+)
 
 
 class RequestsInstrumentor(AbstractInstrumentor):
@@ -26,7 +28,9 @@ class RequestsInstrumentor(AbstractInstrumentor):
                 )
                 add_body_attribute(span, request.body, "http.request.body")
 
-        def response_hook(span: Span, request: PreparedRequest, response: Response) -> None:
+        def response_hook(
+            span: Span, request: PreparedRequest, response: Response
+        ) -> None:
             with lumigo_safe_execute("flask response_hook"):
                 span.set_attribute(
                     "http.response.headers",
@@ -34,9 +38,13 @@ class RequestsInstrumentor(AbstractInstrumentor):
                 )
                 add_body_attribute(span, response.content, "http.response.body")
                 if "x-amzn-requestid" in response.headers:
-                    span.set_attribute("messageId", response.headers["x-amzn-requestid"])
+                    span.set_attribute(
+                        "messageId", response.headers["x-amzn-requestid"]
+                    )
 
-        RequestsInstrumentor().instrument(request_hook=request_hook, response_hook=response_hook)
+        RequestsInstrumentor().instrument(
+            request_hook=request_hook, response_hook=response_hook
+        )
 
 
 instrumentor: AbstractInstrumentor = RequestsInstrumentor()
