@@ -21,7 +21,7 @@ class RequestsInstrumentor(AbstractInstrumentor):
         from requests.models import PreparedRequest, Response
 
         def request_hook(span: Span, request: PreparedRequest) -> None:
-            with lumigo_safe_execute("flask request_hook"):
+            with lumigo_safe_execute("requests request_hook"):
                 span.set_attribute(
                     "http.request.headers",
                     dump_with_context("requestHeaders", request.headers),
@@ -31,7 +31,7 @@ class RequestsInstrumentor(AbstractInstrumentor):
         def response_hook(
             span: Span, request: PreparedRequest, response: Response
         ) -> None:
-            with lumigo_safe_execute("flask response_hook"):
+            with lumigo_safe_execute("requests response_hook"):
                 span.set_attribute(
                     "http.response.headers",
                     dump_with_context("responseHeaders", response.headers),
