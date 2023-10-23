@@ -1,6 +1,5 @@
 from typing import Dict, Any
 
-from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import (
     dump,
@@ -36,9 +35,20 @@ class FastAPIParser:
             span.set_attributes(attributes)
 
     @staticmethod
-    def client_request_hook(span: Span, scope: Dict[Any, Any]) -> None:
-        with lumigo_safe_execute("FastAPIParser: client_request_hook"):
-            logger.debug(f"client_request_hook span: {span}, scope: {scope}")
+    def wrapt__get_otel_receive(original_func, instance, args, kwargs):  # type: ignore
+        original_otel_receive = original_func(*args, **kwargs)
+
+        async def new_otel_receive():  # type: ignore
+            return_value = await original_otel_receive()
+            with lumigo_safe_execute("FastAPIParser: new_otel_receive"):
+                with instance.tracer.start_as_current_span("receive_body") as send_span:
+                    send_span.set_attribute(
+                        "http.request.body",
+                        dump_with_context("requestBody", return_value),
+                    )
+            return return_value
+
+        return new_otel_receive
 
     @staticmethod
     def client_response_hook(span: Span, message: Dict[str, Any]) -> None:

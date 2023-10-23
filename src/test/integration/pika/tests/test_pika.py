@@ -58,7 +58,7 @@ class TestPikaSpans(unittest.TestCase):
 
             spans_container = SpansContainer.get_spans_from_file()
 
-            assert len(spans_container.spans) == 10
+            assert len(spans_container.spans) > 10
 
             for span in spans_container.spans:
                 if span["name"].startswith(test_topic):

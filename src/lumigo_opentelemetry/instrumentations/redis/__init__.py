@@ -23,8 +23,9 @@ class RedisInstrumentor(AbstractInstrumentor):
             span: Span, instance: Connection, args: List[Any], kwargs: Dict[Any, Any]
         ) -> None:
             # a db.statement attribute is automatically added by the RedisInstrumentor
-            # when this hook is called, so we don't need to add anything manually
-            pass
+            # when this hook is called, but only includes the command name for some
+            # versions so we need to set it ourselves.
+            add_body_attribute(span, " ".join(args), "db.statement")
 
         def response_hook(span: Span, instance: Connection, response: Any) -> None:
             add_body_attribute(span, response, "db.response.body")

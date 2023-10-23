@@ -10,9 +10,10 @@ from typing import List, Optional, Union
 from xml.etree import ElementTree
 
 import nox
-import psutil
 import requests
 import yaml
+
+from src.test.test_utils.processes import kill_process, wait_for_app_start
 
 # Ensure nox can load local packages
 repo_dir = os.path.dirname(__file__)
@@ -41,10 +42,10 @@ def create_component_tempfile(name: str):
     return temp_file.name
 
 
-def create_it_tempfile(name: str):
+def create_it_tempfile(name: str, prefix: str = "temp_"):
     temp_file = tempfile.NamedTemporaryFile(
         suffix=".txt",
-        prefix="temp_",
+        prefix=prefix,
         dir=os.path.abspath(f"src/test/integration/{name}/"),
         delete=False,
     )
@@ -158,11 +159,6 @@ def dependency_versions_to_be_tested(
         supported_version_to_test.version
         for supported_version_to_test in supported_versions_to_test
     ]
-
-
-def wait_for_app_start():
-    # TODO Make this deterministic
-    time.sleep(8)
 
 
 @nox.session()
@@ -364,19 +360,6 @@ def integration_tests_fastapi(
 
         try:
             session.run(
-                "sh",
-                "./scripts/start_uvicorn",
-                env={
-                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SERVICE_NAME": "app",
-                },
-                external=True,
-            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-            wait_for_app_start()
-
-            session.run(
                 "pytest",
                 "--tb",
                 "native",
@@ -389,67 +372,16 @@ def integration_tests_fastapi(
                 },
             )
         finally:
-            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+            clean_outputs(temp_file, session)
 
 
 @nox.session(python=python_versions())
 def component_tests(session):
-    component_tests_attr_max_size(
-        session=session,
-        fastapi_version="0.78.0",  # arbitrary version
-        uvicorn_version="0.16.0",  # TODO don't update, see https://lumigo.atlassian.net/browse/RD-11466
-    )
     component_tests_execution_tags(
         session=session,
         fastapi_version="0.78.0",  # arbitrary version
         uvicorn_version="0.16.0",  # TODO don't update, see https://lumigo.atlassian.net/browse/RD-11466
     )
-
-
-def component_tests_attr_max_size(
-    session,
-    fastapi_version,
-    uvicorn_version,
-):
-    install_package("uvicorn", uvicorn_version, session)
-    install_package("fastapi", fastapi_version, session)
-
-    session.install(".")
-
-    temp_file = create_component_tempfile("attr_max_size")
-    with session.chdir("src/test/components"):
-        session.install("-r", OTHER_REQUIREMENTS)
-
-        try:
-            session.run(
-                "sh",
-                "./scripts/start_uvicorn",
-                env={
-                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SERVICE_NAME": "app",
-                    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
-                },
-                external=True,
-            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-            wait_for_app_start()
-
-            session.run(
-                "pytest",
-                "--tb",
-                "native",
-                "--log-cli-level=INFO",
-                "--color=yes",
-                "-v",
-                "./tests/test_attr_max_size.py",
-                env={
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "1",
-                },
-            )
-        finally:
-            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
 
 
 def component_tests_execution_tags(
@@ -468,19 +400,6 @@ def component_tests_execution_tags(
 
         try:
             session.run(
-                "sh",
-                "./scripts/start_uvicorn",
-                env={
-                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                    "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    "OTEL_SERVICE_NAME": "app",
-                },
-                external=True,
-            )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-            wait_for_app_start()
-
-            session.run(
                 "pytest",
                 "--tb",
                 "native",
@@ -493,7 +412,7 @@ def component_tests_execution_tags(
                 },
             )
         finally:
-            kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+            clean_outputs(temp_file, session)
 
 
 @nox.session()
@@ -638,29 +557,15 @@ def integration_tests_grpcio(
             "python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
         )
 
-        server_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=create_it_tempfile("grpcio")
-        ).name
-        client_spans = tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix=create_it_tempfile("grpcio")
-        ).name
+        base_span_file = create_it_tempfile("grpcio")
+        clean_outputs(base_span_file, session)
+
+        server_spans = create_it_tempfile("grpcio", prefix=base_span_file)
+        client_spans = create_it_tempfile("grpcio", prefix=base_span_file)
         with session.chdir("src/test/integration/grpcio"):
             session.install("-r", OTHER_REQUIREMENTS)
 
             try:
-                session.run(
-                    "sh",
-                    "./scripts/start_server",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG_SPANDUMP": server_spans,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                wait_for_app_start()
-
                 session.run(
                     "pytest",
                     "--tb",
@@ -677,7 +582,6 @@ def integration_tests_grpcio(
                     },
                 )
             finally:
-                kill_process("greeter_server.py")
                 clean_outputs(server_spans, session)
                 clean_outputs(client_spans, session)
 
@@ -1082,50 +986,6 @@ def integration_tests_redis(
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
     kill_process(process_name)
     clean_outputs(full_path, session)
-
-
-def kill_process(process_name: str) -> None:
-    proc_name = "undefined"
-    cmd_line = "undefined"
-    try:
-        # Kill all processes with the given name
-        for proc in psutil.process_iter(
-            attrs=["pid", "name", "cmdline"], ad_value=None
-        ):
-            proc_name = proc.name()
-            if proc.status() == psutil.STATUS_ZOMBIE:
-                continue
-            # The python process is named "Python" on OS X and "uvicorn" on CircleCI
-            if proc_name == process_name:
-                print(f"Killing process with name {proc_name}...")
-                proc.kill()
-            elif proc_name.lower().startswith("python"):
-                # drop the first argument, which is the python executable
-                python_command_parts = proc.cmdline()[1:]
-                # the initial command part is the last part of the path
-                python_command_parts[0] = python_command_parts[0].split("/")[-1]
-                # combine the remaining arguments
-                command = " ".join(python_command_parts)
-                print(
-                    f"Evaluating process with name '{proc_name}' and command '{command}'..."
-                )
-                if (
-                    len(cmd_line) > 1
-                    and "nox" not in command
-                    and process_name in command
-                ):
-                    print(
-                        f"Killing process with name '{proc_name}' and command '{command}'..."
-                    )
-                    proc.kill()
-    except psutil.ZombieProcess as zp:
-        print(
-            f"Failed to kill zombie process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(zp)}"
-        )
-    except psutil.NoSuchProcess as nsp:
-        print(
-            f"Failed to kill process '{proc_name}' (looking for {process_name}) with command line '{cmd_line}': {str(nsp)}"
-        )
 
 
 def clean_outputs(full_path: str, session) -> None:

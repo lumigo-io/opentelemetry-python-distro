@@ -26,7 +26,7 @@ jobs:
           # The task outputs the list of tasks on stdout, each entry separated by a `\n` character.
           # The task output is piped into the `jq` command, that formats it as a JSON list, as the
           # we need a JSON datastructure later on for dynamic matrixes.
-          echo "integration_tests=$(nox -e list_integration_tests_ci | jq -Rnc '[inputs]')" >> $GITHUB_OUTPUT
+          echo "integration_tests=$(python -m nox -e list_integration_tests_ci | jq -Rnc '[inputs]')" >> $GITHUB_OUTPUT
 
   version-testing:
     needs: [list-instrumentations]

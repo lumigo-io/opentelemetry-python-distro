@@ -1,4 +1,0 @@
-#!/bin/sh
-
-uvicorn fastapi_external_apis.app:app --port 8021 &
-uvicorn app:app --port 8020 &

@@ -13,6 +13,13 @@ class FastApiInstrumentorWrapper(AbstractInstrumentor):
         import wrapt
 
         from lumigo_opentelemetry import logger
+        from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
+
+        wrapt.wrap_function_wrapper(
+            OpenTelemetryMiddleware,
+            "_get_otel_receive",
+            FastAPIParser.wrapt__get_otel_receive,
+        )
 
         @wrapt.patch_function_wrapper("fastapi", "FastAPI.__init__")
         def init_otel_middleware(wrapped, instance, args, kwargs):  # type: ignore
@@ -23,7 +30,6 @@ class FastApiInstrumentorWrapper(AbstractInstrumentor):
                 FastAPIInstrumentor().instrument_app(
                     instance,
                     server_request_hook=FastAPIParser.server_request_hook,
-                    client_request_hook=FastAPIParser.client_request_hook,
                     client_response_hook=FastAPIParser.client_response_hook,
                 )
 

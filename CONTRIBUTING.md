@@ -25,7 +25,8 @@ It might be necessary to throw in a `brew tap homebrew/core` along the way.
 
 ### PyCharm Users
 
-If you are using pycharm, ensure that you set it to use the virtualenv virtual environment manager. This is available in the menu under `PyCharm -> Preferences -> Project -> Interpreter`
+If you are using PyCharm, ensure that you set it to use the virtualenv virtual environment manager.
+This is available in the menu under `PyCharm -> Settings -> Project -> Interpreter`.
 
 ## Running the test suite
 
