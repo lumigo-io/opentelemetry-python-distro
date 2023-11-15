@@ -11,15 +11,16 @@ Getting your machine ready to develop against the package is a straightforward p
 1. Create a virtual environment for the project `virtualenv venv -p python3`
 1. Activate the virtualenv: `. venv/bin/activate`
 1. Install dependencies: `pip install -r requirements.txt`
-1. Navigate to the source directory: `cd src` and
 1. Run the setup script: `python setup.py develop`.
 1. Run `pre-commit install` in your repository to install pre-commit hooks
 
 ### MacOS Users
 
-Psycopg2 cannot be installed without the `pg_config` executable available, for which you'll need to install `postgres`.
+Psycopg cannot be installed without the `libpq` executable available, Psycopg2 cannot be installed without the `pg_config` executable available.
 
-You can do this with `brew update && brew install postgresql`.
+For these you'll need to install both `postgres` and `libpq`.
+
+You can do this with `brew update && brew install postgresql libpq`.
 
 It might be necessary to throw in a `brew tap homebrew/core` along the way.
 
