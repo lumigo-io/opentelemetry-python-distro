@@ -755,6 +755,59 @@ def integration_tests_pika(
 
 @nox.session()
 @nox.parametrize(
+    "python,dependency_name,psycopg_version",
+    [
+        (python, dependency_name, psycopg_version)
+        for python in python_versions()
+        for dependency_name in ["psycopg", "psycopg-binary"]
+        for psycopg_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="psycopg",
+            dependency_name=dependency_name,
+        )
+    ],
+)
+def integration_tests_psycopg(
+    session,
+    dependency_name,
+    psycopg_version,
+):
+    python = session.python
+    with TestedVersions.save_tests_result(
+        "psycopg",
+        python,
+        dependency_name=dependency_name,
+        dependency_version=psycopg_version,
+    ):
+        install_package(dependency_name, psycopg_version, session)
+        install_package("psycopg[pool]", psycopg_version, session)
+        # TODO ensure libpq available on device
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("psycopg")
+        with session.chdir("src/test/integration/psycopg"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_psycopg.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_psycopg", session)
+
+
+@nox.session()
+@nox.parametrize(
     "python,dependency_name,psycopg2_version",
     [
         (python, dependency_name, psycopg2_version)
