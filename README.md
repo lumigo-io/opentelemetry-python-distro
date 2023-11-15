@@ -206,7 +206,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | Instrumentation | Package | Supported Versions | | | | |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
 | | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.28.85|1.17.22~1.28.85|1.17.22~1.28.85|1.17.22~1.28.85|1.17.22~1.28.85|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.29.0|1.17.22~1.29.0|1.17.22~1.29.0|1.17.22~1.29.0|1.17.22~1.29.0|
 | django | [django](https://pypi.org/project/django) | 3.2.1~3.2.23|3.2.1~3.2.23|3.2.1~3.2.23|3.2.1~3.2.23|3.2.1~3.2.23|
 | | | 3.2| 4.0.1~4.2.7| 4.0.1~4.2.7| 4.0.1~4.2.7| 4.0.1~4.2.7|
 | | | | 3.2| 3.2| 5.0.1~5.0.1| 5.0.1~5.0.1|
@@ -230,7 +230,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 |  | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
 | | | 0.100.0b2~0.103.2| 0.100.0b2~0.104.1| 0.100.0b2~0.104.1| 0.100.0b2~0.104.1| 0.100.0b2~0.104.1|
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|
-| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.59.2|1.45.0~1.59.2|1.45.0~1.59.2|1.45.0~1.59.2|1.49.0~1.59.2|
+| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.60.0rc1|1.45.0~1.60.0rc1|1.45.0~1.60.0rc1|1.45.0~1.60.0rc1|1.49.0~1.60.0rc1|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|
 | pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|1.0.0|
 | | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
