@@ -110,7 +110,6 @@ from typing import Collection
 import psycopg
 from opentelemetry.instrumentation import dbapi
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from psycopg.extensions import cursor as pg_cursor  # pylint: disable=no-name-in-module
 from psycopg.sql import Composed  # pylint: disable=no-name-in-module
 
 from .package import _instruments
@@ -237,7 +236,7 @@ def _new_cursor_factory(db_api=None, base_factory=None, tracer_provider=None):
             tracer_provider=tracer_provider,
         )
 
-    base_factory = base_factory or pg_cursor
+    base_factory = base_factory or psycopg.Cursor
     _cursor_tracer = CursorTracer(db_api)
 
     class TracedCursorFactory(base_factory):
