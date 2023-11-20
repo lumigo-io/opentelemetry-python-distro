@@ -7,6 +7,16 @@ Below are a couple pointers on how to prepare your machine, as well as some info
 
 Getting your machine ready to develop against the package is a straightforward process:
 
+### With pyenv
+
+Assuming that you have [pyenv](https://github.com/pyenv/pyenv) already installed:
+
+1. Clone this repository, and open a CLI in the cloned directory
+1. Run `scripts/reset_venv` to create/re-create the virtual environment. To specify a different Python version, simply provide it as an argument eg. `scripts/reset_venv 3.11`
+1. Activate the virtualenv: `. venv/bin/activate`
+
+### Without pyenv
+
 1. Clone this repository, and open a CLI in the cloned directory
 1. Create a virtual environment for the project `virtualenv venv -p python3`
 1. Activate the virtualenv: `. venv/bin/activate`

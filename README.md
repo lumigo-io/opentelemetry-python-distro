@@ -235,8 +235,8 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|1.0.0|
 | | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
 | | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2|
-| psycopg | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.2|3.1.2|3.1.2|3.1.2|3.1.2|
-|  | [psycopg](https://pypi.org/project/psycopg) | 3.1.2|3.1.2|3.1.2|3.1.2|3.1.2|
+| psycopg | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.2~3.1.4|3.1.2~3.1.4|3.1.2~3.1.4|3.1.2~3.1.4|3.1.4|
+|  | [psycopg](https://pypi.org/project/psycopg) | 3.1.2~3.1.4|3.1.2~3.1.4|3.1.2~3.1.4|3.1.2~3.1.4|3.1.2~3.1.4|
 | psycopg2 | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.9| 2.8| |
