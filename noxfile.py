@@ -5,7 +5,6 @@ import platform
 import re
 import sys
 import tempfile
-import time
 from typing import List, Optional, Union
 from xml.etree import ElementTree
 
@@ -210,9 +209,7 @@ def integration_tests_boto3_sqs(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -781,7 +778,6 @@ def integration_tests_psycopg(
     ):
         install_package(dependency_name, psycopg_version, session)
         install_package("psycopg[pool]", psycopg_version, session)
-        # TODO ensure libpq available on device
 
         session.install(".")
 
