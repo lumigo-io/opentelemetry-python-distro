@@ -16,16 +16,12 @@ connection = psycopg.connect(
     port=parsed_connection.port,
 )
 
-cursor = connection.cursor()
-cursor.execute("SELECT VERSION()")
-cursor.execute(
+connection.execute("SELECT VERSION()")
+connection.execute(
     "CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))"
-)
-cursor.execute(
-    "INSERT INTO users (name, email) VALUES (%s, %s)", (TEST_NAME, TEST_EMAIL)
-)
-cursor.execute("SELECT * FROM users")
-result = cursor.fetchall()
+).execute("INSERT INTO users (name, email) VALUES (%s, %s)", (TEST_NAME, TEST_EMAIL))
 connection.commit()
-cursor.close()
+
+result = connection.execute("SELECT * FROM users").fetchall()
+
 connection.close()
