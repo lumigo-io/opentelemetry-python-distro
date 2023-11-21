@@ -1,3 +1,4 @@
+import os
 from test.test_utils.spans_parser import SpansContainer
 
 import pytest
@@ -6,3 +7,8 @@ import pytest
 @pytest.fixture(autouse=True)
 def increment_spans_counter():
     SpansContainer.update_span_offset()
+
+
+@pytest.fixture(autouse=True)
+def module_under_testing():
+    os.environ["MODULE_UNDER_TESTING"] = "psycopg2"
