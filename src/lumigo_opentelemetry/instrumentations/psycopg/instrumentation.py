@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# MODIFICATIONS from opentelemetry-python-contrib psycopg2 instrumentation:
+# https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/opentelemetry-instrumentation-psycopg2/src/opentelemetry/instrumentation/psycopg2/__init__.py
+# pg_cursor (cursor imported from psycopg.extensions) -> psycopg.Cursor
+
 """
 The integration with PostgreSQL supports the `Psycopg`_ library (Psycopg3), it can be enabled by
 using ``PsycopgInstrumentor``.
