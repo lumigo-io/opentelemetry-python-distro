@@ -1,21 +1,23 @@
 from __future__ import annotations
 
 import json
-from typing import Optional, Type, Dict, Any
+from typing import Any, Dict, Optional, Type
 
-from opentelemetry.trace import Span
 from lumigo_core.triggers.event_trigger import parse_triggers
+from opentelemetry.trace import Span
 
-from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
+from lumigo_opentelemetry import logger
+from lumigo_opentelemetry.libs.environment_variables import AUTO_FILTER_EMPTY_SQS
+from lumigo_opentelemetry.libs.general_utils import (
+    get_boolean_env_var,
+    lumigo_safe_execute,
+)
 from lumigo_opentelemetry.libs.json_utils import dump_with_context
+from lumigo_opentelemetry.resources.span_processor import set_span_skip_export
 from lumigo_opentelemetry.utils.aws_utils import (
     extract_region_from_arn,
     get_resource_fullname,
 )
-from lumigo_opentelemetry.resources.span_processor import set_span_skip_export
-from lumigo_opentelemetry import logger
-from lumigo_opentelemetry.libs.general_utils import get_boolean_env_var
-from lumigo_opentelemetry.libs.environment_variables import AUTO_FILTER_EMPTY_SQS
 
 
 class AwsParser:
