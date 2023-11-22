@@ -4,22 +4,22 @@ from lumigo_opentelemetry.instrumentations.shared.psycopg import (
 )
 
 
-class Psycopg2Instrumentor(AbstractInstrumentor):
+class PsycopgInstrumentor(AbstractInstrumentor):
     def __init__(self) -> None:
-        super().__init__("psycopg2")
+        super().__init__("psycopg")
 
     def check_if_applicable(self) -> None:
-        import psycopg2  # noqa
+        import psycopg  # noqa
 
     def install_instrumentation(self) -> None:
 
-        from opentelemetry.instrumentation import psycopg2
+        from . import instrumentation as psycopg
 
-        patch_psycopg_for_payload_capture(package=psycopg2)
+        patch_psycopg_for_payload_capture(package=psycopg)
 
         # if we don't skip the dependency check, the instrumentor will fail
         # because it can't detect psycopg2-binary
-        psycopg2.Psycopg2Instrumentor().instrument(skip_dep_check=True)
+        psycopg.PsycopgInstrumentor().instrument(skip_dep_check=True)
 
 
-instrumentor: AbstractInstrumentor = Psycopg2Instrumentor()
+instrumentor: AbstractInstrumentor = PsycopgInstrumentor()

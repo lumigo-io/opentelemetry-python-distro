@@ -7,19 +7,30 @@ Below are a couple pointers on how to prepare your machine, as well as some info
 
 Getting your machine ready to develop against the package is a straightforward process:
 
+### With pyenv
+
+Assuming that you have [pyenv](https://github.com/pyenv/pyenv) already installed:
+
+1. Clone this repository, and open a CLI in the cloned directory
+1. Run `scripts/reset_venv.sh` to create/re-create the virtual environment. To specify a different Python version, simply provide it as an argument eg. `scripts/reset_venv.sh 3.11`
+1. Activate the virtualenv: `. venv/bin/activate`
+
+### Without pyenv
+
 1. Clone this repository, and open a CLI in the cloned directory
 1. Create a virtual environment for the project `virtualenv venv -p python3`
 1. Activate the virtualenv: `. venv/bin/activate`
 1. Install dependencies: `pip install -r requirements.txt`
-1. Navigate to the source directory: `cd src` and
 1. Run the setup script: `python setup.py develop`.
 1. Run `pre-commit install` in your repository to install pre-commit hooks
 
 ### MacOS Users
 
-Psycopg2 cannot be installed without the `pg_config` executable available, for which you'll need to install `postgres`.
+Psycopg cannot be installed without the `libpq` executable available, Psycopg2 cannot be installed without the `pg_config` executable available.
 
-You can do this with `brew update && brew install postgresql`.
+For these you'll need to install both `postgres` and `libpq`.
+
+You can do this with `brew update && brew install postgresql libpq`.
 
 It might be necessary to throw in a `brew tap homebrew/core` along the way.
 

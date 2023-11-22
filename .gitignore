@@ -125,8 +125,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# pycharm
+# IDEs
 .idea/
+.vscode/
 
 # spans created by tox testing
 src/test/integration/*/spans.txt

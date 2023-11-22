@@ -11,4 +11,4 @@ def increment_spans_counter():
 
 @pytest.fixture(autouse=True)
 def module_under_testing():
-    os.environ["MODULE_UNDER_TESTING"] = "psycopg2"
+    os.environ["MODULE_UNDER_TESTING"] = "psycopg"

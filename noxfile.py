@@ -5,7 +5,6 @@ import platform
 import re
 import sys
 import tempfile
-import time
 from typing import List, Optional, Union
 from xml.etree import ElementTree
 
@@ -210,9 +209,7 @@ def integration_tests_boto3_sqs(
                     external=True,
                 )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
 
-                # TODO Make this deterministic
-                # Give time for app to start
-                time.sleep(8)
+                wait_for_app_start()
 
                 session.run(
                     "pytest",
@@ -751,6 +748,58 @@ def integration_tests_pika(
                 )
             finally:
                 kill_process_and_clean_outputs(temp_file, "uvicorn", session)
+
+
+@nox.session()
+@nox.parametrize(
+    "python,dependency_name,psycopg_version",
+    [
+        (python, dependency_name, psycopg_version)
+        for python in python_versions()
+        for dependency_name in ["psycopg", "psycopg-binary"]
+        for psycopg_version in dependency_versions_to_be_tested(
+            python=python,
+            directory="psycopg",
+            dependency_name=dependency_name,
+        )
+    ],
+)
+def integration_tests_psycopg(
+    session,
+    dependency_name,
+    psycopg_version,
+):
+    python = session.python
+    with TestedVersions.save_tests_result(
+        "psycopg",
+        python,
+        dependency_name=dependency_name,
+        dependency_version=psycopg_version,
+    ):
+        install_package(dependency_name, psycopg_version, session)
+        install_package("psycopg[pool]", psycopg_version, session)
+
+        session.install(".")
+
+        temp_file = create_it_tempfile("psycopg")
+        with session.chdir("src/test/integration/psycopg"):
+            session.install("-r", OTHER_REQUIREMENTS)
+
+            try:
+                session.run(
+                    "pytest",
+                    "--tb",
+                    "native",
+                    "--log-cli-level=INFO",
+                    "--color=yes",
+                    "-v",
+                    "./tests/test_psycopg.py",
+                    env={
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                    },
+                )
+            finally:
+                kill_process_and_clean_outputs(temp_file, "test_psycopg", session)
 
 
 @nox.session()

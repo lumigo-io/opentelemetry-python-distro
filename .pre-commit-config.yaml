@@ -4,7 +4,7 @@ repos:
     hooks:
     - id: black
       language_version: python3.7
-      exclude: 'src/lumigo_opentelemetry/external/.*'
+      exclude: '(src/lumigo_opentelemetry/external/.*|src/test/integration/grpcio/app/helloworld_pb2.*)'
       additional_dependencies: ['click==8.0.4']
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
@@ -44,6 +44,7 @@ repos:
     - id: flake8
       args: ["--ignore","E501,W503","--exclude","src/lumigo_opentelemetry/external/*"]
       additional_dependencies: ['importlib-metadata==4.2.0']
+      exclude: '(src/test/integration/grpcio/app/helloworld_pb2.*)'
 
 -   repo: https://github.com/PyCQA/bandit
     rev: '1.7.0'
