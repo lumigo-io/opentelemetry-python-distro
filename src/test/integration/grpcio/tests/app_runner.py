@@ -2,7 +2,11 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from test.test_utils.processes import kill_process, wait_for_app_start
+from test.test_utils.processes import (
+    kill_process,
+    wait_for_app_start,
+    wait_for_process_output,
+)
 
 
 class GreeterServerApp(object):
@@ -29,6 +33,11 @@ class GreeterServerApp(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
+        try:
+            wait_for_process_output(self.process, "Server started", timeout=15)
+        except Exception as e:
+            raise Exception(f"GreeterServer app '{self.app}' failed to start", e)
+
         # checking the stderr stream for the "Server started" message breaks the
         # pycharm debugger
         wait_for_app_start()
@@ -37,6 +46,4 @@ class GreeterServerApp(object):
         return self
 
     def __exit__(self, *args):
-        # because we need a shell to run uvicorn we need to kill multiple processs,
-        # but not the process group because that includes the test process as well
         kill_process(self.app)

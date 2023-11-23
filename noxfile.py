@@ -438,18 +438,6 @@ def integration_tests_django(session, django_version):
 
             try:
                 session.run(
-                    "sh",
-                    "./scripts/start_django",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )  # One happy day we will have https://github.com/wntrblm/nox/issues/198
-
-                wait_for_app_start()
-
-                session.run(
                     "pytest",
                     "--tb",
                     "native",

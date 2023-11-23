@@ -2,28 +2,25 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from test.test_utils.processes import kill_process, wait_for_process_output
+from test.test_utils.processes import kill_process, wait_for_app_start
 
 
-class FastApiApp(object):
+class DjangoApp(object):
     def __init__(self, app: str, port: int):
         self.app = app
         self.port = port
-        cwd = Path(__file__).parent.parent
+        cwd = Path(__file__).parent.parent / "app"
         print(f"cwd = {cwd}")
         env = {
             **os.environ,
-            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-            "OTEL_SERVICE_NAME": "fastapi_test_app",
+            "OTEL_SERVICE_NAME": "app",
             "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],
         }
         print(f"venv bin path = {Path(sys.executable).parent}")
         cmd = [
             sys.executable,
-            "start_uvicorn.py",
-            "--app",
             self.app,
-            "--port",
+            "runserver",
             str(self.port),
         ]
         print(f"cmd = {cmd}")
@@ -32,17 +29,14 @@ class FastApiApp(object):
             cwd=cwd,
             env=env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
-        try:
-            wait_for_process_output(self.process, "Uvicorn running")
-        except Exception as e:
-            raise Exception(
-                f"FastApiApp app '{self.app}' failed to start on port {self.port}", e
-            )
+        # django runs an app that runs an app, so we don't have access to that second
+        # app's stdout/stderr, so we can't wait for it to say it's ready
+        wait_for_app_start()
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
-        kill_process(["uvicorn", self.app, str(self.port)])
+        kill_process([self.app, str(self.port)])

@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from test.test_utils.processes import kill_process
+from test.test_utils.processes import kill_process, wait_for_process_output
 
 
 class FastApiApp(object):
@@ -34,15 +34,12 @@ class FastApiApp(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        is_app_running = False
-        for line in self.process.stderr:
-            print(line)
-            if "Uvicorn running" in str(line):
-                is_app_running = True
-                break
-        if not is_app_running:
+
+        try:
+            wait_for_process_output(self.process, "Uvicorn running")
+        except Exception as e:
             raise Exception(
-                f"FastApiApp app '{self.app}' failed to start on port {self.port}"
+                f"FastApiApp app '{self.app}' failed to start on port {self.port}", e
             )
 
     def __enter__(self):
