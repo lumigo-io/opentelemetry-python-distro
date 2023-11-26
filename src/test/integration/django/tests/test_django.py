@@ -47,7 +47,7 @@ class TestDjangoSpans(unittest.TestCase):
         with DjangoApp(
             APP_EXECUTABLE,
             APP_PORT,
-            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEXa": ".*not_matching.*"},
+            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*not_matching.*"},
         ):
             response = requests.get(endpoint, data='{"support": "django"}')
             response.raise_for_status()

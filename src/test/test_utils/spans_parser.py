@@ -21,6 +21,12 @@ class SpansContainer:
     spans: List[Dict[str, Any]]
 
     @staticmethod
+    def reset_spans_file(path: str = SPANS_FILE_FULL_PATH):
+        """This empties an existing spans file, useful for local debugging"""
+        open(path, "w").close()
+        SpansContainer.update_span_offset(path)
+
+    @staticmethod
     def update_span_offset(path: str = SPANS_FILE_FULL_PATH):
         spanCounter.counters[path] = sum(1 for _ in open(path))
 
@@ -43,6 +49,7 @@ class SpansContainer:
         wait_time_sec: int = 3,
         expected_span_count: int = 0,
     ) -> SpansContainer:
+        spans = []
         waited_time_in_sec = 0
         span_offset = SpansContainer.get_span_offset(path)
         while waited_time_in_sec < wait_time_sec:
