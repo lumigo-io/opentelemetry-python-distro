@@ -6,13 +6,14 @@ from test.test_utils.processes import kill_process, wait_for_app_start
 
 
 class DjangoApp(object):
-    def __init__(self, app: str, port: int):
+    def __init__(self, app: str, port: int, env: dict = {}):
         self.app = app
         self.port = port
         cwd = Path(__file__).parent.parent / "app"
         print(f"cwd = {cwd}")
         env = {
             **os.environ,
+            **env,
             "OTEL_SERVICE_NAME": "app",
             "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],
         }

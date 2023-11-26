@@ -26,16 +26,88 @@ class TestDjangoSpans(unittest.TestCase):
             spans_container = SpansContainer.get_spans_from_file()
             self.assertEqual(1, len(spans_container.spans))
 
-            # assert root
             root = spans_container.get_first_root()
             self.assertIsNotNone(root)
             self.assertEqual(root["kind"], "SpanKind.SERVER")
-            self.assertEqual(root["attributes"]["http.status_code"], 200)
+            root_attributes = root["attributes"]
+            self.assertEqual(root_attributes["http.status_code"], 200)
             self.assertEqual(
-                root["attributes"]["http.request.body"], '{"support": "django"}'
+                root_attributes["http.request.body"], '{"support": "django"}'
             )
-            self.assertIsNotNone(root["attributes"]["http.request.headers"])
-            self.assertIsNotNone(root["attributes"]["http.response.headers"])
-            self.assertIsNotNone(root["attributes"]["http.response.body"])
-            self.assertEqual(root["attributes"]["http.method"], "GET")
-            self.assertEqual(root["attributes"]["http.host"], f"localhost:{APP_PORT}")
+            self.assertIsNotNone(root_attributes["http.request.headers"])
+            self.assertIsNotNone(root_attributes["http.response.headers"])
+            self.assertIsNotNone(root_attributes["http.response.body"])
+            self.assertEqual(root_attributes["http.method"], "GET")
+            self.assertEqual(root_attributes["http.host"], f"localhost:{APP_PORT}")
+
+            self.assertIsNone(root_attributes.get("SKIP_EXPORT"))
+
+    def test_endpoint_filter_no_match(self):
+        endpoint = f"http://localhost:{APP_PORT}/"
+        with DjangoApp(
+            APP_EXECUTABLE,
+            APP_PORT,
+            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEXa": ".*not_matching.*"},
+        ):
+            response = requests.get(endpoint, data='{"support": "django"}')
+            response.raise_for_status()
+
+            body = response.text
+
+            self.assertIsNotNone(body)
+
+            wait_for_exporter()
+
+            spans_container = SpansContainer.get_spans_from_file()
+            self.assertEqual(1, len(spans_container.spans))
+
+            root = spans_container.get_first_root()
+            self.assertIsNotNone(root)
+            self.assertEqual(root["kind"], "SpanKind.SERVER")
+            root_attributes = root["attributes"]
+            self.assertEqual(root_attributes["http.status_code"], 200)
+            self.assertEqual(
+                root_attributes["http.request.body"], '{"support": "django"}'
+            )
+            self.assertIsNotNone(root_attributes["http.request.headers"])
+            self.assertIsNotNone(root_attributes["http.response.headers"])
+            self.assertIsNotNone(root_attributes["http.response.body"])
+            self.assertEqual(root_attributes["http.method"], "GET")
+            self.assertEqual(root_attributes["http.host"], f"localhost:{APP_PORT}")
+
+            self.assertIsNone(root_attributes.get("SKIP_EXPORT"))
+
+    def test_endpoint_filter_match(self):
+        endpoint = f"http://localhost:{APP_PORT}/"
+        with DjangoApp(
+            APP_EXECUTABLE,
+            APP_PORT,
+            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*localhost.*"},
+        ):
+            response = requests.get(endpoint, data='{"support": "django"}')
+            response.raise_for_status()
+
+            body = response.text
+
+            self.assertIsNotNone(body)
+
+            wait_for_exporter()
+
+            spans_container = SpansContainer.get_spans_from_file()
+            self.assertEqual(1, len(spans_container.spans))
+
+            root = spans_container.get_first_root()
+            self.assertIsNotNone(root)
+            self.assertEqual(root["kind"], "SpanKind.SERVER")
+            root_attributes = root["attributes"]
+            self.assertEqual(root_attributes["http.status_code"], 200)
+            self.assertEqual(
+                root_attributes["http.request.body"], '{"support": "django"}'
+            )
+            self.assertIsNotNone(root_attributes["http.request.headers"])
+            self.assertIsNotNone(root_attributes["http.response.headers"])
+            self.assertIsNotNone(root_attributes["http.response.body"])
+            self.assertEqual(root_attributes["http.method"], "GET")
+            self.assertEqual(root_attributes["http.host"], f"localhost:{APP_PORT}")
+
+            self.assertEqual(root_attributes["SKIP_EXPORT"], True)
