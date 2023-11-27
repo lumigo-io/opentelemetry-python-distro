@@ -6,13 +6,14 @@ from test.test_utils.processes import kill_process, wait_for_process_output
 
 
 class FastApiApp(object):
-    def __init__(self, app: str, port: int):
+    def __init__(self, app: str, port: int, env: dict = {}):
         self.app = app
         self.port = port
         cwd = Path(__file__).parent.parent
         print(f"cwd = {cwd}")
         env = {
             **os.environ,
+            **env,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "OTEL_SERVICE_NAME": "fastapi_test_app",
             "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],

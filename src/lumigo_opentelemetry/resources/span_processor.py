@@ -1,12 +1,9 @@
-from opentelemetry.trace import Span
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace import Span
 
 from lumigo_opentelemetry import logger
-
-
-# A span attributes that if is set to True, the span will not be exported
-SKIP_EXPORT_SPAN_ATTRIBUTE = "SKIP_EXPORT"
+from lumigo_opentelemetry.libs.attributes import SKIP_EXPORT_SPAN_ATTRIBUTE
 
 
 class LumigoSpanProcessor(BatchSpanProcessor):

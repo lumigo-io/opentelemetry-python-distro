@@ -55,7 +55,10 @@ class SpansContainer:
         while waited_time_in_sec < wait_time_sec:
             try:
                 spans = SpansContainer.parse_spans_from_file(path).spans
-                if len(spans) >= expected_span_count + span_offset:
+                if (
+                    expected_span_count > 0
+                    and len(spans) >= expected_span_count + span_offset
+                ):
                     return SpansContainer(spans=spans[span_offset:])  # noqa
             except Exception as err:
                 print(
@@ -63,7 +66,7 @@ class SpansContainer:
                 )
             time.sleep(1)
             waited_time_in_sec += 1
-        return SpansContainer(spans=spans if spans else [])  # noqa
+        return SpansContainer(spans=spans[span_offset:] if spans else [])  # noqa
 
     def get_first_root(self) -> Optional[Dict[str, Any]]:
         root_spans = self.get_root_spans()
