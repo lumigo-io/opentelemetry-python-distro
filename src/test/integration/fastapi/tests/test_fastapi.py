@@ -14,9 +14,7 @@ class TestFastApiSpans(unittest.TestCase):
         with FastApiApp("app:app", APP_PORT):
             response = requests.get(f"http://localhost:{APP_PORT}/")
             response.raise_for_status()
-
             body = response.json()
-
             self.assertEqual(body, {"message": "Hello FastAPI!"})
 
             spans_container = SpansContainer.get_spans_from_file(
@@ -28,10 +26,11 @@ class TestFastApiSpans(unittest.TestCase):
             root = spans_container.get_first_root()
             self.assertIsNotNone(root)
             self.assertEqual(root["kind"], "SpanKind.SERVER")
-            self.assertEqual(root["attributes"]["http.status_code"], 200)
-            self.assertEqual(root["attributes"]["http.method"], "GET")
+            root_attributes = root["attributes"]
+            self.assertEqual(root_attributes["http.status_code"], 200)
+            self.assertEqual(root_attributes["http.method"], "GET")
             self.assertEqual(
-                root["attributes"]["http.url"], f"http://127.0.0.1:{APP_PORT}/"
+                root_attributes["http.url"], f"http://127.0.0.1:{APP_PORT}/"
             )
 
             # assert internal spans
@@ -79,16 +78,12 @@ class TestFastApiSpans(unittest.TestCase):
         ):
             response = requests.get(endpoint)
             response.raise_for_status()
-
             body = response.json()
-
             self.assertEqual(body, {"message": "Hello FastAPI!"})
 
             response = requests.get(endpoint + "unmatched")
             response.raise_for_status()
-
             body = response.json()
-
             self.assertEqual(body, {"message": "Hello again, FastAPI!"})
 
             spans_container = SpansContainer.get_spans_from_file(
@@ -102,15 +97,12 @@ class TestFastApiSpans(unittest.TestCase):
                 f"http://localhost:{APP_PORT}/invoke-requests", json={"a": "b"}
             )
             response.raise_for_status()
-
             body = response.json()
-
             expected_url = "http://sheker.kol.shehoo:8021/little-response"
-
             self.assertIn(expected_url, body["url"])
 
             spans_container = SpansContainer.get_spans_from_file(
-                wait_time_sec=10, expected_span_count=4
+                wait_time_sec=10, expected_span_count=5
             )
             self.assertEqual(5, len(spans_container.spans))
 
@@ -118,10 +110,11 @@ class TestFastApiSpans(unittest.TestCase):
             root = spans_container.get_first_root()
             self.assertIsNotNone(root)
             self.assertEqual(root["kind"], "SpanKind.SERVER")
-            self.assertEqual(root["attributes"]["http.status_code"], 200)
-            self.assertIsNotNone(root["attributes"]["http.request.headers"])
+            root_attributes = root["attributes"]
+            self.assertEqual(root_attributes["http.status_code"], 200)
+            self.assertIsNotNone(root_attributes["http.request.headers"])
             self.assertEqual(
-                root["attributes"]["http.url"],
+                root_attributes["http.url"],
                 f"http://127.0.0.1:{APP_PORT}/invoke-requests",
             )
 
@@ -157,9 +150,7 @@ class TestFastApiSpans(unittest.TestCase):
                 f"http://localhost:{APP_PORT}/invoke-requests-large-response"
             )
             response.raise_for_status()
-
             body = response.json()
-
             assert body is not None
 
             spans_container = SpansContainer.get_spans_from_file(
