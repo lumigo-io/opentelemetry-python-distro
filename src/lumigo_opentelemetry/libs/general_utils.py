@@ -5,7 +5,6 @@ except ImportError:
     from collections.abc import Iterable
 
 import os
-import re
 from contextlib import contextmanager
 from typing import Generator, List, Optional, TypeVar, Union
 
@@ -15,9 +14,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 
 from lumigo_opentelemetry import logger
-from lumigo_opentelemetry.libs.environment_variables import (
-    AUTO_FILTER_HTTP_ENDPOINTS_REGEX,
-)
 
 DEFAULT_MAX_ENTRY_SIZE = 2048
 
@@ -101,23 +97,3 @@ def get_boolean_env_var(env_var_name: str, default: bool = False) -> bool:
         return default
 
     return is_truth_value
-
-
-def should_skip_span_on_route_match(url: str) -> bool:
-    """
-    This function checks if the given route should be skipped from tracing.
-    @param url: The complete url to check. Query params will be ignored.
-    @return: True if the route should be skipped, False otherwise
-    """
-    url_without_query_params = url.split("?")[0]
-    filter_regex_string = os.environ.get(AUTO_FILTER_HTTP_ENDPOINTS_REGEX, "")
-    if not filter_regex_string:
-        return False
-    try:
-        filter_regex = re.compile(filter_regex_string)
-    except Exception:
-        logger.error(
-            f"Invalid regex '{filter_regex_string}' for env var '{AUTO_FILTER_HTTP_ENDPOINTS_REGEX}'"
-        )
-        return False
-    return filter_regex.search(url_without_query_params) is not None

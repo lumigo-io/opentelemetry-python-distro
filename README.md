@@ -99,7 +99,7 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 * `LUMIGO_SWITCH_OFF=true`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected.
 * `LUMIGO_REPORT_DEPENDENCIES=false`: This option disables the built-in dependency reporting to Lumigo SaaS. For more information, refer to the [Automated dependency reporting](#automated-dependency-reporting) section.
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS`: This option enables the automatic filtering of empty SQS messages from being sent to Lumigo SaaS. For more information, refer to the [Filtering out empty SQS messages](#filtering-out-empty-sqs-messages) section.
-* `LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX`: This option enables the automatic filtering of endpoints that match the supplied regular expressions.
+* `LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX`: This option enables the automatic filtering of endpoints that match the supplied regular expressions, refer to the [Filtering out HTTP endpoints](#filtering-out-http-endpoints) section.
 
 ### Execution Tags
 
@@ -393,7 +393,7 @@ The possible variations are:
 It is possible to automatically filter out spans based on an HTTP server endpoints for all supported web server frameworks.
 
 Simply set the `LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX` environment variable to a regex string that will match the urls,
-spans will not be processed for matching routes.
+spans for matching urls will be not be delivered.
 
 NOTE: The entire url can be matched, but query strings will be ignored.
 

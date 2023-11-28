@@ -2,36 +2,12 @@ from typing import Any, Dict
 
 from opentelemetry.trace import Span
 
-from lumigo_opentelemetry import logger
-from lumigo_opentelemetry.libs.environment_variables import (
-    AUTO_FILTER_HTTP_ENDPOINTS_REGEX,
-)
-from lumigo_opentelemetry.libs.general_utils import (
-    lumigo_safe_execute,
-    should_skip_span_on_route_match,
-)
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import (
     dump,
     dump_with_context,
     safe_convert_bytes_to_string,
 )
-from lumigo_opentelemetry.resources.span_processor import set_span_skip_export
-
-
-def _build_fastapi_request_url(scope: Dict[str, Any]) -> str:
-    request_url = ""
-    if scope.get("server"):
-        request_url = scope.get("scheme", "http") + "://"
-        # server should be a tuple of host, port
-        host = scope["server"][0]
-        port = scope["server"][1]
-        request_url += host
-        if port:
-            request_url += ":" + str(port)
-    root_path = scope.get("root_path", "")
-    path = scope.get("path", "")
-    request_url += root_path + path
-    return request_url
 
 
 class FastAPIParser:
@@ -57,14 +33,6 @@ class FastAPIParser:
                 "http.request.path": dump(path),
             }
             span.set_attributes(attributes)
-
-            request_url = _build_fastapi_request_url(scope)
-            if should_skip_span_on_route_match(request_url):
-                logger.info(
-                    f"Not tracing url '{request_url}' because it matches the auto-filter"
-                    f" regex specified by '{AUTO_FILTER_HTTP_ENDPOINTS_REGEX}'"
-                )
-                set_span_skip_export(span)
 
     @staticmethod
     def wrapt__get_otel_receive(original_func, instance, args, kwargs):  # type: ignore

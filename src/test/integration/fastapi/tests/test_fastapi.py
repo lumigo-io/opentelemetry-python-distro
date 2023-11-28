@@ -53,17 +53,22 @@ class TestFastApiSpans(unittest.TestCase):
         with FastApiApp(
             "app:app",
             APP_PORT,
-            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*"},
+            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*/$"},
         ):
             response = requests.get(endpoint)
             response.raise_for_status()
-
             body = response.json()
-
             self.assertEqual(body, {"message": "Hello FastAPI!"})
 
-            spans_container = SpansContainer.get_spans_from_file()
-            self.assertEqual(0, len(spans_container.spans))
+            response = requests.get(endpoint + "unmatched")
+            response.raise_for_status()
+            body = response.json()
+            self.assertEqual(body, {"message": "Hello again, FastAPI!"})
+
+            spans_container = SpansContainer.get_spans_from_file(
+                wait_time_sec=10, expected_span_count=3
+            )
+            self.assertEqual(3, len(spans_container.spans))
 
     def test_endpoint_filter_no_match(self):
         endpoint = f"http://localhost:{APP_PORT}/"
@@ -79,36 +84,17 @@ class TestFastApiSpans(unittest.TestCase):
 
             self.assertEqual(body, {"message": "Hello FastAPI!"})
 
+            response = requests.get(endpoint + "unmatched")
+            response.raise_for_status()
+
+            body = response.json()
+
+            self.assertEqual(body, {"message": "Hello again, FastAPI!"})
+
             spans_container = SpansContainer.get_spans_from_file(
-                wait_time_sec=10, expected_span_count=3
+                wait_time_sec=10, expected_span_count=6
             )
-            self.assertEqual(3, len(spans_container.spans))
-
-            root = spans_container.get_first_root()
-            self.assertIsNotNone(root)
-            self.assertEqual(root["kind"], "SpanKind.SERVER")
-            root_attributes = root["attributes"]
-            self.assertEqual(root_attributes["http.status_code"], 200)
-            self.assertEqual(root_attributes["http.method"], "GET")
-            self.assertEqual(
-                root_attributes["http.url"], f"http://127.0.0.1:{APP_PORT}/"
-            )
-
-            self.assertIsNone(root_attributes.get("SKIP_EXPORT"))
-
-            # assert internal spans
-            internals = spans_container.get_internals()
-            self.assertEqual(2, len(internals))
-            self.assertIsNotNone(
-                spans_container.get_attribute_from_list_of_spans(
-                    internals, "http.response.headers"
-                )
-            )
-            self.assertIsNotNone(
-                spans_container.get_attribute_from_list_of_spans(
-                    internals, "http.response.body"
-                )
-            )
+            self.assertEqual(6, len(spans_container.spans))
 
     def test_requests_instrumentation(self):
         with FastApiApp("app:app", APP_PORT):
