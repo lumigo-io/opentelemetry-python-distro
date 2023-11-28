@@ -10,14 +10,12 @@ class FastApiApp(object):
         self.app = app
         self.port = port
         cwd = Path(__file__).parent.parent
-        print(f"cwd = {cwd}")
         env = {
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],
             "OTEL_SERVICE_NAME": "fastapi_test_app",
         }
-        print(f"venv bin path = {Path(sys.executable).parent}")
         cmd = [
             sys.executable,
             "start_uvicorn.py",
@@ -26,7 +24,6 @@ class FastApiApp(object):
             "--port",
             str(self.port),
         ]
-        print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
             cwd=cwd,

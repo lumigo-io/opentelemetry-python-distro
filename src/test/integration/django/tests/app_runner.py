@@ -3,28 +3,26 @@ import subprocess
 import sys
 from pathlib import Path
 from test.test_utils.processes import kill_process, wait_for_app_start
+from typing import Optional
 
 
 class DjangoApp(object):
-    def __init__(self, app: str, port: int, env: dict = {}):
+    def __init__(self, app: str, port: int, env: Optional[dict] = None):
         self.app = app
         self.port = port
         cwd = Path(__file__).parent.parent / "app"
-        print(f"cwd = {cwd}")
         env = {
             **os.environ,
-            **env,
+            **(env or {}),
             "OTEL_SERVICE_NAME": "app",
             "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],
         }
-        print(f"venv bin path = {Path(sys.executable).parent}")
         cmd = [
             sys.executable,
             self.app,
             "runserver",
             str(self.port),
         ]
-        print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
             cwd=cwd,

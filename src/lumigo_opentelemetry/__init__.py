@@ -4,8 +4,6 @@ import logging
 import os
 from typing import Any, Callable, Dict, List, TypeVar
 
-from lumigo_opentelemetry.libs.sampling import LUMIGO_SAMPLER
-
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
 T = TypeVar("T")
@@ -50,6 +48,13 @@ def _get_lumigo_opentelemetry_version() -> str:
     except Exception as err:
         logger.exception("failed getting lumigo_opentelemetry version", exc_info=err)
         return "unknown"
+
+
+def _get_lumigo_sampler() -> Any:
+    # import here to avoid circular imports
+    from lumigo_opentelemetry.libs.sampling import LUMIGO_SAMPLER
+
+    return LUMIGO_SAMPLER
 
 
 __version__ = _get_lumigo_opentelemetry_version()
@@ -123,7 +128,7 @@ def init() -> Dict[str, Any]:
 
     tracer_provider = TracerProvider(
         resource=tracer_resource,
-        sampler=LUMIGO_SAMPLER,
+        sampler=_get_lumigo_sampler(),
         span_limits=(SpanLimits(max_span_attribute_length=(get_max_size()))),
     )
 

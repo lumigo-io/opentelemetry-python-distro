@@ -13,6 +13,7 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
+from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.environment_variables import (
     AUTO_FILTER_HTTP_ENDPOINTS_REGEX,
 )
@@ -31,9 +32,6 @@ class AttributeSampler(Sampler):
     Otherwise, the decision is based on the parent span's decision.
     """
 
-    def __init__(self) -> None:
-        pass
-
     def should_sample(
         self,
         parent_context: Optional["Context"],
@@ -47,6 +45,10 @@ class AttributeSampler(Sampler):
         decision = Decision.RECORD_AND_SAMPLE
         attributes_url = _extract_url(attributes)
         if attributes_url and _should_skip_span_on_route_match(attributes_url):
+            logger.debug(
+                f"Dropping trace for url '{attributes_url}' because it matches the"
+                f" auto-filter regex specified by '{AUTO_FILTER_HTTP_ENDPOINTS_REGEX}'"
+            )
             decision = Decision.DROP
             attributes = None
 
@@ -65,30 +67,47 @@ LUMIGO_SAMPLER = ParentBased(AttributeSampler())
 
 def _extract_url(attributes: Attributes) -> Optional[str]:
     if attributes is not None:
+        # if the url is already in the attributes, return it
         if "http.url" in attributes:
             return str(attributes["http.url"])
-        url = ""
+        # generate as much of the url as possible from the attributes
+
+        # if we have the host and port, use them. it's even better if
+        # we have the scheme as well
+        host = ""
         if "http.host" in attributes:
             if "http.scheme" in attributes:
-                url = f"{attributes['http.scheme']}://"
+                host = f"{attributes['http.scheme']}://"
 
             if ":" in attributes["http.host"]:
-                url += attributes["http.host"]
+                host += attributes["http.host"]
             else:
-                url += attributes["http.host"]
+                host += attributes["http.host"]
                 if "net.host.port" in attributes:
-                    url += f":{attributes['net.host.port']}"
+                    host += f":{attributes['net.host.port']}"
 
-            if "http.target" in attributes:
-                url += attributes["http.target"]
-            else:
-                if "http.route" in attributes:
-                    url += attributes["http.route"]
-                elif "http.path" in attributes:
-                    url += attributes["http.path"]
+        path = ""
 
-            return url if len(url) > 0 else "/"
+        # if we have the target, use it. otherwise, fallback to route
+        # or path
+        if "http.target" in attributes:
+            path += attributes["http.target"]
+        elif "http.route" in attributes:
+            path += attributes["http.route"]
+        elif "http.path" in attributes:
+            path += attributes["http.path"]
 
+        # combine the host and path
+        url = host + path
+
+        # if we have any useable part of the url, return it
+        if len(url) > 0:
+            # ensure that the path starts with a slash
+            if len(path) == 0:
+                url += "/"
+            return url
+
+    # if we have absolutely nothing, return None
     return None
 
 
@@ -114,5 +133,9 @@ def _should_skip_span_on_route_match(url: Optional[str]) -> bool:
     try:
         filter_regex = re.compile(filter_regex_string)
     except Exception:
+        logger.warning(
+            f"Invalid regex in '{AUTO_FILTER_HTTP_ENDPOINTS_REGEX}': {filter_regex_string}",
+            exc_info=True,
+        )
         return False
     return filter_regex.search(url_without_query_params) is not None
