@@ -126,7 +126,6 @@ def _should_skip_span_on_route_match(url: Optional[str]) -> bool:
     """
     if not url:
         return False
-    url_without_query_params = url.split("?")[0]
     filter_regex_string = os.environ.get(AUTO_FILTER_HTTP_ENDPOINTS_REGEX, "")
     if not filter_regex_string:
         return False
@@ -138,4 +137,4 @@ def _should_skip_span_on_route_match(url: Optional[str]) -> bool:
             exc_info=True,
         )
         return False
-    return filter_regex.search(url_without_query_params) is not None
+    return filter_regex.search(url) is not None
