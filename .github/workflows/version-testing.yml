@@ -94,7 +94,7 @@ jobs:
           reviewers: GuyMoses,saartochner,shanishiri
         # WARNING: the create pull request action must be the last action in the job, it changes the current branch
       - run: |  # post update to #microservices slack channel
-          slack_channel_webhook="${{secrets.MICROSERVICES_SLACK_CHANNEL_WEBHOOK}}"
+          slack_channel_webhook="${{secrets.VERSION_TESTING_SLACK_CHANNEL_WEBHOOK}}"
           if [ -n $slack_channel_webhook ]; then
             branch_name="${{steps.branch_name.outputs.branch_name}}"
             text_property="New version testing PR has been opened:
