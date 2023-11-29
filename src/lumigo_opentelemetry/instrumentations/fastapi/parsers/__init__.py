@@ -1,13 +1,13 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
+from opentelemetry.trace import Span
 
 from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import (
     dump,
-    safe_convert_bytes_to_string,
     dump_with_context,
+    safe_convert_bytes_to_string,
 )
-
-from opentelemetry.trace import Span
 
 
 class FastAPIParser:

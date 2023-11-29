@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Callable, TypeVar, Dict, List
+from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
@@ -48,6 +48,13 @@ def _get_lumigo_opentelemetry_version() -> str:
     except Exception as err:
         logger.exception("failed getting lumigo_opentelemetry version", exc_info=err)
         return "unknown"
+
+
+def _get_lumigo_sampler() -> Any:
+    # import here to avoid circular imports
+    from lumigo_opentelemetry.libs.sampling import LUMIGO_SAMPLER
+
+    return LUMIGO_SAMPLER
 
 
 __version__ = _get_lumigo_opentelemetry_version()
@@ -105,12 +112,12 @@ def init() -> Dict[str, Any]:
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
-    from lumigo_opentelemetry.resources.detectors import get_resource
+    from lumigo_opentelemetry.libs.general_utils import get_max_size
     from lumigo_opentelemetry.resources.detectors import (
         get_infrastructure_resource,
         get_process_resource,
+        get_resource,
     )
-    from lumigo_opentelemetry.libs.general_utils import get_max_size
 
     infrastructure_resource = get_infrastructure_resource()
     process_resource = get_process_resource()
@@ -121,6 +128,7 @@ def init() -> Dict[str, Any]:
 
     tracer_provider = TracerProvider(
         resource=tracer_resource,
+        sampler=_get_lumigo_sampler(),
         span_limits=(SpanLimits(max_span_attribute_length=(get_max_size()))),
     )
 
@@ -156,8 +164,8 @@ def init() -> Dict[str, Any]:
     spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
     if spandump_file:
         from opentelemetry.sdk.trace.export import (
-            SimpleSpanProcessor,
             ConsoleSpanExporter,
+            SimpleSpanProcessor,
         )
 
         tracer_provider.add_span_processor(
@@ -184,6 +192,7 @@ def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
     PARENT_IDENTICATOR = "LumigoRoot"
 
     from opentelemetry import trace
+
     from lumigo_opentelemetry.libs.json_utils import dump
 
     def wrapper(*args: List[Any], **kwargs: Dict[Any, Any]) -> T:

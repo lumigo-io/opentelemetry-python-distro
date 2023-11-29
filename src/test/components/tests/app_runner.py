@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from test.test_utils.processes import kill_process
+from test.test_utils.processes import kill_process, wait_for_process_output
 
 
 class FastApiApp(object):
@@ -10,14 +10,12 @@ class FastApiApp(object):
         self.app = app
         self.port = port
         cwd = Path(__file__).parent.parent
-        print(f"cwd = {cwd}")
         env = {
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "LUMIGO_DEBUG_SPANDUMP": os.environ["LUMIGO_DEBUG_SPANDUMP"],
             "OTEL_SERVICE_NAME": "fastapi_test_app",
         }
-        print(f"venv bin path = {Path(sys.executable).parent}")
         cmd = [
             sys.executable,
             "start_uvicorn.py",
@@ -26,7 +24,6 @@ class FastApiApp(object):
             "--port",
             str(self.port),
         ]
-        print(f"cmd = {cmd}")
         self.process = subprocess.Popen(
             cmd,
             cwd=cwd,
@@ -34,15 +31,12 @@ class FastApiApp(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        is_app_running = False
-        for line in self.process.stderr:
-            print(line)
-            if "Uvicorn running" in str(line):
-                is_app_running = True
-                break
-        if not is_app_running:
+
+        try:
+            wait_for_process_output(self.process, "Uvicorn running")
+        except Exception as e:
             raise Exception(
-                f"FastApiApp app '{self.app}' failed to start on port {self.port}"
+                f"FastApiApp app '{self.app}' failed to start on port {self.port}", e
             )
 
     def __enter__(self):

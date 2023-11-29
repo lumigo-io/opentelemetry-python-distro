@@ -1,10 +1,10 @@
 from opentelemetry.trace.span import Span
 
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
-from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
     add_body_attribute,
 )
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 from lumigo_opentelemetry.libs.json_utils import dump_with_context
 
 
@@ -16,8 +16,8 @@ class DjangoInstrumentorWrapper(AbstractInstrumentor):
         import django  # noqa
 
     def install_instrumentation(self) -> None:
-        from opentelemetry.instrumentation.django import DjangoInstrumentor
         from django.http import HttpRequest, HttpResponse
+        from opentelemetry.instrumentation.django import DjangoInstrumentor
 
         def request_hook(span: Span, request: HttpRequest) -> None:
             with lumigo_safe_execute("django request_hook"):

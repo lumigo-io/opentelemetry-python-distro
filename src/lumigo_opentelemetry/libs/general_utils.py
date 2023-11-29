@@ -4,16 +4,16 @@ except ImportError:
     # collections.Iterables was removed in Python 3.10
     from collections.abc import Iterable
 
-from contextlib import contextmanager
-from typing import Union, Generator, Optional, TypeVar, List
 import os
-
-from lumigo_opentelemetry import logger
+from contextlib import contextmanager
+from typing import Generator, List, Optional, TypeVar, Union
 
 from opentelemetry.sdk.environment_variables import (
-    OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
 )
+
+from lumigo_opentelemetry import logger
 
 DEFAULT_MAX_ENTRY_SIZE = 2048
 
