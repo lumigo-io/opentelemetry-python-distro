@@ -82,7 +82,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
       - name: Create Pull Request
         # WARNING: the create pull request action must be the last action in the job, it changes the current branch
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           title: ${{steps.branch_name.outputs.branch_name}}
@@ -93,6 +93,18 @@ jobs:
           labels: version-testing, automerge
           reviewers: GuyMoses,saartochner,shanishiri
         # WARNING: the create pull request action must be the last action in the job, it changes the current branch
+      - run: |  # post update to #microservices slack channel
+          slack_channel_webhook="${{secrets.MICROSERVICES_SLACK_CHANNEL_WEBHOOK}}"
+          if [ -n $slack_channel_webhook ]; then
+            branch_name="${{steps.branch_name.outputs.branch_name}}"
+            text_property="New version testing PR has been opened:
+              \nRepository: opentelemetry-python-distro
+              \nBranch name: ${branch_name}
+              \n
+              \nPlease review, approve and merge the PR *only* if the results are desirable."
+            echo \{ \"text\": "$text_property" \} | \
+              curl -X POST "${slack_channel_webhook}" --header "Content-Type: application/json" -v --data-binary @-
+          fi
 
   delete-old-version-testing-branches:
     runs-on: ubuntu-latest
