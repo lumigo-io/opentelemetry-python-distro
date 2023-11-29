@@ -1,75 +1,100 @@
+import pytest
+
 from lumigo_opentelemetry.libs.sampling import (
     _extract_url,
     _should_skip_span_on_route_match,
 )
 
 
-def test_extract_url():
-    assert _extract_url({"http.url": "http://test.com"}) == "http://test.com"
-    assert (
-        _extract_url({"http.url": "http://test.com/test", "http.route": "/test"})
-        == "http://test.com/test"
-    )
-    assert (
-        _extract_url({"http.url": "http://test.com:8080/test", "http.route": "/test"})
-        == "http://test.com:8080/test"
-    )
-    assert (
-        _extract_url({"http.scheme": "http", "http.host": "test.com"})
-        == "http://test.com/"
-    )
-    assert (
-        _extract_url(
-            {"http.scheme": "http", "http.host": "test.com", "http.route": "/test"}
-        )
-        == "http://test.com/test"
-    )
-    assert (
-        _extract_url(
-            {"http.scheme": "http", "http.host": "test.com:8080", "http.route": "/test"}
-        )
-        == "http://test.com:8080/test"
-    )
-    assert (
-        _extract_url(
+@pytest.mark.parametrize(
+    "attributes, expected_url",
+    [
+        ({"url.full": "http://test.com"}, "http://test.com"),
+        ({"http.url": "http://test.com"}, "http://test.com"),
+        (
+            {"url.full": "http://test.com/test", "http.route": "/test"},
+            "http://test.com/test",
+        ),
+        (
+            {"http.url": "http://test.com/test", "http.route": "/test"},
+            "http://test.com/test",
+        ),
+        (
+            {"url.full": "http://test.com:8080/test", "http.route": "/test"},
+            "http://test.com:8080/test",
+        ),
+        (
+            {"http.url": "http://test.com:8080/test", "http.route": "/test"},
+            "http://test.com:8080/test",
+        ),
+        ({"url.scheme": "http", "http.host": "test.com"}, "http://test.com/"),
+        ({"http.scheme": "http", "http.host": "test.com"}, "http://test.com/"),
+        (
+            {"url.scheme": "http", "http.host": "test.com", "http.route": "/test"},
+            "http://test.com/test",
+        ),
+        (
+            {"http.scheme": "http", "http.host": "test.com", "http.route": "/test"},
+            "http://test.com/test",
+        ),
+        (
+            {
+                "http.scheme": "http",
+                "http.host": "test.com:8080",
+                "http.route": "/test",
+            },
+            "http://test.com:8080/test",
+        ),
+        (
             {
                 "http.scheme": "http",
                 "http.host": "test.com:8080",
                 "net.host.port": 8080,
                 "http.route": "/test",
-            }
-        )
-        == "http://test.com:8080/test"
-    )
-    assert (
-        _extract_url(
+            },
+            "http://test.com:8080/test",
+        ),
+        (
             {
                 "http.scheme": "http",
                 "http.host": "test.com",
                 "net.host.port": 8080,
                 "http.route": "/test",
-            }
-        )
-        == "http://test.com:8080/test"
-    )
-    assert _extract_url({"http.host": "test.com"}) == "test.com/"
-    assert (
-        _extract_url({"http.host": "test.com", "http.route": "/test"})
-        == "test.com/test"
-    )
-    assert (
-        _extract_url(
-            {"http.host": "test.com", "net.host.port": 8080, "http.route": "/test"}
-        )
-        == "test.com:8080/test"
-    )
-    assert _extract_url({"http.target": "/test"}) == "/test"
-    assert _extract_url({"http.target": "/test", "http.route": "/test"}) == "/test"
-    assert _extract_url({"http.target": "/test", "http.path": "/test"}) == "/test"
-    assert _extract_url({"http.route": "/test"}) == "/test"
-    assert _extract_url({"http.route": "/test", "http.path": "/test"}) == "/test"
-    assert _extract_url({"http.path": "/test"}) == "/test"
-    assert _extract_url({}) is None
+            },
+            "http://test.com:8080/test",
+        ),
+        ({"http.host": "test.com"}, "test.com/"),
+        ({"http.host": "test.com", "http.route": "/test"}, "test.com/test"),
+        (
+            {"http.host": "test.com", "net.host.port": 8080, "http.route": "/test"},
+            "test.com:8080/test",
+        ),
+        ({"http.target": "/test"}, "/test"),
+        ({"http.target": "/test?a=b#hello"}, "/test?a=b#hello"),
+        (
+            {"url.path": "/test", "url.query": "a=b", "url.fragment": "hello"},
+            "/test?a=b#hello",
+        ),
+        (
+            {
+                "url.path": "/test",
+                "url.query": "a=b",
+                "url.fragment": "hello",
+                "http.target": "/test?a=b#hello",
+                "http.route": "/test",
+            },
+            "/test?a=b#hello",
+        ),
+        ({"http.target": "/test?a=b#hello", "http.route": "/test"}, "/test?a=b#hello"),
+        ({"http.target": "/test?a=b#hello", "http.path": "/test"}, "/test?a=b#hello"),
+        ({"http.route": "/test"}, "/test"),
+        ({"http.route": "/test", "http.path": "/test"}, "/test"),
+        ({"http.path": "/test"}, "/test"),
+        ({}, None),
+    ],
+)
+def test_extract_url(attributes, expected_url):
+    assert _extract_url(attributes) == expected_url
 
 
 def test_should_skip_span_on_route_match(monkeypatch):

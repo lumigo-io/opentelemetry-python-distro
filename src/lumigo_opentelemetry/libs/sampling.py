@@ -68,15 +68,20 @@ LUMIGO_SAMPLER = ParentBased(AttributeSampler())
 def _extract_url(attributes: Attributes) -> Optional[str]:
     if attributes is not None:
         # if the url is already in the attributes, return it
-        if "http.url" in attributes:
+        if "url.full" in attributes:
+            return str(attributes["url.full"])
+        elif "http.url" in attributes:
             return str(attributes["http.url"])
+
         # generate as much of the url as possible from the attributes
 
         # if we have the host and port, use them. it's even better if
         # we have the scheme as well
         host = ""
         if "http.host" in attributes:
-            if "http.scheme" in attributes:
+            if "url.scheme" in attributes:
+                host = f"{attributes['url.scheme']}://"
+            elif "http.scheme" in attributes:
                 host = f"{attributes['http.scheme']}://"
 
             if ":" in attributes["http.host"]:
@@ -90,7 +95,13 @@ def _extract_url(attributes: Attributes) -> Optional[str]:
 
         # if we have the target, use it. otherwise, fallback to route
         # or path
-        if "http.target" in attributes:
+        if "url.path" in attributes:
+            path += attributes["url.path"]
+            if "url.query" in attributes:
+                path += f"?{attributes['url.query']}"
+            if "url.fragment" in attributes:
+                path += f"#{attributes['url.fragment']}"
+        elif "http.target" in attributes:
             path += attributes["http.target"]
         elif "http.route" in attributes:
             path += attributes["http.route"]
