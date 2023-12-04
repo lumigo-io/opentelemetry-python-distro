@@ -1,6 +1,5 @@
 import unittest
 from parameterized import parameterized
-import pytest
 
 from test.test_utils.spans_parser import SpansContainer
 
@@ -193,18 +192,20 @@ class TestFastApiSpans(unittest.TestCase):
                 200,
             )
 
-    @parameterized.expand([
-        # regex matches, so we shouldn't see the client span sending a request to that endpoint
-        (r".*example\.com.*", 3, 0),
-        # regex doesn't match, so we should see the client span sending a request to that endpoint
-        (r".*this-will-not-match-anything.*", 4, 1)
-    ])
-    def test_skip_outbound_http_request(self, regex: str, expected_span_count: int, expected_client_span_count: int):
-        with FastApiApp("app:app",
-                        APP_PORT,
-                        env={
-                            "LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": regex
-                        }):
+    @parameterized.expand(
+        [
+            # regex matches, so we shouldn't see the client span sending a request to that endpoint
+            (r".*example\.com.*", 3, 0),
+            # regex doesn't match, so we should see the client span sending a request to that endpoint
+            (r".*this-will-not-match-anything.*", 4, 1),
+        ]
+    )
+    def test_skip_outbound_http_request(
+        self, regex: str, expected_span_count: int, expected_client_span_count: int
+    ):
+        with FastApiApp(
+            "app:app", APP_PORT, env={"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": regex}
+        ):
             response = requests.get(f"http://localhost:{APP_PORT}/call-external")
             response.raise_for_status()
 
