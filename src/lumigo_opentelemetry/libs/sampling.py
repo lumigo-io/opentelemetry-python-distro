@@ -62,7 +62,13 @@ class AttributeSampler(Sampler):
         return "SkipSampler"
 
 
-LUMIGO_SAMPLER = ParentBased(AttributeSampler())
+_attribute_sampler = AttributeSampler()
+LUMIGO_SAMPLER = ParentBased(
+    root=_attribute_sampler,
+    # If the parent was sampled we still want to check the current span for sampling
+    remote_parent_sampled=_attribute_sampler,
+    local_parent_sampled=_attribute_sampler,
+)
 
 
 def _extract_url(attributes: Attributes) -> Optional[str]:
