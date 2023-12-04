@@ -194,7 +194,7 @@ class TestFastApiSpans(unittest.TestCase):
         with FastApiApp("app:app",
                         APP_PORT,
                         env={
-                            "LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*example\.com.*"
+                            "LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": r".*example\.com.*"
                         }):
             response = requests.get(f"http://localhost:{APP_PORT}/call-external")
             response.raise_for_status()
