@@ -21,7 +21,7 @@ def invoke_requests(request: dict):
 
 @app.get("/call-external")
 def call_external():
-    response = requests.get('http://example.com')
+    response = requests.get("http://example.com")
     return {"status_code": response.status_code}
 
 
