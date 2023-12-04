@@ -92,6 +92,14 @@ class SpansContainer:
             )
         )
 
+    def get_clients(self, root_span: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        return list(
+            filter(
+                lambda item: item["kind"] == "SpanKind.CLIENT",
+                self.get_children(root_span=root_span),
+            )
+        )
+
     def find_child_span(self, predicate):
         for span in self.get_children():
             if predicate(span):

@@ -189,3 +189,47 @@ class TestFastApiSpans(unittest.TestCase):
                 ),
                 200,
             )
+
+    def test_skip_outbound_http_request_match(self):
+        with FastApiApp("app:app",
+                        APP_PORT,
+                        env={
+                            "LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*example\.com.*"
+                        }):
+            response = requests.get(f"http://localhost:{APP_PORT}/call-external")
+            response.raise_for_status()
+
+            spans_container = SpansContainer.get_spans_from_file(
+                wait_time_sec=10, expected_span_count=3
+            )
+            self.assertEqual(3, len(spans_container.spans))
+
+            # assert root
+            root = spans_container.get_first_root()
+            self.assertIsNotNone(root)
+            self.assertEqual(root["kind"], "SpanKind.SERVER")
+
+            client_spans = spans_container.get_clients(root_span=root)
+            self.assertEqual(len(client_spans), 0)
+
+    def test_skip_outbound_http_request_no_match(self):
+        with FastApiApp("app:app",
+                        APP_PORT,
+                        env={
+                            "LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*this-will-not-match-anything.*"
+                        }):
+            response = requests.get(f"http://localhost:{APP_PORT}/call-external")
+            response.raise_for_status()
+
+            spans_container = SpansContainer.get_spans_from_file(
+                wait_time_sec=10, expected_span_count=4
+            )
+            self.assertEqual(4, len(spans_container.spans))
+
+            # assert root
+            root = spans_container.get_first_root()
+            self.assertIsNotNone(root)
+            self.assertEqual(root["kind"], "SpanKind.SERVER")
+
+            client_spans = spans_container.get_clients(root_span=root)
+            self.assertEqual(len(client_spans), 1)
