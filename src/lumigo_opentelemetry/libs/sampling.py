@@ -80,7 +80,7 @@ def _extract_url(attributes: Attributes) -> Optional[str]:
     # if the url is already in the attributes, return it
     if attributes.get("url.full"):
         raw_url = str(attributes["url.full"])
-    elif attributes.get('http.url'):
+    elif attributes.get("http.url"):
         raw_url = str(attributes["http.url"])
 
     if not raw_url:
@@ -127,17 +127,27 @@ def _extract_url(attributes: Attributes) -> Optional[str]:
         return None
 
     parsed_url = urlparse(raw_url)
-    if parsed_url.scheme not in ('http', 'https') or not parsed_url.netloc:
+    if (
+        parsed_url.scheme not in ("http", "https")
+        or not parsed_url.netloc
+        or not parsed_url.hostname
+    ):
         # We can't parse the URL, so return the raw URL
         return raw_url
 
     final_url = f"{parsed_url.scheme}://"
-    final_url += parsed_url.hostname if (parsed_url.netloc.endswith(':80') and parsed_url.scheme == 'http') or (parsed_url.netloc.endswith(':443') and parsed_url.scheme == 'https') else parsed_url.netloc
-    if parsed_url.path and parsed_url.path != '/':
+    final_url += (
+        parsed_url.hostname
+        if (parsed_url.netloc.endswith(":80") and parsed_url.scheme == "http")
+        or (parsed_url.netloc.endswith(":443") and parsed_url.scheme == "https")
+        else parsed_url.netloc
+    )
+    if parsed_url.path and parsed_url.path != "/":
         final_url += parsed_url.path
     if parsed_url.query:
         final_url += f"?{parsed_url.query}"
     return final_url
+
 
 def _get_parent_trace_state(parent_context: "Context") -> Optional["TraceState"]:
     parent_span_context = get_current_span(parent_context).get_span_context()
