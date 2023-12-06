@@ -54,7 +54,7 @@ class TestFastApiSpans(unittest.TestCase):
         with FastApiApp(
             "app:app",
             APP_PORT,
-            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*/$"},
+            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*$"},
         ):
             response = requests.get(endpoint)
             response.raise_for_status()
