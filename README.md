@@ -393,9 +393,19 @@ The possible variations are:
 It is possible to automatically filter out spans based on an HTTP server endpoints for all supported web server frameworks.
 
 Simply set the `LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX` environment variable to a regex string that will match the urls,
-spans for matching urls will be not be delivered.
+spans for matching urls will be not be delivered (works for both incoming & outgoing HTTP requests).
 
-NOTE: The entire url can be matched, but query strings will be ignored.
+If we are filtering out an HTTP call to an opentelemetry traced component, every subsequent invocation made by that 
+component won't be traced either.
+
+When filtering out an HTTP span, all child spans will not be recorded as well.
+
+NOTE: When urls are accessed using standard ports (80 for HTTP and 443 for HTTPS), the port is not included in the url.
+
+example patterns:
+* `https:\/\/example\.com\/about` - will match `https://example.com/about`
+* `.*example.*` - will match any url with the word `example` in it
+* `https:\/\/example\.com:123.*` - will match any http request to example.com on port 123
 
 ## Contributing
 
