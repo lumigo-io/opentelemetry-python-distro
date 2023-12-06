@@ -9,6 +9,10 @@ from lumigo_opentelemetry.libs.sampling import (
 @pytest.mark.parametrize(
     "attributes, expected_url",
     [
+        ({"url.full": "http://test.com:80"}, "http://test.com"),
+        ({"url.full": "http://test.com:443"}, "http://test.com:443"),
+        ({"url.full": "https://test.com:443"}, "https://test.com"),
+        ({"url.full": "https://test.com:80"}, "https://test.com:80"),
         ({"url.full": "http://test.com"}, "http://test.com"),
         ({"http.url": "http://test.com"}, "http://test.com"),
         (
@@ -27,8 +31,8 @@ from lumigo_opentelemetry.libs.sampling import (
             {"http.url": "http://test.com:8080/test", "http.route": "/test"},
             "http://test.com:8080/test",
         ),
-        ({"url.scheme": "http", "http.host": "test.com"}, "http://test.com/"),
-        ({"http.scheme": "http", "http.host": "test.com"}, "http://test.com/"),
+        ({"url.scheme": "http", "http.host": "test.com"}, "http://test.com"),
+        ({"http.scheme": "http", "http.host": "test.com"}, "http://test.com"),
         (
             {"url.scheme": "http", "http.host": "test.com", "http.route": "/test"},
             "http://test.com/test",
@@ -63,7 +67,7 @@ from lumigo_opentelemetry.libs.sampling import (
             },
             "http://test.com:8080/test",
         ),
-        ({"http.host": "test.com"}, "test.com/"),
+        ({"http.host": "test.com"}, "test.com"),
         ({"http.host": "test.com", "http.route": "/test"}, "test.com/test"),
         (
             {"http.host": "test.com", "net.host.port": 8080, "http.route": "/test"},
