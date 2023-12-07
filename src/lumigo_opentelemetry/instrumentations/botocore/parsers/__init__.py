@@ -169,7 +169,7 @@ class SqsParser(AwsParser):
 
         # Filter out sqs polls with empty response
         if SqsParser._should_skip_empty_sqs_polling_response(operation_name, result):
-            logger.info(
+            logger.debug(
                 "Not tracing empty SQS polling requests "
                 f"(override by setting the {AUTO_FILTER_EMPTY_SQS} env var to false)"
             )
