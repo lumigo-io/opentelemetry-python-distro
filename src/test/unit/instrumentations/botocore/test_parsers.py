@@ -52,7 +52,8 @@ def test_sqs_skip_sqs_response(
 @patch(
     "lumigo_opentelemetry.instrumentations.botocore.parsers.SqsParser._should_skip_empty_sqs_polling_response"
 )
-def test_parse_sqs_response_skipping_empty_polls_outputs_log(should_skip_mock, caplog):
+def test_parse_sqs_response_skipping_empty_polls_outputs_log(should_skip_mock, caplog, monkeypatch):
+    monkeypatch.setenv("LUMIGO_DEBUG", "true")
     should_skip_mock.return_value = True
     span = Mock(set_attribute=Mock())
     service_name = "sqs"
