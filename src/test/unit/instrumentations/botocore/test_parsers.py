@@ -75,7 +75,7 @@ def test_parse_sqs_response_skipping_empty_polls_outputs_log(
         }
     }
 
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.DEBUG):
         SqsParser.parse_response(span, service_name, operation_name, result)
 
         assert "not tracing empty sqs polling requests" in caplog.text.lower()
