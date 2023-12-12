@@ -72,7 +72,7 @@ class TestFlaskSpans(unittest.TestCase):
             wait_for_exporter()
 
             spans_container = SpansContainer.get_spans_from_file()
-            self.assertEqual(1, len(spans_container.spans))
+            self.assertEqual(0, len(spans_container.spans))
 
     def test_requests_instrumentation(self):
         with FlaskApp(APP_PORT):

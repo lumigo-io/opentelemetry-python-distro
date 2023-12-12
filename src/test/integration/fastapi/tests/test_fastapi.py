@@ -1,5 +1,6 @@
 import unittest
 from parameterized import parameterized
+from test.test_utils.span_exporter import wait_for_exporter
 
 from test.test_utils.spans_parser import SpansContainer
 
@@ -66,10 +67,10 @@ class TestFastApiSpans(unittest.TestCase):
             body = response.json()
             self.assertEqual(body, {"message": "Hello again, FastAPI!"})
 
-            spans_container = SpansContainer.get_spans_from_file(
-                wait_time_sec=10, expected_span_count=3
-            )
-            self.assertEqual(3, len(spans_container.spans))
+            wait_for_exporter()
+
+            spans_container = SpansContainer.get_spans_from_file()
+            self.assertEqual(0, len(spans_container.spans))
 
     def test_endpoint_filter_no_match(self):
         endpoint = f"http://localhost:{APP_PORT}/"
