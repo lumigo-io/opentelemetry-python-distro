@@ -1,6 +1,7 @@
 import os
 import re
 from typing import Optional, Sequence
+from urllib.parse import urlparse
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace.sampling import (
@@ -62,17 +63,27 @@ class AttributeSampler(Sampler):
         return "SkipSampler"
 
 
-LUMIGO_SAMPLER = ParentBased(AttributeSampler())
+_attribute_sampler = AttributeSampler()
+LUMIGO_SAMPLER = ParentBased(
+    root=_attribute_sampler,
+    # If the parent was sampled we still want to check the current span for sampling
+    remote_parent_sampled=_attribute_sampler,
+    local_parent_sampled=_attribute_sampler,
+)
 
 
 def _extract_url(attributes: Attributes) -> Optional[str]:
-    if attributes is not None:
-        # if the url is already in the attributes, return it
-        if "url.full" in attributes:
-            return str(attributes["url.full"])
-        elif "http.url" in attributes:
-            return str(attributes["http.url"])
+    if attributes is None:
+        return None
 
+    raw_url = None
+    # if the url is already in the attributes, return it
+    if attributes.get("url.full"):
+        raw_url = str(attributes["url.full"])
+    elif attributes.get("http.url"):
+        raw_url = str(attributes["http.url"])
+
+    if not raw_url:
         # generate as much of the url as possible from the attributes
 
         # if we have the host and port, use them. it's even better if
@@ -109,17 +120,33 @@ def _extract_url(attributes: Attributes) -> Optional[str]:
             path += attributes["http.path"]
 
         # combine the host and path
-        url = host + path
+        raw_url = host + path
 
-        # if we have any useable part of the url, return it
-        if len(url) > 0:
-            # ensure that the path starts with a slash
-            if len(path) == 0:
-                url += "/"
-            return url
+    # If we still don't have a URL, return None
+    if not raw_url:
+        return None
 
-    # if we have absolutely nothing, return None
-    return None
+    parsed_url = urlparse(raw_url)
+    if (
+        parsed_url.scheme not in ("http", "https")
+        or not parsed_url.netloc
+        or not parsed_url.hostname
+    ):
+        # We can't parse the URL, so return the raw URL
+        return raw_url
+
+    final_url = f"{parsed_url.scheme}://"
+    final_url += (
+        parsed_url.hostname
+        if (parsed_url.netloc.endswith(":80") and parsed_url.scheme == "http")
+        or (parsed_url.netloc.endswith(":443") and parsed_url.scheme == "https")
+        else parsed_url.netloc
+    )
+    if parsed_url.path and parsed_url.path != "/":
+        final_url += parsed_url.path
+    if parsed_url.query:
+        final_url += f"?{parsed_url.query}"
+    return final_url
 
 
 def _get_parent_trace_state(parent_context: "Context") -> Optional["TraceState"]:

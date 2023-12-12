@@ -1,4 +1,7 @@
 import unittest
+from parameterized import parameterized
+from test.test_utils.span_exporter import wait_for_exporter
+
 from test.test_utils.spans_parser import SpansContainer
 
 import requests
@@ -52,7 +55,7 @@ class TestFastApiSpans(unittest.TestCase):
         with FastApiApp(
             "app:app",
             APP_PORT,
-            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*/$"},
+            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*$"},
         ):
             response = requests.get(endpoint)
             response.raise_for_status()
@@ -64,10 +67,10 @@ class TestFastApiSpans(unittest.TestCase):
             body = response.json()
             self.assertEqual(body, {"message": "Hello again, FastAPI!"})
 
-            spans_container = SpansContainer.get_spans_from_file(
-                wait_time_sec=10, expected_span_count=3
-            )
-            self.assertEqual(3, len(spans_container.spans))
+            wait_for_exporter()
+
+            spans_container = SpansContainer.get_spans_from_file()
+            self.assertEqual(0, len(spans_container.spans))
 
     def test_endpoint_filter_no_match(self):
         endpoint = f"http://localhost:{APP_PORT}/"
@@ -189,3 +192,33 @@ class TestFastApiSpans(unittest.TestCase):
                 ),
                 200,
             )
+
+    @parameterized.expand(
+        [
+            # regex matches, so we shouldn't see the client span sending a request to that endpoint
+            (r".*example\.com.*", 3, 0),
+            # regex doesn't match, so we should see the client span sending a request to that endpoint
+            (r".*this-will-not-match-anything.*", 4, 1),
+        ]
+    )
+    def test_skip_outbound_http_request(
+        self, regex: str, expected_span_count: int, expected_client_span_count: int
+    ):
+        with FastApiApp(
+            "app:app", APP_PORT, env={"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": regex}
+        ):
+            response = requests.get(f"http://localhost:{APP_PORT}/call-external")
+            response.raise_for_status()
+
+            spans_container = SpansContainer.get_spans_from_file(
+                wait_time_sec=10, expected_span_count=expected_span_count
+            )
+            self.assertEqual(expected_span_count, len(spans_container.spans))
+
+            # assert root
+            root = spans_container.get_first_root()
+            self.assertIsNotNone(root)
+            self.assertEqual(root["kind"], "SpanKind.SERVER")
+
+            client_spans = spans_container.get_clients(root_span=root)
+            self.assertEqual(len(client_spans), expected_client_span_count)

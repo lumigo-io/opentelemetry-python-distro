@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import requests
 
 app = FastAPI()
 
@@ -16,6 +17,12 @@ async def unmatched():
 @app.post("/invoke-requests")
 def invoke_requests(request: dict):
     return {"url": "http://sheker.kol.shehoo:8021/little-response", "data": "a" * 100}
+
+
+@app.get("/call-external")
+def call_external():
+    response = requests.get("http://example.com")
+    return {"status_code": response.status_code}
 
 
 @app.get("/invoke-requests-large-response")
