@@ -207,7 +207,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | Instrumentation | Package | Supported Versions | | | | |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
 | | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.33.13|1.17.22~1.34.2|1.17.22~1.34.2|1.17.22~1.34.2|1.17.22~1.34.2|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.33.13|1.17.22~1.34.4|1.17.22~1.34.4|1.17.22~1.34.4|1.17.22~1.34.4|
 | django | [django](https://pypi.org/project/django) | 3.2.1~3.2.23|3.2.1~3.2.23|3.2.1~3.2.23|3.2.1~3.2.23|3.2.1~3.2.23|
 | | | 3.2| 4.0.1~4.2.8| 4.0.1~4.2.8| 4.0.1~4.2.8| 4.0.1~4.2.8|
 | | | | 3.2| 3.2| 5.0.1~5.0.1| 5.0.1~5.0.1|
@@ -238,9 +238,9 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|1.0.0|
 | | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
 | | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2|
-| psycopg | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.1.15|3.1.1~3.1.15|3.1.1~3.1.15|3.1.1~3.1.15|3.1.4~3.1.15|
+| psycopg | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.1.16|3.1.1~3.1.16|3.1.1~3.1.16|3.1.1~3.1.16|3.1.4~3.1.16|
 | | | 3.1| 3.1| 3.1| 3.1| |
-|  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.1.15|3.1.1~3.1.15|3.1.1~3.1.15|3.1.1~3.1.15|3.1.1~3.1.15|
+|  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.1.16|3.1.1~3.1.16|3.1.1~3.1.16|3.1.1~3.1.16|3.1.1~3.1.16|
 | | | 3.1| 3.1| 3.1| 3.1| 3.1|
 | psycopg2 | [psycopg2](https://pypi.org/project/psycopg2) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.8| 2.9.5~2.9.9| |
