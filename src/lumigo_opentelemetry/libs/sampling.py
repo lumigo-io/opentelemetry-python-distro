@@ -1,7 +1,7 @@
+import json
 import os
 import re
-from typing import Optional, Sequence
-from urllib.parse import urlparse
+from typing import Optional, Sequence, List
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace.sampling import (
@@ -16,7 +16,9 @@ from opentelemetry.util.types import Attributes
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.environment_variables import (
-    AUTO_FILTER_HTTP_ENDPOINTS_REGEX,
+    LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX,
+    LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT,
+    LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER,
 )
 
 
@@ -44,14 +46,35 @@ class AttributeSampler(Sampler):
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         decision = Decision.RECORD_AND_SAMPLE
-        attributes_url = _extract_url(attributes)
-        if attributes_url and _should_skip_span_on_route_match(attributes_url):
-            logger.debug(
-                f"Dropping trace for url '{attributes_url}' because it matches the"
-                f" auto-filter regex specified by '{AUTO_FILTER_HTTP_ENDPOINTS_REGEX}'"
-            )
-            decision = Decision.DROP
-            attributes = None
+        endpoint = _extract_endpoint(attributes, kind)
+        if endpoint:
+            if (
+                kind == SpanKind.SERVER
+                and does_endpoint_match_server_filtering_regexes(endpoint)
+            ):
+                logger.debug(
+                    f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
+                    f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER}' env var"
+                )
+                decision = Decision.DROP
+                attributes = None
+            elif (
+                kind == SpanKind.CLIENT
+                and does_endpoint_match_client_filtering_regexes(endpoint)
+            ):
+                logger.debug(
+                    f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
+                    f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT}' env var"
+                )
+                decision = Decision.DROP
+                attributes = None
+            elif does_endpoint_match_filtering_regexes(endpoint):
+                logger.debug(
+                    f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
+                    f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX}' env var"
+                )
+                decision = Decision.DROP
+                attributes = None
 
         return SamplingResult(
             decision,
@@ -72,81 +95,76 @@ LUMIGO_SAMPLER = ParentBased(
 )
 
 
-def _extract_url(attributes: Attributes) -> Optional[str]:
+def does_endpoint_match_client_filtering_regexes(endpoint: str) -> bool:
+    regexes = _get_string_list_from_env_var(LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT)
+    if not regexes:
+        return False
+
+    return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+
+
+def does_endpoint_match_server_filtering_regexes(endpoint: str) -> bool:
+    regexes = _get_string_list_from_env_var(LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER)
+    if not regexes:
+        return False
+
+    return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+
+
+def does_endpoint_match_filtering_regexes(endpoint: str) -> bool:
+    regexes = _get_string_list_from_env_var(LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX)
+    if not regexes:
+        return False
+
+    return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+
+
+def does_match_regex_safe(regex: str, value: str) -> bool:
+    if not regex or value is None:
+        return False
+
+    try:
+        return re.match(regex, value) is not None
+    except Exception:
+        logger.warning(f"Invalid regex: {regex}")
+        return False
+
+
+def _get_string_list_from_env_var(env_var_name: str) -> List[str]:
+    env_var_value = os.environ.get(env_var_name)
+    if not env_var_value:
+        return []
+
+    parsed_list = None
+    try:
+        parsed_list = json.loads(env_var_value)
+    except Exception:
+        pass
+
+    if (
+        parsed_list is None
+        or not isinstance(parsed_list, list)
+        or any(not isinstance(item, str) for item in parsed_list)
+    ):
+        logger.warning(
+            f"The value of env var '{env_var_name}' is not a valid list of strings"
+        )
+        return []
+
+    return parsed_list
+
+
+def _extract_endpoint(attributes: Attributes, spanKind: SpanKind) -> Optional[str]:
     if attributes is None:
         return None
 
-    raw_url = None
-    # if the url is already in the attributes, return it
-    if attributes.get("url.full"):
-        raw_url = str(attributes["url.full"])
-    elif attributes.get("http.url"):
-        raw_url = str(attributes["http.url"])
+    endpoint = None
+    if spanKind == SpanKind.CLIENT:
+        endpoint = attributes.get("url.full", attributes.get("http.url"))
+    elif spanKind == SpanKind.SERVER:
+        endpoint = attributes.get("url.path", attributes.get("http.target"))
 
-    if not raw_url:
-        # generate as much of the url as possible from the attributes
-
-        # if we have the host and port, use them. it's even better if
-        # we have the scheme as well
-        host = ""
-        if "http.host" in attributes:
-            if "url.scheme" in attributes:
-                host = f"{attributes['url.scheme']}://"
-            elif "http.scheme" in attributes:
-                host = f"{attributes['http.scheme']}://"
-
-            if ":" in attributes["http.host"]:
-                host += attributes["http.host"]
-            else:
-                host += attributes["http.host"]
-                if "net.host.port" in attributes:
-                    host += f":{attributes['net.host.port']}"
-
-        path = ""
-
-        # if we have the target, use it. otherwise, fallback to route
-        # or path
-        if "url.path" in attributes:
-            path += attributes["url.path"]
-            if "url.query" in attributes:
-                path += f"?{attributes['url.query']}"
-            if "url.fragment" in attributes:
-                path += f"#{attributes['url.fragment']}"
-        elif "http.target" in attributes:
-            path += attributes["http.target"]
-        elif "http.route" in attributes:
-            path += attributes["http.route"]
-        elif "http.path" in attributes:
-            path += attributes["http.path"]
-
-        # combine the host and path
-        raw_url = host + path
-
-    # If we still don't have a URL, return None
-    if not raw_url:
-        return None
-
-    parsed_url = urlparse(raw_url)
-    if (
-        parsed_url.scheme not in ("http", "https")
-        or not parsed_url.netloc
-        or not parsed_url.hostname
-    ):
-        # We can't parse the URL, so return the raw URL
-        return raw_url
-
-    final_url = f"{parsed_url.scheme}://"
-    final_url += (
-        parsed_url.hostname
-        if (parsed_url.netloc.endswith(":80") and parsed_url.scheme == "http")
-        or (parsed_url.netloc.endswith(":443") and parsed_url.scheme == "https")
-        else parsed_url.netloc
-    )
-    if parsed_url.path and parsed_url.path != "/":
-        final_url += parsed_url.path
-    if parsed_url.query:
-        final_url += f"?{parsed_url.query}"
-    return final_url
+    return str(endpoint) if endpoint else None
 
 
 def _get_parent_trace_state(parent_context: "Context") -> Optional["TraceState"]:
@@ -154,25 +172,3 @@ def _get_parent_trace_state(parent_context: "Context") -> Optional["TraceState"]
     if parent_span_context is None or not parent_span_context.is_valid:
         return None
     return parent_span_context.trace_state
-
-
-def _should_skip_span_on_route_match(url: Optional[str]) -> bool:
-    """
-    This function checks if the given route should be skipped from tracing.
-    @param url: The complete url to check. Query params will be ignored.
-    @return: True if the route should be skipped, False otherwise
-    """
-    if not url:
-        return False
-    filter_regex_string = os.environ.get(AUTO_FILTER_HTTP_ENDPOINTS_REGEX, "")
-    if not filter_regex_string:
-        return False
-    try:
-        filter_regex = re.compile(filter_regex_string)
-    except Exception:
-        logger.warning(
-            f"Invalid regex in '{AUTO_FILTER_HTTP_ENDPOINTS_REGEX}': {filter_regex_string}",
-            exc_info=True,
-        )
-        return False
-    return filter_regex.search(url) is not None
