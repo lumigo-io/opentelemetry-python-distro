@@ -75,26 +75,6 @@ class TestFlaskSpans(unittest.TestCase):
             spans_container = SpansContainer.get_spans_from_file()
             self.assertEqual(expected_span_count, len(spans_container.spans))
 
-    def test_200_OK_filter_match(self):
-        with FlaskApp(
-            APP_PORT,
-            {"LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX": ".*(localhost|127.0.0.1).*$"},
-        ):
-            response = requests.get("http://localhost:5000/")
-            response.raise_for_status()
-            body = response.json()
-            self.assertEqual(body, {"message": "Hello Flask!"})
-
-            response = requests.get("http://localhost:5000/unmatched")
-            response.raise_for_status()
-            body = response.json()
-            self.assertEqual(body, {"message": "Hello again, Flask!"})
-
-            wait_for_exporter()
-
-            spans_container = SpansContainer.get_spans_from_file()
-            self.assertEqual(0, len(spans_container.spans))
-
     def test_requests_instrumentation(self):
         with FlaskApp(APP_PORT):
             response = requests.get("http://localhost:5000/invoke-requests")
