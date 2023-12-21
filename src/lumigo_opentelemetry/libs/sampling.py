@@ -13,6 +13,7 @@ from opentelemetry.sdk.trace.sampling import (
 from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
+from urllib.parse import urlparse, ParseResult
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.environment_variables import (
@@ -155,16 +156,56 @@ def _get_string_list_from_env_var(env_var_name: str) -> List[str]:
 
 
 def _extract_endpoint(attributes: Attributes, spanKind: SpanKind) -> Optional[str]:
+    """
+    Extract the endpoint from the given span attributes.
+
+    Expected attributes for HTTP CLIENT spans:
+    * url.full - The Absolute URL describing a network resource. E.g. "https://www.foo.bar/search?q=OpenTelemetry#SemConv"
+
+    Expected attributes for HTTP SERVER spans:
+    * url.path - The URI path component. E.g. "/search"
+
+    Deprecated attributes (see https://opentelemetry.io/docs/specs/semconv/attributes-registry/http/#deprecated-http-attributes):
+    * http.target - replaced by the url.path & url.query attributes. Example: "/search?q=OpenTelemetry#SemConv"
+    * http.url - replaced by the url.full attribute. Example: "https://www.foo.bar/search?q=OpenTelemetry#SemConv"
+    """
     if attributes is None:
         return None
 
     endpoint = None
     if spanKind == SpanKind.CLIENT:
-        endpoint = attributes.get("url.full", attributes.get("http.url"))
+        endpoint = (
+            attributes.get("url.full")
+            or attributes.get("http.url")
+            or attributes.get("http.target")
+        )
     elif spanKind == SpanKind.SERVER:
-        endpoint = attributes.get("url.path", attributes.get("http.target"))
+        endpoint = (
+            attributes.get("url.path")
+            or attributes.get("http.target")
+            or attributes.get("http.url")
+        )
 
-    return str(endpoint) if endpoint else None
+    endpoint = str(endpoint) if endpoint else None
+
+    if not endpoint:
+        return None
+
+    parsed_endpoint: ParseResult = urlparse(endpoint)
+    if spanKind == SpanKind.CLIENT:
+        return parsed_endpoint.geturl()
+    elif spanKind == SpanKind.SERVER:
+        # Make sure that we only return the path and everything that comes after it, not the full URL
+        return ParseResult(
+            scheme="",
+            netloc="",
+            path=parsed_endpoint.path,
+            params=parsed_endpoint.params,
+            query=parsed_endpoint.query,
+            fragment=parsed_endpoint.fragment,
+        ).geturl()
+
+    return None
 
 
 def _get_parent_trace_state(parent_context: "Context") -> Optional["TraceState"]:

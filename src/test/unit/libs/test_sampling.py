@@ -56,7 +56,9 @@ def test_should_sample(
     )
     sampler = AttributeSampler()
     assert (
-        sampler.should_sample(trace_id=1, name="test", kind=spanKind).decision
+        sampler.should_sample(
+            parent_context=None, trace_id=1, name="test", kind=spanKind
+        ).decision
         == expected_sampling_decision
     )
 
@@ -117,19 +119,27 @@ def test_extract_string_list_from_env_var(
     "attributes, spanKind, expected_url",
     [
         (
-            {"url.path": "urlPath", "http.target": "httpTarget"},
+            {"url.path": "/search", "http.target": "/about"},
             SpanKind.SERVER,
-            "urlPath",
+            "/search",
         ),
-        ({"a": "a", "http.target": "httpTarget"}, SpanKind.SERVER, "httpTarget"),
-        ({"url.full": "fullUrl", "http.url": "httpUrl"}, SpanKind.CLIENT, "fullUrl"),
-        ({"a": "a", "http.url": "httpUrl"}, SpanKind.CLIENT, "httpUrl"),
+        ({"a": "a", "http.target": "/about"}, SpanKind.SERVER, "/about"),
+        (
+            {"url.full": "https://foo.bar/search", "http.url": "https://foo.bar/about"},
+            SpanKind.CLIENT,
+            "https://foo.bar/search",
+        ),
+        (
+            {"a": "a", "http.url": "https://foo.bar/about"},
+            SpanKind.CLIENT,
+            "https://foo.bar/about",
+        ),
         (
             {
-                "url.path": "urlPath",
-                "http.target": "httpTarget",
-                "url.full": "fullUrl",
-                "http.url": "httpUrl",
+                "url.path": "/search",
+                "http.target": "/about",
+                "url.full": "https://foo.bar/search",
+                "http.url": "https://foo.bar/about",
             },
             SpanKind.INTERNAL,
             None,
@@ -137,40 +147,15 @@ def test_extract_string_list_from_env_var(
         ({}, SpanKind.INTERNAL, None),
         ({}, SpanKind.SERVER, None),
         ({}, SpanKind.CLIENT, None),
+        # If the client endpoint field is only a path, we return it as a path (best we can do)
+        ({"http.url": "/about"}, SpanKind.CLIENT, "/about"),
+        # If the server endpoint field is a full URL, we return only everything that comes after the path
+        (
+            {"http.url": "https://www.foo.bar/search?q=OpenTelemetry#SemConv"},
+            SpanKind.SERVER,
+            "/search?q=OpenTelemetry#SemConv",
+        ),
     ],
 )
 def test_extract_endpoint(attributes, spanKind, expected_url):
     assert _extract_endpoint(attributes, spanKind) == expected_url
-
-
-# def test_should_skip_span_on_route_match(monkeypatch):
-#     monkeypatch.setenv("LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX", ".*(localhost).*/$")
-#     assert _should_skip_span_on_route_match("http://localhost:5000/") is True
-#     assert _should_skip_span_on_route_match("http://localhost:5000/?a=b") is False
-#     assert _should_skip_span_on_route_match("http://localhost:5000/unmatched") is False
-#     assert _should_skip_span_on_route_match("http://example.com:5000/") is False
-#
-#     monkeypatch.setenv("LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX", ".*(localhost).*a=b")
-#     assert _should_skip_span_on_route_match("http://localhost:5000/") is False
-#     assert _should_skip_span_on_route_match("http://localhost:5000/?a=b") is True
-#     assert (
-#         _should_skip_span_on_route_match("http://localhost:5000/unmatched?c=d&a=b")
-#         is True
-#     )
-#     assert _should_skip_span_on_route_match("http://example.com:5000/") is False
-#     assert _should_skip_span_on_route_match("http://example.com:5000/?a=b&c=d") is False
-#
-#     monkeypatch.setenv(
-#         "LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX", ".*(localhost).*/matched"
-#     )
-#     assert _should_skip_span_on_route_match("http://localhost:5000/matched") is True
-#     assert _should_skip_span_on_route_match("http://localhost:5000/matched?a=b") is True
-#     assert _should_skip_span_on_route_match("http://localhost:5000/unmatched") is False
-#     assert (
-#         _should_skip_span_on_route_match("http://example.com:5000/matched-incorrectly")
-#         is False
-#     )
-#     assert (
-#         _should_skip_span_on_route_match("http://localhost:5000/matched-incorrectly")
-#         is True
-#     )
