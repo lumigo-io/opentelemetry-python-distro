@@ -148,7 +148,7 @@ def _get_string_list_from_env_var(env_var_name: str) -> List[str]:
         or any(not isinstance(item, str) for item in parsed_list)
     ):
         logger.warning(
-            f"The value of env var '{env_var_name}' is not a valid list of strings"
+            f"The value of env var '{env_var_name}' is not valid JSON format for an array of strings: {env_var_value}"
         )
         return []
 
