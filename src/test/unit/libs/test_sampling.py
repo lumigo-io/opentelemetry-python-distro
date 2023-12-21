@@ -106,7 +106,11 @@ def test_does_match_regex_safe(regex, value, should_match):
         ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", "[1,2,3]", []),
         ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", '["a","b","c"]', ["a", "b", "c"]),
         ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", '["a",1,"c"]', []),
-        ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", r'["https:\\/\\/api\\.chucknorris\\.io\\/jokes\\/random"]', [r"https:\/\/api\.chucknorris\.io\/jokes\/random"]),
+        (
+            "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX",
+            r'["https:\\/\\/api\\.chucknorris\\.io\\/jokes\\/random"]',
+            [r"https:\/\/api\.chucknorris\.io\/jokes\/random"],
+        ),
     ],
 )
 def test_extract_string_list_from_env_var(

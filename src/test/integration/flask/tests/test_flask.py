@@ -41,25 +41,31 @@ class TestFlaskSpans(unittest.TestCase):
             ("/", None, None, r'["\/"]', 0),
             ("/", None, None, r'[".*no-match.*"]', 1),
             ("/invoke-requests", None, None, r'[".*no-match.*"]', 2),
-            ("/invoke-requests", None, None, r'["https:\\/\\/api\\.chucknorris\\.io\\/jokes\\/random"]', 1),
+            (
+                "/invoke-requests",
+                None,
+                None,
+                r'["https:\\/\\/api\\.chucknorris\\.io\\/jokes\\/random"]',
+                1,
+            ),
         ]
     )
     def test_endpoint_filter_match(
-            self,
-            endpoint,
-            server_regexes,
-            client_regexes,
-            general_regexes,
-            expected_span_count,
+        self,
+        endpoint,
+        server_regexes,
+        client_regexes,
+        general_regexes,
+        expected_span_count,
     ):
         endpoint = f"http://localhost:{APP_PORT}{endpoint}"
         with FlaskApp(
-                APP_PORT,
-                {
-                    "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER": server_regexes or "",
-                    "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT": client_regexes or "",
-                    "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX": general_regexes or "",
-                },
+            APP_PORT,
+            {
+                "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER": server_regexes or "",
+                "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT": client_regexes or "",
+                "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX": general_regexes or "",
+            },
         ):
             response = requests.get(endpoint)
             response.raise_for_status()
