@@ -1,101 +1,146 @@
 import pytest
+from opentelemetry.sdk.trace.sampling import Decision
+from opentelemetry.trace import SpanKind
 
-from lumigo_opentelemetry.libs.sampling import _extract_endpoint
+from lumigo_opentelemetry.libs.sampling import (
+    _extract_endpoint,
+    _get_string_list_from_env_var,
+    does_match_regex_safe,
+    does_endpoint_match_filtering_regexes,
+    AttributeSampler,
+)
 
 
 @pytest.mark.parametrize(
-    "attributes, expected_url",
+    "endpoint, spanKind, matches_server_filter, matched_client_filter, matched_general_filter, expected_sampling_decision",
     [
-        ({"url.full": "http://test.com:80"}, "http://test.com"),
-        ({"url.full": "http://test.com:443"}, "http://test.com:443"),
-        ({"url.full": "https://test.com:443"}, "https://test.com"),
-        ({"url.full": "https://test.com:80"}, "https://test.com:80"),
-        ({"url.full": "http://test.com"}, "http://test.com"),
-        ({"http.url": "http://test.com"}, "http://test.com"),
+        ("/orders", SpanKind.SERVER, True, False, False, Decision.DROP),
+        ("/orders", SpanKind.SERVER, False, True, False, Decision.RECORD_AND_SAMPLE),
+        ("/orders", SpanKind.SERVER, False, False, True, Decision.DROP),
         (
-            {"url.full": "http://test.com/test", "http.route": "/test"},
-            "http://test.com/test",
+            "https://foo.bar",
+            SpanKind.CLIENT,
+            True,
+            False,
+            False,
+            Decision.RECORD_AND_SAMPLE,
         ),
-        (
-            {"http.url": "http://test.com/test", "http.route": "/test"},
-            "http://test.com/test",
-        ),
-        (
-            {"url.full": "http://test.com:8080/test", "http.route": "/test"},
-            "http://test.com:8080/test",
-        ),
-        (
-            {"http.url": "http://test.com:8080/test", "http.route": "/test"},
-            "http://test.com:8080/test",
-        ),
-        ({"url.scheme": "http", "http.host": "test.com"}, "http://test.com"),
-        ({"http.scheme": "http", "http.host": "test.com"}, "http://test.com"),
-        (
-            {"url.scheme": "http", "http.host": "test.com", "http.route": "/test"},
-            "http://test.com/test",
-        ),
-        (
-            {"http.scheme": "http", "http.host": "test.com", "http.route": "/test"},
-            "http://test.com/test",
-        ),
-        (
-            {
-                "http.scheme": "http",
-                "http.host": "test.com:8080",
-                "http.route": "/test",
-            },
-            "http://test.com:8080/test",
-        ),
-        (
-            {
-                "http.scheme": "http",
-                "http.host": "test.com:8080",
-                "net.host.port": 8080,
-                "http.route": "/test",
-            },
-            "http://test.com:8080/test",
-        ),
-        (
-            {
-                "http.scheme": "http",
-                "http.host": "test.com",
-                "net.host.port": 8080,
-                "http.route": "/test",
-            },
-            "http://test.com:8080/test",
-        ),
-        ({"http.host": "test.com"}, "test.com"),
-        ({"http.host": "test.com", "http.route": "/test"}, "test.com/test"),
-        (
-            {"http.host": "test.com", "net.host.port": 8080, "http.route": "/test"},
-            "test.com:8080/test",
-        ),
-        ({"http.target": "/test"}, "/test"),
-        ({"http.target": "/test?a=b#hello"}, "/test?a=b#hello"),
-        (
-            {"url.path": "/test", "url.query": "a=b", "url.fragment": "hello"},
-            "/test?a=b#hello",
-        ),
-        (
-            {
-                "url.path": "/test",
-                "url.query": "a=b",
-                "url.fragment": "hello",
-                "http.target": "/test?a=b#hello",
-                "http.route": "/test",
-            },
-            "/test?a=b#hello",
-        ),
-        ({"http.target": "/test?a=b#hello", "http.route": "/test"}, "/test?a=b#hello"),
-        ({"http.target": "/test?a=b#hello", "http.path": "/test"}, "/test?a=b#hello"),
-        ({"http.route": "/test"}, "/test"),
-        ({"http.route": "/test", "http.path": "/test"}, "/test"),
-        ({"http.path": "/test"}, "/test"),
-        ({}, None),
+        ("https://foo.bar", SpanKind.CLIENT, False, True, False, Decision.DROP),
+        ("https://foo.bar", SpanKind.CLIENT, False, False, True, Decision.DROP),
     ],
 )
-def test_extract_url(attributes, expected_url):
-    assert _extract_endpoint(attributes) == expected_url
+def test_should_sample(
+    endpoint,
+    spanKind,
+    matches_server_filter,
+    matched_client_filter,
+    matched_general_filter,
+    expected_sampling_decision,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "lumigo_opentelemetry.libs.sampling._extract_endpoint",
+        lambda *args, **kwargs: endpoint,
+    )
+    monkeypatch.setattr(
+        "lumigo_opentelemetry.libs.sampling.does_endpoint_match_server_filtering_regexes",
+        lambda *args, **kwargs: matches_server_filter,
+    )
+    monkeypatch.setattr(
+        "lumigo_opentelemetry.libs.sampling.does_endpoint_match_client_filtering_regexes",
+        lambda *args, **kwargs: matched_client_filter,
+    )
+    monkeypatch.setattr(
+        "lumigo_opentelemetry.libs.sampling.does_endpoint_match_filtering_regexes",
+        lambda *args, **kwargs: matched_general_filter,
+    )
+    sampler = AttributeSampler()
+    assert (
+        sampler.should_sample(trace_id=1, name="test", kind=spanKind).decision
+        == expected_sampling_decision
+    )
+
+
+@pytest.mark.parametrize(
+    "endpoint, env_var_name, env_var_value, should_match",
+    [
+        ("/orders", "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", '[".*orders.*"]', True),
+        ("/orders", "LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", '[".*no-match.*"]', False),
+    ],
+)
+def test_does_endpoint_match_filtering_regexes(
+    endpoint, env_var_name, env_var_value, should_match, monkeypatch
+):
+    monkeypatch.setenv(env_var_name, env_var_value)
+    assert does_endpoint_match_filtering_regexes(endpoint) == should_match
+
+
+@pytest.mark.parametrize(
+    "regex, value, should_match",
+    [
+        ("", "", False),
+        ("", "a", False),
+        ("a", "", False),
+        ("a", "a", True),
+        ("a", "b", False),
+        # This is an invalid regex, but we want to make sure it doesn't crash
+        ("[", "", False),
+        ("[", "[", False),
+        # None values shouldn't crash the func
+        (None, None, False),
+        (None, "", False),
+        ("", None, False),
+    ],
+)
+def test_does_match_regex_safe(regex, value, should_match):
+    assert does_match_regex_safe(regex, value) == should_match
+
+
+@pytest.mark.parametrize(
+    "env_var_name, env_var_value, expected_list",
+    [
+        ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", None, []),
+        ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", "[]", []),
+        ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", "[1,2,3]", []),
+        ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", '["a","b","c"]', ["a", "b", "c"]),
+        ("LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX", '["a",1,"c"]', []),
+    ],
+)
+def test_extract_string_list_from_env_var(
+    env_var_name, env_var_value, expected_list, monkeypatch
+):
+    monkeypatch.setenv(env_var_name, env_var_value)
+    assert _get_string_list_from_env_var(env_var_name) == expected_list
+
+
+@pytest.mark.parametrize(
+    "attributes, spanKind, expected_url",
+    [
+        (
+            {"url.path": "urlPath", "http.target": "httpTarget"},
+            SpanKind.SERVER,
+            "urlPath",
+        ),
+        ({"a": "a", "http.target": "httpTarget"}, SpanKind.SERVER, "httpTarget"),
+        ({"url.full": "fullUrl", "http.url": "httpUrl"}, SpanKind.CLIENT, "fullUrl"),
+        ({"a": "a", "http.url": "httpUrl"}, SpanKind.CLIENT, "httpUrl"),
+        (
+            {
+                "url.path": "urlPath",
+                "http.target": "httpTarget",
+                "url.full": "fullUrl",
+                "http.url": "httpUrl",
+            },
+            SpanKind.INTERNAL,
+            None,
+        ),
+        ({}, SpanKind.INTERNAL, None),
+        ({}, SpanKind.SERVER, None),
+        ({}, SpanKind.CLIENT, None),
+    ],
+)
+def test_extract_endpoint(attributes, spanKind, expected_url):
+    assert _extract_endpoint(attributes, spanKind) == expected_url
 
 
 # def test_should_skip_span_on_route_match(monkeypatch):
