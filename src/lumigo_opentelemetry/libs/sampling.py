@@ -96,28 +96,32 @@ LUMIGO_SAMPLER = ParentBased(
 )
 
 
-def does_endpoint_match_client_filtering_regexes(endpoint: str) -> bool:
-    regexes = _get_string_list_from_env_var(LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT)
+def does_endpoint_match_env_var_filtering_regex(
+    endpoint: str, env_var_name: str
+) -> bool:
+    regexes = _get_string_list_from_env_var(env_var_name)
     if not regexes:
         return False
 
     return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+
+
+def does_endpoint_match_client_filtering_regexes(endpoint: str) -> bool:
+    return does_endpoint_match_env_var_filtering_regex(
+        endpoint, LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT
+    )
 
 
 def does_endpoint_match_server_filtering_regexes(endpoint: str) -> bool:
-    regexes = _get_string_list_from_env_var(LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER)
-    if not regexes:
-        return False
-
-    return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+    return does_endpoint_match_env_var_filtering_regex(
+        endpoint, LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER
+    )
 
 
 def does_endpoint_match_filtering_regexes(endpoint: str) -> bool:
-    regexes = _get_string_list_from_env_var(LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX)
-    if not regexes:
-        return False
-
-    return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+    return does_endpoint_match_env_var_filtering_regex(
+        endpoint, LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX
+    )
 
 
 def does_match_regex_safe(regex: str, value: str) -> bool:
