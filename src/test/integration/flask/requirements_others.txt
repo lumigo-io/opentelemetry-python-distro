@@ -2,3 +2,4 @@ pytest
 json-stream
 requests
 psutil
+parameterized

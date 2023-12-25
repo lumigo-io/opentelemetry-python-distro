@@ -99,7 +99,11 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 * `LUMIGO_SWITCH_OFF=true`: This option disables the Lumigo OpenTelemetry distro entirely; no instrumentation will be injected, no tracing data will be collected.
 * `LUMIGO_REPORT_DEPENDENCIES=false`: This option disables the built-in dependency reporting to Lumigo SaaS. For more information, refer to the [Automated dependency reporting](#automated-dependency-reporting) section.
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS`: This option enables the automatic filtering of empty SQS messages from being sent to Lumigo SaaS. For more information, refer to the [Filtering out empty SQS messages](#filtering-out-empty-sqs-messages) section.
-* `LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX`: This option enables the automatic filtering of endpoints that match the supplied regular expressions, refer to the [Filtering out HTTP endpoints](#filtering-out-http-endpoints) section.
+* `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX='["regex1", "regex2"]'`: This option enables the filtering of client and server endpoints through regular expression searches. Fine-tune your settings via the following environment variables, which work in conjunction with `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX` for a specific span type:
+  * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER` applies the regular expression search exclusively to server spans. Searching is performed against the following attributes on a span: `url.path` and `http.target`.
+  * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT` applies the regular expression search exclusively to client spans. Searching is performed against the following attributes on a span: `url.full` and `http.url`.
+  
+  For more information check out [Filtering http endpoints](#filtering-http-endpoints).
 
 ### Execution Tags
 
@@ -392,24 +396,32 @@ The possible variations are:
 * `LUMIGO_AUTO_FILTER_EMPTY_SQS=false` do not filter out empty SQS polling messages
 * No environment variable set (default): filter out empty SQS polling messages
 
-### Filtering out HTTP endpoints
+### Filtering http endpoints
 
-It is possible to automatically filter out spans based on an HTTP server endpoints for all supported web server frameworks.
+You can selectively filter spans based on HTTP server/client endpoints for various components, not limited to web frameworks.
 
-Simply set the `LUMIGO_AUTO_FILTER_HTTP_ENDPOINTS_REGEX` environment variable to a regex string that will match the urls,
-spans for matching urls will be not be delivered (works for both incoming & outgoing HTTP requests).
+#### Global filtering
+Set the `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX` environment variable to a list of regex strings. Spans with matching server/client endpoints will not be traced.
 
-If we are filtering out an HTTP call to an opentelemetry traced component, every subsequent invocation made by that 
+#### Specific Filtering
+For exclusive server (inbound) or client (outbound) span filtering, use the environment variables:
+* `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER`
+* `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT`
+
+Notes:
+* the environment variable must be a valid JSON array of strings, so if you want to match endpoint with the hostname `google.com` the environment variable value should be `["google\\.com"]`.
+* If we are filtering out an HTTP call to an opentelemetry traced component, every subsequent invocation made by that 
 component won't be traced either.
 
-When filtering out an HTTP span, all child spans will not be recorded as well.
-
-NOTE: When urls are accessed using standard ports (80 for HTTP and 443 for HTTPS), the port is not included in the url.
-
-example patterns:
-* `https:\/\/example\.com\/about` - will match `https://example.com/about`
-* `.*example.*` - will match any url with the word `example` in it
-* `https:\/\/example\.com:123.*` - will match any http request to example.com on port 123
+Examples:
+* Filtering out every incoming HTTP request to the `/login` endpoint (will also match requests such as `/login?user=foo`, `/login/bar`))):
+  * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER=["\\/login"]`
+* Filtering out every outgoing HTTP request to the `google.com` domain (will also match requests such as `google.com/foo`, `bar.google.com`):
+  * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT=["google\\.com"]`'
+* Filtering out every outgoing HTTP request to `https://www.google.com` (will also match requests such as `https://www.google.com/`, `https://www.google.com/foo`)
+  * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT=["https:\\/\\/www\\.google\\.com"]`
+* Filtering out every HTTP request (incoming or outgoing) with the word `login`:
+  * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX=["login"]`
 
 ## Contributing
 
