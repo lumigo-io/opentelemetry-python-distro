@@ -87,6 +87,7 @@ def test_does_endpoint_match_filtering_regexes(
         ("a", "b", False),
         # Make sure that the regex is searched and not matched
         ("word", "search for one word in this sentence", True),
+        (".*word.*", "search for one word in this sentence", True),
         (r"^word$", "search for one word in this sentence", False),
         (
             r"^search for one word in this sentence$",
