@@ -103,7 +103,7 @@ def does_endpoint_match_env_var_filtering_regex(
     if not regexes:
         return False
 
-    return any(does_match_regex_safe(regex, endpoint) for regex in regexes)
+    return any(does_search_regex_find_safe(regex, endpoint) for regex in regexes)
 
 
 def does_endpoint_match_client_filtering_regexes(endpoint: str) -> bool:
@@ -124,12 +124,12 @@ def does_endpoint_match_filtering_regexes(endpoint: str) -> bool:
     )
 
 
-def does_match_regex_safe(regex: str, value: str) -> bool:
+def does_search_regex_find_safe(regex: str, value: str) -> bool:
     if not regex or value is None:
         return False
 
     try:
-        return re.match(regex, value) is not None
+        return re.search(regex, value) is not None
     except Exception:
         logger.warning(f"Invalid regex: {regex}")
         return False
