@@ -5,7 +5,7 @@ from opentelemetry.trace import SpanKind
 from lumigo_opentelemetry.libs.sampling import (
     _extract_endpoint,
     _get_string_list_from_env_var,
-    does_match_regex_safe,
+    does_search_regex_find_safe,
     does_endpoint_match_filtering_regexes,
     AttributeSampler,
 )
@@ -85,6 +85,14 @@ def test_does_endpoint_match_filtering_regexes(
         ("a", "", False),
         ("a", "a", True),
         ("a", "b", False),
+        # Make sure that the regex is searched and not matched
+        ("word", "search for one word in this sentence", True),
+        (r"^word$", "search for one word in this sentence", False),
+        (
+            r"^search for one word in this sentence$",
+            "search for one word in this sentence",
+            True,
+        ),
         # This is an invalid regex, but we want to make sure it doesn't crash
         ("[", "", False),
         ("[", "[", False),
@@ -94,8 +102,8 @@ def test_does_endpoint_match_filtering_regexes(
         ("", None, False),
     ],
 )
-def test_does_match_regex_safe(regex, value, should_match):
-    assert does_match_regex_safe(regex, value) == should_match
+def test_does_search_regex_find_safe(regex, value, should_match):
+    assert does_search_regex_find_safe(regex, value) == should_match
 
 
 @pytest.mark.parametrize(
