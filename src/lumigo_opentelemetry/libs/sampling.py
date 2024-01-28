@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Optional, Sequence, List
+from typing import Optional, Sequence, List, Mapping, Any
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace.sampling import (
@@ -47,35 +47,9 @@ class AttributeSampler(Sampler):
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         decision = Decision.RECORD_AND_SAMPLE
-        endpoint = _extract_endpoint(attributes, kind)
-        if endpoint:
-            if (
-                kind == SpanKind.SERVER
-                and does_endpoint_match_server_filtering_regexes(endpoint)
-            ):
-                logger.debug(
-                    f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
-                    f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER}' env var"
-                )
-                decision = Decision.DROP
-                attributes = None
-            elif (
-                kind == SpanKind.CLIENT
-                and does_endpoint_match_client_filtering_regexes(endpoint)
-            ):
-                logger.debug(
-                    f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
-                    f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT}' env var"
-                )
-                decision = Decision.DROP
-                attributes = None
-            elif does_endpoint_match_filtering_regexes(endpoint):
-                logger.debug(
-                    f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
-                    f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX}' env var"
-                )
-                decision = Decision.DROP
-                attributes = None
+        if not should_sample(attributes, kind):
+            decision = Decision.DROP
+            attributes = None
 
         return SamplingResult(
             decision,
@@ -85,6 +59,37 @@ class AttributeSampler(Sampler):
 
     def get_description(self) -> str:
         return "SkipSampler"
+
+
+def should_sample(attributes: Mapping[str, Any], span_kind: SpanKind) -> bool:
+    endpoint = _extract_endpoint(attributes, span_kind)
+    if endpoint:
+        if (
+            span_kind == SpanKind.SERVER
+            and does_endpoint_match_server_filtering_regexes(endpoint)
+        ):
+            logger.debug(
+                f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
+                f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER}' env var"
+            )
+            return False
+        elif (
+            span_kind == SpanKind.CLIENT
+            and does_endpoint_match_client_filtering_regexes(endpoint)
+        ):
+            logger.debug(
+                f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
+                f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT}' env var"
+            )
+            return False
+        elif does_endpoint_match_filtering_regexes(endpoint):
+            logger.debug(
+                f"Dropping trace for endpoint '{endpoint}' because it matches one of the"
+                f" filter regexes specified by the '{LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX}' env var"
+            )
+            return False
+
+    return True
 
 
 _attribute_sampler = AttributeSampler()

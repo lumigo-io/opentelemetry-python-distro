@@ -19,6 +19,8 @@ from lumigo_opentelemetry.utils.aws_utils import (
     get_resource_fullname,
 )
 
+from lumigo_opentelemetry.utils.span_utils import safe_get_span_attribute
+
 
 class AwsParser:
     @staticmethod
@@ -33,20 +35,173 @@ class AwsParser:
         }
         return parsers.get(service_name, AwsParser)
 
-    @staticmethod
-    def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
-    ) -> None:
+    @classmethod
+    def safe_extract_region(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        if span:
+            try:
+                region_from_attrs: Optional[str] = safe_get_span_attribute(
+                    span=span, attribute_name="aws.region"
+                )
+                if region_from_attrs:
+                    return region_from_attrs
+            except Exception:
+                pass
+
+        # Try getting the region from the ARN
+        try:
+            arn = cls.safe_extract_arn(api_params=api_params)
+            region_from_arn: Optional[str] = (
+                extract_region_from_arn(arn=arn) if arn else None
+            )
+            if region_from_arn:
+                return region_from_arn
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def safe_extract_url(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            region = cls.safe_extract_region(
+                span=span,
+                service_name=service_name,
+                operation_name=operation_name,
+                api_params=api_params,
+            )
+            if region and service_name:
+                return f"https://{service_name.lower()}.{region}.amazonaws.com"
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def safe_extract_arn(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        # Child classes need to implement this, no generic implementation is possible
+        return None
+
+    @classmethod
+    def safe_extract_resource_name(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            arn = cls.safe_extract_arn(api_params=api_params)
+            return get_resource_fullname(arn) if arn else None
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def safe_extract_http_request_body(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            return dump_with_context("requestBody", api_params)  # type: ignore
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def _get_request_additional_attributes(
+        cls,
+        span: Span,
+        service_name: str,
+        operation_name: str,
+        api_params: Dict[str, Any],
+    ) -> Dict[str, Any]:
         attributes = {
-            "http.request.body": dump_with_context("requestBody", api_params),
             "aws.service": service_name,
             "http.method": operation_name,
         }
+        request_body = cls.safe_extract_http_request_body(
+            span=span,
+            service_name=service_name,
+            operation_name=operation_name,
+            api_params=api_params,
+        )
+        if request_body:
+            attributes["http.request.body"] = request_body
+
+        region = AwsParser.safe_extract_region(
+            span=span,
+            service_name=service_name,
+            operation_name=operation_name,
+            api_params=api_params,
+        )
+        if region:
+            attributes["region"] = region
+        url = AwsParser.safe_extract_url(
+            span=span,
+            service_name=service_name,
+            operation_name=operation_name,
+            api_params=api_params,
+        )
+        if url:
+            attributes["http.url"] = url
+
+        resource_name = cls.safe_extract_resource_name(
+            span=span,
+            service_name=service_name,
+            operation_name=operation_name,
+            api_params=api_params,
+        )
+        if resource_name:
+            attributes["aws.resource.name"] = resource_name
+
+        return attributes
+
+    @classmethod
+    def parse_request(
+        cls,
+        span: Span,
+        service_name: str,
+        operation_name: str,
+        api_params: Dict[str, Any],
+    ) -> None:
+        attributes = cls._get_request_additional_attributes(
+            span=span,
+            service_name=service_name,
+            operation_name=operation_name,
+            api_params=api_params,
+        )
         span.set_attributes(attributes)
 
-    @staticmethod
+    @classmethod
     def request_hook(
-        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
+        cls,
+        span: Span,
+        service_name: str,
+        operation_name: str,
+        api_params: Dict[str, Any],
     ) -> None:
         with lumigo_safe_execute("aws: request_hook"):
             parser = AwsParser.get_parser(service_name=service_name)
@@ -57,9 +212,9 @@ class AwsParser:
                 api_params=api_params,
             )
 
-    @staticmethod
+    @classmethod
     def parse_response(
-        span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
+        cls, span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
         headers = result.get("ResponseMetadata", {}).get("HTTPHeaders", {})
         attributes = {
@@ -74,9 +229,9 @@ class AwsParser:
         }
         span.set_attributes(attributes)
 
-    @staticmethod
+    @classmethod
     def response_hook(
-        span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
+        cls, span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
         with lumigo_safe_execute("aws: response_hook"):
             parser = AwsParser.get_parser(service_name=service_name)
@@ -89,28 +244,33 @@ class AwsParser:
 
 
 class SnsParser(AwsParser):
-    @staticmethod
-    def safe_extract_arn(api_params: Dict[Any, Any]) -> Optional[str]:
-        return api_params.get("TargetArn")
+    @classmethod
+    def safe_extract_arn(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[Any, Any]] = None,
+    ) -> Optional[str]:
+        return api_params.get("TargetArn") if api_params else None
 
-    @staticmethod
-    def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
-    ) -> None:
-        arn = SnsParser.safe_extract_arn(api_params=api_params)
-        region = extract_region_from_arn(arn=arn) if arn else None
+    @classmethod
+    def safe_extract_http_request_body(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[Any, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            if api_params:
+                return dump_with_context(  # type: ignore
+                    "requestBody", api_params.get("Message", api_params or {})
+                )
+        except Exception:
+            pass
 
-        attributes = {
-            "http.request.body": dump_with_context(
-                "requestBody", api_params.get("Message", api_params or {})
-            ),
-            "aws.service": service_name,
-            "region": region or "",
-            "http.method": operation_name,
-            "http.url": f"https://{service_name.lower()}.{region}.amazonaws.com",
-            "aws.resource.name": get_resource_fullname(arn) if arn else "",
-        }
-        span.set_attributes(attributes)
+        return None
 
 
 class SqsParser(AwsParser):
@@ -118,26 +278,50 @@ class SqsParser(AwsParser):
     def extract_queue_name_from_url(queue_url: str) -> str:
         return queue_url.split("/")[-1]
 
-    @staticmethod
-    def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
-    ) -> None:
-        queue_url = api_params.get("QueueUrl")
-        resource_name = (
-            SqsParser.extract_queue_name_from_url(queue_url=queue_url)
-            if queue_url
-            else None
-        )
-        attributes = {
-            "http.request.body": dump_with_context(
-                "requestBody", api_params.get("MessageBody", api_params or {})
-            ),
-            "aws.service": service_name,
-            "http.method": operation_name,
-            "http.url": queue_url or "",
-            "aws.resource.name": resource_name or "",
-        }
-        span.set_attributes(attributes)
+    @classmethod
+    def safe_extract_http_request_body(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[Any, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            if api_params:
+                return dump_with_context(  # type: ignore
+                    "requestBody", api_params.get("MessageBody", api_params or {})
+                )
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def safe_extract_resource_name(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[Any, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            queue_url = cls.safe_extract_url(
+                span=span,
+                service_name=service_name,
+                operation_name=operation_name,
+                api_params=api_params,
+            )
+            resource_name = (
+                cls.extract_queue_name_from_url(queue_url=queue_url)
+                if queue_url
+                else None
+            )
+            if resource_name:
+                return resource_name
+        except Exception:
+            pass
+
+        return None
 
     @staticmethod
     def _should_skip_empty_sqs_polling_response(
@@ -155,9 +339,9 @@ class SqsParser(AwsParser):
             and get_boolean_env_var(AUTO_FILTER_EMPTY_SQS, True)
         )
 
-    @staticmethod
+    @classmethod
     def parse_response(
-        span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
+        cls, span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
         trigger_details = parse_triggers(
             {"service_name": service_name, "operation_name": operation_name, **result}
@@ -168,7 +352,7 @@ class SqsParser(AwsParser):
             )
 
         # Filter out sqs polls with empty response
-        if SqsParser._should_skip_empty_sqs_polling_response(operation_name, result):
+        if cls._should_skip_empty_sqs_polling_response(operation_name, result):
             logger.debug(
                 "Not tracing empty SQS polling requests "
                 f"(override by setting the {AUTO_FILTER_EMPTY_SQS} env var to false)"
@@ -177,32 +361,75 @@ class SqsParser(AwsParser):
 
 
 class LambdaParser(AwsParser):
-    @staticmethod
-    def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
-    ) -> None:
-        resource_name = api_params.get("FunctionName")
-        attributes = {
-            "http.request.body": dump_with_context(
-                "requestBody", api_params.get("Payload", api_params or {})
-            ),
-            "aws.resource.name": resource_name or "",
-            "aws.service": service_name,
-            "http.method": operation_name,
-        }
-        span.set_attributes(attributes)
+    @classmethod
+    def safe_extract_http_request_body(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[Any, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            if api_params:
+                return dump_with_context(  # type: ignore
+                    "requestBody", api_params.get("Payload", api_params or {})
+                )
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def safe_extract_resource_name(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, str]] = None,
+    ) -> Optional[str]:
+        try:
+            if api_params:
+                resource_name = api_params.get("FunctionName")
+                if resource_name:
+                    return resource_name
+        except Exception:
+            pass
+
+        return None
 
 
 class DynamoParser(AwsParser):
-    @staticmethod
-    def parse_request(
-        span: Span, service_name: str, operation_name: str, api_params: Dict[Any, Any]
-    ) -> None:
-        attributes = {
-            "http.request.body": dump_with_context("requestBody", api_params),
-            "aws.service": service_name,
-            "http.method": operation_name,
-            "aws.resource.name": api_params.get("TableName", ""),
-            "aws.dynamodb.method": operation_name,
-        }
-        span.set_attributes(attributes)
+    @classmethod
+    def safe_extract_resource_name(
+        cls,
+        span: Optional[Span] = None,
+        service_name: Optional[str] = None,
+        operation_name: Optional[str] = None,
+        api_params: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        try:
+            if api_params:
+                resource_name: Optional[str] = api_params.get("TableName")
+                if resource_name:
+                    return resource_name
+        except Exception:
+            pass
+
+        return None
+
+    @classmethod
+    def _get_request_additional_attributes(
+        cls,
+        span: Span,
+        service_name: str,
+        operation_name: str,
+        api_params: Dict[Any, Any],
+    ) -> Dict[str, Any]:
+        attributes = super()._get_request_additional_attributes(
+            span=span,
+            service_name=service_name,
+            operation_name=operation_name,
+            api_params=api_params,
+        )
+        attributes["aws.dynamodb.method"] = operation_name
+        return attributes
