@@ -1,3 +1,6 @@
+import functools
+import logging
+
 try:
     from collections import Iterable
 except ImportError:
@@ -6,7 +9,7 @@ except ImportError:
 
 import os
 from contextlib import contextmanager
-from typing import Generator, List, Optional, TypeVar, Union
+from typing import Generator, List, Optional, TypeVar, Union, Any, Callable, cast
 
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -28,6 +31,39 @@ def lumigo_safe_execute(part_name: str = "") -> Generator[None, None, None]:
         logger.exception(
             f"An exception occurred in lumigo's code {part_name}", exc_info=e
         )
+
+
+TCallable = TypeVar("TCallable", bound=Callable)  # type: ignore
+
+
+def lumigo_safe_wrapper(
+    default_return_value: Any = None, level: Optional[int] = logging.ERROR
+) -> Callable:  # type: ignore
+    """
+    A wrapper to safely execute a function, and return a default value in case of an exception.
+    @param default_return_value:
+    @param level: The log level for the error message. If None, no error message will be logged.
+    @return: The wrapper function
+    """
+
+    def decorator(func: TCallable) -> TCallable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):  # type: ignore
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if level is not None:
+                    logger.log(
+                        level=level,
+                        msg=f"An exception occurred in lumigo's code {func.__name__}",
+                        exc_info=e,
+                    )
+
+            return default_return_value
+
+        return cast(TCallable, wrapper)
+
+    return decorator
 
 
 def safe_split_get(
