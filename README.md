@@ -211,7 +211,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | Instrumentation | Package | Supported Versions | | | | |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
 | | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.33.13|1.17.22~1.34.59|1.17.22~1.34.59|1.17.22~1.34.59|1.17.22~1.34.59|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.33.13|1.17.22~1.34.61|1.17.22~1.34.61|1.17.22~1.34.61|1.17.22~1.34.61|
 | django | [django](https://pypi.org/project/django) | 3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|
 | | | 3.2| 4.0.1~4.2.11| 4.0.1~4.2.11| 4.0.1~4.2.11| 4.0.1~4.2.11|
 | | | | 3.2| 3.2| 5.0.1~5.0.3| 5.0.1~5.0.3|
@@ -246,10 +246,10 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | | | 3.1| 3.1| 3.1| 3.1| |
 |  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.1.18|3.1.1~3.1.18|3.1.1~3.1.18|3.1.1~3.1.18|3.1.1~3.1.18|
 | | | 3.1| 3.1| 3.1| 3.1| 3.1|
-| psycopg2 | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
+| psycopg2 | [psycopg2](https://pypi.org/project/psycopg2) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.9| 2.8| |
-|  | [psycopg2](https://pypi.org/project/psycopg2) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
+|  | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.9| 2.8| |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|
