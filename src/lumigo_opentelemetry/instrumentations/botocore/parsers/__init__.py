@@ -219,7 +219,9 @@ class AwsParser:
             "http.response.body": cls.safe_dump_payload(
                 context="responseBody", payload=result
             ),
-            "http.response.headers": dump_with_context("responseHeaders", headers),
+            "http.response.headers": cls.safe_dump_payload(
+                context="responseHeaders", payload=headers
+            ),
             "http.status_code": result.get("ResponseMetadata", {}).get(
                 "HTTPStatusCode", ""
             ),
@@ -233,8 +235,8 @@ class AwsParser:
     def safe_dump_payload(cls, context: str, payload: Any) -> Optional[Any]:
         try:
             return dump_with_context(context, payload)
-        except Exception as err:
-            logger.info(f"An exception occurred in while extracting {payload}", err)
+        except Exception:
+            logger.info(f"An exception occurred in while extracting: {context}")
             return f"{context} is unavailable"
 
     @classmethod
