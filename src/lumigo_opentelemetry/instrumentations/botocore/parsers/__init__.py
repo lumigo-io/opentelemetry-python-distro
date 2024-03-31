@@ -216,7 +216,9 @@ class AwsParser:
     ) -> None:
         headers = result.get("ResponseMetadata", {}).get("HTTPHeaders", {})
         attributes = {
-            "http.response.body": dump_with_context("responseBody", result),
+            "http.response.body": cls.safe_dump_payload(
+                context="responseBody", payload=result
+            ),
             "http.response.headers": dump_with_context("responseHeaders", headers),
             "http.status_code": result.get("ResponseMetadata", {}).get(
                 "HTTPStatusCode", ""
@@ -226,6 +228,14 @@ class AwsParser:
             or headers.get("x-amz-requestid", ""),
         }
         span.set_attributes(attributes)
+
+    @classmethod
+    def safe_dump_payload(cls, context: str, payload: Any) -> Optional[Any]:
+        try:
+            return dump_with_context(context, payload)
+        except Exception as err:
+            logger.info(f"An exception occurred in while extracting {payload}", err)
+            return f"{context} is unavailable"
 
     @classmethod
     def response_hook(
