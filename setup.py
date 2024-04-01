@@ -16,7 +16,7 @@ setup(
         "asgiref~=3.0",
         "autowrapt>=1.0",
         "wrapt>=1.11.0",
-        "lumigo_core==0.0.6",
+        "lumigo_core==0.0.10",
         "opentelemetry-api==1.20.0",
         "opentelemetry-sdk==1.20.0",
         "opentelemetry-sdk-extension-aws==2.0.1",

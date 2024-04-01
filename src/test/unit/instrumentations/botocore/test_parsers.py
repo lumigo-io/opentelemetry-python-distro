@@ -3,7 +3,7 @@ import logging
 import pytest
 from unittest.mock import Mock, patch
 
-from lumigo_opentelemetry.instrumentations.botocore.parsers import SqsParser
+from lumigo_opentelemetry.instrumentations.botocore.parsers import SqsParser, AwsParser
 
 
 EMPTY_SQS_RESULT_1 = {}
@@ -109,3 +109,24 @@ def test_parse_sqs_response_not_skipping_polls_no_output_log(should_skip_mock, c
     assert "not tracing empty sqs polling requests" not in caplog.text.lower()
 
     # Make sure that there is an info log
+
+
+@patch("lumigo_opentelemetry.instrumentations.botocore.parsers.dump_with_context")
+def test_parse_response_handles_unparsable_payload(dump_with_context_mock, caplog):
+    dump_with_context_mock.side_effect = Exception("Boom!")
+
+    span = Mock(set_attribute=Mock())
+    result = {"content": {}}
+
+    # no exception
+    assert (
+        AwsParser.parse_response(
+            span=span,
+            service_name="service-name",
+            operation_name="operation",
+            result=result,
+        )
+        is None
+    )
+
+    assert "An exception occurred in while extracting" in caplog.text
