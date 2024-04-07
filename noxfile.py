@@ -1007,9 +1007,35 @@ def integration_tests_redis(
                 kill_process_and_clean_outputs(temp_file, "test_redis", session)
 
 
+@nox.session()
+@nox.parametrize(
+    "python",
+    [(python) for python in python_versions()],
+)
+def integration_tests_logging(session):
+    session.install(".")
+    temp_file = create_it_tempfile("logging")
+    with session.chdir("src/test/integration/logging"):
+        try:
+            session.run(
+                "pytest",
+                "--tb=native",
+                "--log-cli-level=INFO",
+                "--color=yes",
+                "-v",
+                "./tests/test_logging.py",
+                env={
+                    "LUMIGO_DEBUG_LOGDUMP": temp_file,
+                    "LUMIGO_DEBUG": "true",
+                },
+            )
+        finally:
+            kill_process_and_clean_outputs(temp_file, "test_logging", session)
+
+
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
     kill_process(process_name)
-    clean_outputs(full_path, session)
+    # clean_outputs(full_path, session)
 
 
 def clean_outputs(full_path: str, session) -> None:

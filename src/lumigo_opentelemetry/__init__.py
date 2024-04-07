@@ -94,20 +94,34 @@ def init() -> Dict[str, Any]:
     )
 
     from opentelemetry import trace
+    from opentelemetry import _logs
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
-
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+    from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
     from lumigo_opentelemetry.resources.span_processor import LumigoSpanProcessor
 
     DEFAULT_LUMIGO_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
     )
+    DEFAULT_LUMIGO_LOGS_ENDPOINT = (
+        "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/logs"
+    )
     DEFAULT_DEPENDENCIES_ENDPOINT = (
         "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/dependencies"
     )
-    lumigo_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
+    lumigo_traces_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
+    lumigo_logs_endpoint = os.getenv(
+        "LUMIGO_LOGS_ENDPOINT", DEFAULT_LUMIGO_LOGS_ENDPOINT
+    )
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
-    lumigo_report_dependencies = os.getenv("LUMIGO_REPORT_DEPENDENCIES", "true").lower()
+    lumigo_report_dependencies = (
+        os.getenv("LUMIGO_REPORT_DEPENDENCIES", "true").lower() == "true"
+    )
+    logging_enabled = os.getenv("LUMIGO_LOGS_ENABLED", "").lower() == "true"
+    spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
+    logdump_file = os.getenv("LUMIGO_DEBUG_LOGDUMP")
 
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
@@ -122,27 +136,39 @@ def init() -> Dict[str, Any]:
     infrastructure_resource = get_infrastructure_resource()
     process_resource = get_process_resource()
 
-    tracer_resource = get_resource(
+    resource = get_resource(
         infrastructure_resource, process_resource, {"framework": framework}
     )
 
     tracer_provider = TracerProvider(
-        resource=tracer_resource,
+        resource=resource,
         sampler=_get_lumigo_sampler(),
         span_limits=(SpanLimits(max_span_attribute_length=(get_max_size()))),
     )
+
+    logger_provider = LoggerProvider(resource=resource)
 
     if lumigo_token:
         tracer_provider.add_span_processor(
             LumigoSpanProcessor(
                 OTLPSpanExporter(
-                    endpoint=lumigo_endpoint,
+                    endpoint=lumigo_traces_endpoint,
                     headers={"Authorization": f"LumigoToken {lumigo_token}"},
                 ),
             )
         )
 
-        if lumigo_report_dependencies == "true":
+        if logging_enabled:
+            logger_provider.add_log_record_processor(
+                BatchLogRecordProcessor(
+                    OTLPLogExporter(
+                        endpoint=lumigo_logs_endpoint,
+                        headers={"Authorization": f"LumigoToken {lumigo_token}"},
+                    )
+                )
+            )
+
+        if lumigo_report_dependencies:
             from lumigo_opentelemetry.dependencies import report
 
             try:
@@ -161,7 +187,6 @@ def init() -> Dict[str, Any]:
             "no data will be sent to Lumigo"
         )
 
-    spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
     if spandump_file:
         from opentelemetry.sdk.trace.export import (
             ConsoleSpanExporter,
@@ -184,7 +209,32 @@ def init() -> Dict[str, Any]:
 
     trace.set_tracer_provider(tracer_provider)
 
-    return {"tracer_provider": tracer_provider}
+    if logging_enabled:
+        if logdump_file:
+            from opentelemetry.sdk._logs.export import (
+                ConsoleLogExporter,
+                SimpleLogRecordProcessor,
+            )
+
+            logger_provider.add_log_record_processor(
+                SimpleLogRecordProcessor(
+                    ConsoleLogExporter(
+                        out=open(logdump_file, "w"),
+                        # Print one log per line for ease of parsing, as the file itself
+                        # will not be valid JSON but a sequence of JSON objects (not a valid JSON array)
+                        formatter=lambda log_record: log_record.to_json() + "\n",
+                    )
+                )
+            )
+
+            logger.debug("Storing a copy of the log data under: %s", logdump_file)
+
+        _logs.set_logger_provider(logger_provider)
+
+        # Add the handler to the root logger, hence affecting all loggers created by the app from now on
+        logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
+
+    return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
 
 def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
@@ -211,5 +261,13 @@ def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
 init_data = init()
 
 tracer_provider = init_data.get("tracer_provider")
+logger_provider = init_data.get("logger_provider")
 
-__all__ = ["auto_load", "init", "lumigo_wrapped", "logger", "tracer_provider"]
+__all__ = [
+    "auto_load",
+    "init",
+    "lumigo_wrapped",
+    "logger",
+    "tracer_provider",
+    "logger_provider",
+]
