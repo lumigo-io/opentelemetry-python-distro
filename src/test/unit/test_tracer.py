@@ -20,8 +20,8 @@ class TestDistroInit(unittest.TestCase):
         self.assertTrue(hasattr(tracer_provider, "shutdown"))
 
         self.assertIsNotNone(logger_provider)
-        self.assertTrue(hasattr(tracer_provider, "force_flush"))
-        self.assertTrue(hasattr(tracer_provider, "shutdown"))
+        self.assertTrue(hasattr(logger_provider, "force_flush"))
+        self.assertTrue(hasattr(logger_provider, "shutdown"))
 
 
 class TestDependencyReport(TestCase):

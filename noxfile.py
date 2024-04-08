@@ -1035,7 +1035,7 @@ def integration_tests_logging(session):
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
     kill_process(process_name)
-    # clean_outputs(full_path, session)
+    clean_outputs(full_path, session)
 
 
 def clean_outputs(full_path: str, session) -> None:
