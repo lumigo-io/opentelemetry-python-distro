@@ -220,9 +220,9 @@ def init() -> Dict[str, Any]:
                 SimpleLogRecordProcessor(
                     ConsoleLogExporter(
                         out=open(logdump_file, "w"),
-                        # Print one log per line for ease of parsing, as the file itself
-                        # will not be valid JSON but a sequence of JSON objects (not a valid JSON array)
-                        formatter=lambda log_record: log_record.to_json() + "\n",
+                        # Override the default formatter to remove indentation, so one log record will be printed per line
+                        formatter=lambda log_record: log_record.to_json(indent=None)
+                        + "\n",
                     )
                 )
             )

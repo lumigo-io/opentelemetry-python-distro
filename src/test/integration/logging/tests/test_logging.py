@@ -7,12 +7,13 @@ from test.test_utils.logs_parser import LogsContainer
 
 
 def run_logging_app():
-    sample_path = path.join(
+    app_path = path.join(
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
     )
-    subprocess.check_output(
-        [sys.executable, sample_path],
+
+    subprocess.run(
+        [sys.executable, app_path],
         env={
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
@@ -29,9 +30,9 @@ class TestLogging(unittest.TestCase):
         logs_container = LogsContainer.get_logs_from_file()
 
         self.assertEqual(len(logs_container), 1)
-
-        logs_container[0]["body"] == "Hello OTEL!"
+        self.assertEqual(logs_container[0]["body"], "Hello OTEL!")
 
         # "resource" is currently not a proper dictionary, but a string from a repr(...) call over the resource attributes.
         # Pending a fix in https://github.com/open-telemetry/opentelemetry-python/pull/3346
-        logs_container[0]["resource"]["service.name"] == "logging-app"
+        self.assertIn("'service.name': 'logging-app'", logs_container[0]["resource"])
+        # self.assertEqual(logs_container[0]["resource"]["service.name"], "logging-app")
