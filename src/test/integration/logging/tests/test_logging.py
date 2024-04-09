@@ -6,7 +6,7 @@ from os import path
 from test.test_utils.logs_parser import LogsContainer
 
 
-def run_logging_app():
+def run_logging_app(logging_enabled: bool):
     app_path = path.join(
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
@@ -18,14 +18,14 @@ def run_logging_app():
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "OTEL_SERVICE_NAME": "logging-app",
-            "LUMIGO_LOGS_ENABLED": "true",
+            "LUMIGO_LOGS_ENABLED": str(logging_enabled).lower(),
         },
     )
 
 
 class TestLogging(unittest.TestCase):
-    def test_logging(self):
-        run_logging_app()
+    def test_logging_enabled(self):
+        run_logging_app(logging_enabled=True)
 
         logs_container = LogsContainer.get_logs_from_file()
 
@@ -49,3 +49,10 @@ class TestLogging(unittest.TestCase):
         )
         self.assertEqual(log_attributes["otelServiceName"], "logging-app")
         self.assertEqual(log_attributes["otelTraceSampled"], True)
+
+    def test_logging_disabled(self):
+        run_logging_app(logging_enabled=False)
+
+        logs_container = LogsContainer.get_logs_from_file()
+
+        self.assertEqual(len(logs_container), 0)
