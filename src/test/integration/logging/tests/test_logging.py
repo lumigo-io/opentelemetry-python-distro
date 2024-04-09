@@ -36,3 +36,16 @@ class TestLogging(unittest.TestCase):
         # Pending a fix in https://github.com/open-telemetry/opentelemetry-python/pull/3346
         self.assertIn("'service.name': 'logging-app'", logs_container[0]["resource"])
         # self.assertEqual(logs_container[0]["resource"]["service.name"], "logging-app")
+
+        self.assertIn("attributes", logs_container[0])
+
+        log_attributes = logs_container[0]["attributes"]
+        self.assertEqual(
+            log_attributes["otelSpanID"], logs_container[0]["span_id"].replace("0x", "")
+        )
+        self.assertEqual(
+            log_attributes["otelTraceID"],
+            logs_container[0]["trace_id"].replace("0x", ""),
+        )
+        self.assertEqual(log_attributes["otelServiceName"], "logging-app")
+        self.assertEqual(log_attributes["otelTraceSampled"], True)

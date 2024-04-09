@@ -95,6 +95,7 @@ def init() -> Dict[str, Any]:
 
     from opentelemetry import trace
     from opentelemetry import _logs
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
     from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
@@ -210,6 +211,14 @@ def init() -> Dict[str, Any]:
     trace.set_tracer_provider(tracer_provider)
 
     if logging_enabled:
+        _logs.set_logger_provider(logger_provider)
+
+        # Add the handler to the root logger, hence affecting all loggers created by the app from now on
+        logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
+
+        # Inject the span context into logs
+        LoggingInstrumentor().instrument(set_logging_format=True)
+
         if logdump_file:
             from opentelemetry.sdk._logs.export import (
                 ConsoleLogExporter,
@@ -228,11 +237,6 @@ def init() -> Dict[str, Any]:
             )
 
             logger.debug("Storing a copy of the log data under: %s", logdump_file)
-
-        _logs.set_logger_provider(logger_provider)
-
-        # Add the handler to the root logger, hence affecting all loggers created by the app from now on
-        logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
 
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
