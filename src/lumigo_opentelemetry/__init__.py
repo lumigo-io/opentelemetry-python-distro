@@ -103,15 +103,12 @@ def init() -> Dict[str, Any]:
     from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
     from lumigo_opentelemetry.resources.span_processor import LumigoSpanProcessor
 
-    DEFAULT_LUMIGO_ENDPOINT = (
-        "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/traces"
-    )
-    DEFAULT_LUMIGO_LOGS_ENDPOINT = (
-        "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/logs"
-    )
-    DEFAULT_DEPENDENCIES_ENDPOINT = (
-        "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1/dependencies"
-    )
+    LUMIGO_ENDPOINT_BASE_URL = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1"
+
+    DEFAULT_LUMIGO_ENDPOINT = f"{LUMIGO_ENDPOINT_BASE_URL}/traces"
+    DEFAULT_LUMIGO_LOGS_ENDPOINT = f"{LUMIGO_ENDPOINT_BASE_URL}/logs"
+    DEFAULT_DEPENDENCIES_ENDPOINT = f"{LUMIGO_ENDPOINT_BASE_URL}/dependencies"
+
     lumigo_traces_endpoint = os.getenv("LUMIGO_ENDPOINT", DEFAULT_LUMIGO_ENDPOINT)
     lumigo_logs_endpoint = os.getenv(
         "LUMIGO_LOGS_ENDPOINT", DEFAULT_LUMIGO_LOGS_ENDPOINT
