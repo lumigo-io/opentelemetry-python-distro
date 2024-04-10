@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
@@ -222,10 +223,18 @@ def init() -> Dict[str, Any]:
                 SimpleLogRecordProcessor,
             )
 
+            try:
+                output = open(logdump_file, "w")
+            except Exception:
+                logger.error(
+                    f"Cannot open the log dump file for writing: {logdump_file}"
+                )
+                output = sys.stdout  # type: ignore
+
             logger_provider.add_log_record_processor(
                 SimpleLogRecordProcessor(
                     ConsoleLogExporter(
-                        out=open(logdump_file, "w"),
+                        out=output,
                         # Override the default formatter to remove indentation, so one log record will be printed per line
                         formatter=lambda log_record: log_record.to_json(indent=None)
                         + "\n",

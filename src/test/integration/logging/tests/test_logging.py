@@ -3,24 +3,33 @@ import subprocess
 import sys
 import unittest
 from os import path
+
 from test.test_utils.logs_parser import LogsContainer
 
 
-def run_logging_app(logging_enabled: bool):
+def run_logging_app(logging_enabled: bool, log_dump_file: str = None):
     app_path = path.join(
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
     )
 
-    subprocess.run(
+    completed_process = subprocess.run(
         [sys.executable, app_path],
         env={
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "OTEL_SERVICE_NAME": "logging-app",
             "LUMIGO_LOGS_ENABLED": str(logging_enabled).lower(),
+            "LUMIGO_DEBUG_LOGDUMP": log_dump_file
+            or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
         },
+        capture_output=True,
     )
+
+    # raise error in case of a non-zero exit code from the process
+    completed_process.check_returncode()
+
+    return completed_process.stdout
 
 
 class TestLogging(unittest.TestCase):
@@ -56,3 +65,10 @@ class TestLogging(unittest.TestCase):
         logs_container = LogsContainer.get_logs_from_file()
 
         self.assertEqual(len(logs_container), 0)
+
+    def test_logging_bad_dump_file(self):
+        app_stdout = run_logging_app(
+            logging_enabled=True, log_dump_file="\\__0__/.json"
+        )
+
+        self.assertTrue(str(app_stdout).find('"body": "Hello OTEL!"') != -1)
