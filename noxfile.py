@@ -1032,8 +1032,7 @@ def integration_tests_logging(session):
             )
         finally:
             # No need to run kill_process_and_clean_outputs() here, as the logging tests are a script that runs and exits
-            # clean_outputs(temp_file, session)
-            pass
+            clean_outputs(temp_file, session)
 
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
