@@ -7,7 +7,9 @@ from os import path
 from test.test_utils.logs_parser import LogsContainer
 
 
-def run_logging_app(logging_enabled: bool, log_dump_file: str = None):
+def run_logging_app(
+    logging_enabled: bool, log_dump_file: str = None, log_as_string: bool = False
+):
     app_path = path.join(
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
@@ -23,6 +25,7 @@ def run_logging_app(logging_enabled: bool, log_dump_file: str = None):
             "LUMIGO_DEBUG_LOGDUMP": log_dump_file
             or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
             "LUMIGO_SECRET_MASKING_REGEX": '[".*super-secret.*"]',
+            "LOG_AS_JSON_STRING": str(log_as_string).lower(),
         },
         capture_output=True,
     )
@@ -70,6 +73,28 @@ class TestLogging(unittest.TestCase):
         )
         self.assertEqual(log_attributes["otelServiceName"], "logging-app")
         self.assertEqual(log_attributes["otelTraceSampled"], True)
+
+    def test_secret_scrubbing_string(self):
+        run_logging_app(logging_enabled=True, log_as_string=True)
+
+        logs_container = LogsContainer.get_logs_from_file()
+
+        self.assertEqual(len(logs_container), 1)
+        self.assertEqual(
+            logs_container[0]["body"],
+            '{"some-thing": "Hello OTEL!", "some-super-secret-stuff": "****"}',
+        )
+
+    def test_secret_scrubbing_object(self):
+        run_logging_app(logging_enabled=True, log_as_string=False)
+
+        logs_container = LogsContainer.get_logs_from_file()
+
+        self.assertEqual(len(logs_container), 1)
+        self.assertEqual(
+            logs_container[0]["body"],
+            '{"some-thing": "Hello OTEL!", "some-super-secret-stuff": "****"}',
+        )
 
     def test_logging_disabled(self):
         run_logging_app(logging_enabled=False)

@@ -217,8 +217,9 @@ def init() -> Dict[str, Any]:
         def log_hook(_: Span, record: logging.LogRecord) -> None:
             from lumigo_opentelemetry.libs.json_utils import dump
 
-            scrubbed = dump(record.getMessage())
-            record.msg = scrubbed
+            record.msg = dump(
+                record.getMessage() if isinstance(record.msg, str) else record.msg
+            )
 
         # Inject the span context into logs
         LoggingInstrumentor().instrument(set_logging_format=True, log_hook=log_hook)
