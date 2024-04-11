@@ -19,15 +19,24 @@ def run_logging_app(logging_enabled: bool, log_dump_file: str = None):
             **os.environ,
             "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "OTEL_SERVICE_NAME": "logging-app",
-            "LUMIGO_LOGS_ENABLED": str(logging_enabled).lower(),
+            "LUMIGO_ENABLE_LOGS": str(logging_enabled).lower(),
             "LUMIGO_DEBUG_LOGDUMP": log_dump_file
             or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
+            "LUMIGO_SECRET_MASKING_REGEX": '[".*super-secret.*"]',
         },
         capture_output=True,
     )
 
-    # raise error in case of a non-zero exit code from the process
-    completed_process.check_returncode()
+    try:
+        # raise error in case of a non-zero exit code from the process
+        completed_process.check_returncode()
+        print(completed_process.stdout.decode())
+        print(completed_process.stderr.decode())
+
+    except subprocess.CalledProcessError as e:
+        print(e.stdout.decode())
+        print(e.stderr.decode())
+        raise e
 
     return completed_process.stdout
 
@@ -39,7 +48,10 @@ class TestLogging(unittest.TestCase):
         logs_container = LogsContainer.get_logs_from_file()
 
         self.assertEqual(len(logs_container), 1)
-        self.assertEqual(logs_container[0]["body"], "Hello OTEL!")
+        self.assertEqual(
+            logs_container[0]["body"],
+            '{"some-thing": "Hello OTEL!", "some-super-secret-stuff": "****"}',
+        )
 
         # "resource" is currently not a proper dictionary, but a string from a repr(...) call over the resource attributes.
         # Pending a fix in https://github.com/open-telemetry/opentelemetry-python/pull/3346
@@ -71,4 +83,4 @@ class TestLogging(unittest.TestCase):
             logging_enabled=True, log_dump_file="\\__0__/.json"
         )
 
-        self.assertTrue(str(app_stdout).find('"body": "Hello OTEL!"') != -1)
+        self.assertTrue(str(app_stdout).find("Hello OTEL!") != -1)

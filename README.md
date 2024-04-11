@@ -8,6 +8,8 @@ The Lumigo OpenTelemetry Distribution for Python is a package that provides no-c
 The Lumigo OpenTelemetry Distribution for Python is made of several upstream OpenTelemetry packages, with additional automated quality-assurance and customizations that optimize for no-code injection, meaning that you should need to update exactly zero lines of code in your application in order to make use of the Lumigo OpenTelemetry Distribution.
 (See the [No-code activation](#no-code-activation) section for auto-instrumentation instructions)
 
+The Lumigo OpenTelemetry Distribution also allows logging span-correlated records. See the [configuration](#logging-instrumentation) section for details on how to enable this feature.
+
 **Note:** If you are looking for the Lumigo Python tracer for AWS Lambda functions, [`lumigo-tracer`](https://pypi.org/project/lumigo-tracer/) is the package you should use instead.
 
 ## Setup
@@ -102,8 +104,13 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX='["regex1", "regex2"]'`: This option enables the filtering of client and server endpoints through regular expression searches. Fine-tune your settings via the following environment variables, which work in conjunction with `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX` for a specific span type:
   * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_SERVER` applies the regular expression search exclusively to server spans. Searching is performed against the following attributes on a span: `url.path` and `http.target`.
   * `LUMIGO_FILTER_HTTP_ENDPOINTS_REGEX_CLIENT` applies the regular expression search exclusively to client spans. Searching is performed against the following attributes on a span: `url.full` and `http.url`.
-  
+
   For more information check out [Filtering http endpoints](#filtering-http-endpoints).
+
+#### Logging instrumentation
+
+* `LUMIGO_ENABLE_LOGS` - turns on the `logging` instrumentation. This instrumentation will capture log-records logged by Python's `logging` builtin library, and send them to Lumigo. Logs emitted will also be correlated with the active span using a set of keys added to each logs-record (see [list](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/logging/logging.html#module-opentelemetry.instrumentation.logging)).
+* `LUMIGO_DEBUG_LOGDUMP` - similar to `LUMIGO_DEBUG_SPANDUMP`, only for logs instead of spans.
 
 ### Execution Tags
 
@@ -246,10 +253,10 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | | | 3.1| 3.1| 3.1| 3.1| |
 |  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.1.18|3.1.1~3.1.18|3.1.1~3.1.18|3.1.1~3.1.18|3.1.1~3.1.18|
 | | | 3.1| 3.1| 3.1| 3.1| 3.1|
-| psycopg2 | [psycopg2](https://pypi.org/project/psycopg2) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
+| psycopg2 | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.9| 2.8| |
-|  | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
+|  | [psycopg2](https://pypi.org/project/psycopg2) | 2.7.5~2.9.9|2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.9| 2.8| |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|
@@ -410,7 +417,7 @@ For exclusive server (inbound) or client (outbound) span filtering, use the envi
 
 Notes:
 * the environment variable must be a valid JSON array of strings, so if you want to match endpoint with the hostname `google.com` the environment variable value should be `["google\\.com"]`.
-* If we are filtering out an HTTP call to an opentelemetry traced component, every subsequent invocation made by that 
+* If we are filtering out an HTTP call to an opentelemetry traced component, every subsequent invocation made by that
 component won't be traced either.
 
 Examples:

@@ -98,7 +98,7 @@ def init() -> Dict[str, Any]:
     from opentelemetry import _logs
     from opentelemetry.instrumentation.logging import LoggingInstrumentor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.trace import SpanLimits, TracerProvider
+    from opentelemetry.sdk.trace import SpanLimits, TracerProvider, Span
     from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
     from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
     from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
@@ -118,7 +118,7 @@ def init() -> Dict[str, Any]:
     lumigo_report_dependencies = (
         os.getenv("LUMIGO_REPORT_DEPENDENCIES", "true").lower() == "true"
     )
-    logging_enabled = os.getenv("LUMIGO_LOGS_ENABLED", "").lower() == "true"
+    logging_enabled = os.getenv("LUMIGO_ENABLE_LOGS", "").lower() == "true"
     spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
     logdump_file = os.getenv("LUMIGO_DEBUG_LOGDUMP")
 
@@ -214,8 +214,14 @@ def init() -> Dict[str, Any]:
         # Add the handler to the root logger, hence affecting all loggers created by the app from now on
         logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
 
+        def log_hook(_: Span, record: logging.LogRecord) -> None:
+            from lumigo_opentelemetry.libs.json_utils import dump
+
+            scrubbed = dump(record.getMessage())
+            record.msg = scrubbed
+
         # Inject the span context into logs
-        LoggingInstrumentor().instrument(set_logging_format=True)
+        LoggingInstrumentor().instrument(set_logging_format=True, log_hook=log_hook)
 
         if logdump_file:
             from opentelemetry.sdk._logs.export import (
