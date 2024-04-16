@@ -5,6 +5,8 @@ import os
 import sys
 from typing import Any, Callable, Dict, List, TypeVar
 
+from lumigo_opentelemetry.libs.logs_processor import LumigoLogRecordProcessor
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
 T = TypeVar("T")
@@ -97,11 +99,11 @@ def init() -> Dict[str, Any]:
     from opentelemetry import trace
     from opentelemetry import _logs
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.trace import SpanLimits, TracerProvider, Span
+    from opentelemetry.sdk.trace import SpanLimits, TracerProvider
     from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
     from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
     from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
-    from lumigo_opentelemetry.instrumentations.logging import LoggingInstrumentor
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
     from lumigo_opentelemetry.resources.span_processor import LumigoSpanProcessor
 
     LUMIGO_ENDPOINT_BASE_URL = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1"
@@ -146,6 +148,7 @@ def init() -> Dict[str, Any]:
     )
 
     logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(LumigoLogRecordProcessor())
 
     if lumigo_token:
         tracer_provider.add_span_processor(
@@ -214,15 +217,8 @@ def init() -> Dict[str, Any]:
         # Add the handler to the root logger, hence affecting all loggers created by the app from now on
         logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
 
-        def log_hook(_: Span, record: logging.LogRecord) -> None:
-            from lumigo_opentelemetry.libs.json_utils import dump
-
-            record.msg = dump(
-                record.getMessage() if isinstance(record.msg, str) else record.msg
-            )
-
         # Inject the span context into logs
-        LoggingInstrumentor().instrument(set_logging_format=True, log_hook=log_hook)
+        LoggingInstrumentor().instrument(set_logging_format=True)
 
         if logdump_file:
             from opentelemetry.sdk._logs.export import (
