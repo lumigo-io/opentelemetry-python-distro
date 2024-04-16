@@ -48,28 +48,40 @@ class TestLogging(unittest.TestCase):
     def test_logging_enabled(self):
         run_logging_app(logging_enabled=True)
 
-        logs_container = LogsContainer.get_logs_from_file()
+        logs = LogsContainer.get_logs_from_file()
 
-        self.assertEqual(len(logs_container), 1)
+        self.assertEqual(len(logs), 2)
         self.assertEqual(
-            logs_container[0]["body"],
-            '{"some-thing": "Hello OTEL!", "some-super-secret-stuff": "****"}',
-        )
-
-        # "resource" is currently not a proper dictionary, but a string from a repr(...) call over the resource attributes.
-        # Pending a fix in https://github.com/open-telemetry/opentelemetry-python/pull/3346
-        self.assertIn("'service.name': 'logging-app'", logs_container[0]["resource"])
-        # self.assertEqual(logs_container[0]["resource"]["service.name"], "logging-app")
-
-        self.assertIn("attributes", logs_container[0])
-
-        log_attributes = logs_container[0]["attributes"]
-        self.assertEqual(
-            log_attributes["otelSpanID"], logs_container[0]["span_id"].replace("0x", "")
+            logs[0]["body"],
+            '{"some-thing": "with no recording span", "some-super-secret-stuff": "****"}',
         )
         self.assertEqual(
-            log_attributes["otelTraceID"],
-            logs_container[0]["trace_id"].replace("0x", ""),
+            logs[1]["body"],
+            '{"some-thing": "with recording span", "some-super-secret-stuff": "****"}',
+        )
+
+        for log in logs:
+            # "resource" is currently not a proper dictionary, but a string from a repr(...) call over the resource attributes.
+            # Pending a fix in https://github.com/open-telemetry/opentelemetry-python/pull/3346
+            self.assertIn("'service.name': 'logging-app'", log["resource"])
+            # self.assertEqual(log["resource"]["service.name"], "logging-app")
+
+        self.assertIn("attributes", logs[0])
+
+        # Log with no recording span
+        log_attributes = logs[0]["attributes"]
+        self.assertEqual(log_attributes["otelSpanID"], "0")
+        self.assertEqual(log_attributes["otelTraceID"], "0")
+        self.assertEqual(log_attributes["otelServiceName"], "logging-app")
+        self.assertEqual(log_attributes["otelTraceSampled"], False)
+
+        # Log with a recording span
+        log_attributes = logs[1]["attributes"]
+        self.assertEqual(
+            log_attributes["otelSpanID"], logs[1]["span_id"].replace("0x", "")
+        )
+        self.assertEqual(
+            log_attributes["otelTraceID"], logs[1]["trace_id"].replace("0x", "")
         )
         self.assertEqual(log_attributes["otelServiceName"], "logging-app")
         self.assertEqual(log_attributes["otelTraceSampled"], True)
@@ -77,35 +89,44 @@ class TestLogging(unittest.TestCase):
     def test_secret_scrubbing_string(self):
         run_logging_app(logging_enabled=True, log_as_string=True)
 
-        logs_container = LogsContainer.get_logs_from_file()
+        logs = LogsContainer.get_logs_from_file()
 
-        self.assertEqual(len(logs_container), 1)
+        self.assertEqual(len(logs), 2)
+
         self.assertEqual(
-            logs_container[0]["body"],
-            '{"some-thing": "Hello OTEL!", "some-super-secret-stuff": "****"}',
+            logs[0]["body"],
+            '{"some-thing": "with no recording span", "some-super-secret-stuff": "****"}',
+        )
+        self.assertEqual(
+            logs[1]["body"],
+            '{"some-thing": "with recording span", "some-super-secret-stuff": "****"}',
         )
 
     def test_secret_scrubbing_object(self):
         run_logging_app(logging_enabled=True, log_as_string=False)
 
-        logs_container = LogsContainer.get_logs_from_file()
+        logs = LogsContainer.get_logs_from_file()
 
-        self.assertEqual(len(logs_container), 1)
+        self.assertEqual(len(logs), 2)
         self.assertEqual(
-            logs_container[0]["body"],
-            '{"some-thing": "Hello OTEL!", "some-super-secret-stuff": "****"}',
+            logs[0]["body"],
+            '{"some-thing": "with no recording span", "some-super-secret-stuff": "****"}',
+        )
+        self.assertEqual(
+            logs[1]["body"],
+            '{"some-thing": "with recording span", "some-super-secret-stuff": "****"}',
         )
 
     def test_logging_disabled(self):
         run_logging_app(logging_enabled=False)
 
-        logs_container = LogsContainer.get_logs_from_file()
+        logs = LogsContainer.get_logs_from_file()
 
-        self.assertEqual(len(logs_container), 0)
+        self.assertEqual(len(logs), 0)
 
     def test_logging_bad_dump_file(self):
         app_stdout = run_logging_app(
             logging_enabled=True, log_dump_file="\\__0__/.json"
         )
 
-        self.assertTrue(str(app_stdout).find("Hello OTEL!") != -1)
+        self.assertTrue(str(app_stdout).find("with recording span") != -1)

@@ -96,12 +96,12 @@ def init() -> Dict[str, Any]:
 
     from opentelemetry import trace
     from opentelemetry import _logs
-    from opentelemetry.instrumentation.logging import LoggingInstrumentor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider, Span
     from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
     from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
     from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+    from lumigo_opentelemetry.instrumentations.logging import LoggingInstrumentor
     from lumigo_opentelemetry.resources.span_processor import LumigoSpanProcessor
 
     LUMIGO_ENDPOINT_BASE_URL = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1"
