@@ -1,11 +1,9 @@
 import json
 import os
-from opentelemetry import trace
-from lumigo_opentelemetry import logger_provider
+from lumigo_opentelemetry import logger_provider, tracer_provider
 import logging
 
-tracer = trace.get_tracer(__file__)
-
+tracer = tracer_provider.get_tracer(__file__)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
