@@ -14,7 +14,7 @@ def write_log(message):
         "some-super-secret-stuff": "this is a secret",
     }
 
-    if os.environ["LOG_AS_JSON_STRING"] == "true":
+    if os.environ["LOG_AS_STRING"] == "true":
         logger.debug(json.dumps(log))
     else:
         logger.debug(log)

@@ -25,7 +25,7 @@ def run_logging_app(
             "LUMIGO_DEBUG_LOGDUMP": log_dump_file
             or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
             "LUMIGO_SECRET_MASKING_REGEX": '[".*super-secret.*"]',
-            "LOG_AS_JSON_STRING": str(log_as_string).lower(),
+            "LOG_AS_STRING": str(log_as_string).lower(),
         },
         capture_output=True,
     )
