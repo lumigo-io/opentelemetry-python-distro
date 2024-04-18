@@ -5,8 +5,6 @@ import os
 import sys
 from typing import Any, Callable, Dict, List, TypeVar
 
-from lumigo_opentelemetry.libs.logs_processor import LumigoLogRecordProcessor
-
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 
 T = TypeVar("T")
@@ -128,6 +126,7 @@ def init() -> Dict[str, Any]:
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
     from lumigo_opentelemetry.libs.general_utils import get_max_size
+    from lumigo_opentelemetry.processors.logs_processor import LumigoLogRecordProcessor
     from lumigo_opentelemetry.resources.detectors import (
         get_infrastructure_resource,
         get_process_resource,
