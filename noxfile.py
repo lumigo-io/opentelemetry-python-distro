@@ -1016,6 +1016,8 @@ def integration_tests_logging(session):
     session.install(".")
     temp_file = create_it_tempfile("logging")
     with session.chdir("src/test/integration/logging"):
+        session.install("-r", OTHER_REQUIREMENTS)
+
         try:
             session.run(
                 "pytest",
