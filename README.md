@@ -111,8 +111,9 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 
 #### Logging instrumentation
 
-* `LUMIGO_ENABLE_LOGS` - turns on the `logging` instrumentation. This instrumentation will capture log-records logged by Python's `logging` builtin library, and send them to Lumigo. Logs emitted will also be correlated with the active span using a set of keys added to each logs-record (see [list](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/logging/logging.html#module-opentelemetry.instrumentation.logging)).
-* `LUMIGO_DEBUG_LOGDUMP` - similar to `LUMIGO_DEBUG_SPANDUMP`, only for logs instead of spans.
+* `LUMIGO_ENABLE_LOGS` - Default: `false`. When set to `true`, turns on the `logging` instrumentation to capture log-records logged by Python's `logging` builtin library and send them to Lumigo. Emitted logs will also get injected with the active span context (see [list](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/logging/logging.html#module-opentelemetry.instrumentation.logging)).
+
+* `LUMIGO_DEBUG_LOGDUMP` - similar to `LUMIGO_DEBUG_SPANDUMP`, only for logs instead of spans. Effective only when `LUMIGO_ENABLE_LOGS` is set to `true`.
 
 ### Execution Tags
 
