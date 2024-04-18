@@ -14,6 +14,7 @@ def run_logging_app(
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
     )
+    root_src_path = path.abspath("../../..")
 
     completed_process = subprocess.run(
         [sys.executable, app_path],
@@ -26,6 +27,8 @@ def run_logging_app(
             or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
             "LUMIGO_SECRET_MASKING_REGEX": '[".*super-secret.*"]',
             "LOG_AS_STRING": str(log_as_string).lower(),
+            # Without this, requiring the lumigo_opentelemetry package will fail in the test app
+            "PYTHONPATH": root_src_path,
         },
         capture_output=True,
     )
