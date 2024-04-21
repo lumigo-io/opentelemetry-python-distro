@@ -1,5 +1,3 @@
-import json
-import os
 from lumigo_opentelemetry import logger_provider, tracer_provider
 import logging
 
@@ -11,16 +9,13 @@ logger.setLevel(logging.DEBUG)
 def write_log(message):
     log = {
         "some-thing": message,
-        "some-super-secret-stuff": "this is a secret",
+        "some-super-sekret-stuff": "this is a secret",
     }
 
-    if os.environ["LOG_AS_STRING"] == "true":
-        logger.debug(json.dumps(log))
-    else:
-        logger.debug(log)
+    logger.debug(log)
 
 
-write_log("with no recording span")
+write_log(message="with no recording span")
 
 with tracer.start_as_current_span("some-span") as span:
     write_log("with recording span")

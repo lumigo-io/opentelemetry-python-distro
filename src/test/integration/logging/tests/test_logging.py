@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -7,9 +8,7 @@ from os import path
 from test.test_utils.logs_parser import LogsContainer
 
 
-def run_logging_app(
-    logging_enabled: bool, log_dump_file: str = None, log_as_string: bool = False
-):
+def run_logging_app(logging_enabled: bool, log_dump_file: str = None):
     app_path = path.join(
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
@@ -25,8 +24,7 @@ def run_logging_app(
             "LUMIGO_ENABLE_LOGS": str(logging_enabled).lower(),
             "LUMIGO_DEBUG_LOGDUMP": log_dump_file
             or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
-            "LUMIGO_SECRET_MASKING_REGEX": '[".*super-secret.*"]',
-            "LOG_AS_STRING": str(log_as_string).lower(),
+            "LUMIGO_SECRET_MASKING_REGEX": '[".*super-sekret.*"]',
             # Without this, requiring the lumigo_opentelemetry package will fail in the test app
             "PYTHONPATH": root_src_path,
         },
@@ -56,11 +54,11 @@ class TestLogging(unittest.TestCase):
         self.assertEqual(len(logs), 2)
         self.assertEqual(
             logs[0]["body"],
-            '{"some-thing": "with no recording span", "some-super-secret-stuff": "****"}',
+            '{"some-thing": "with no recording span", "some-super-sekret-stuff": "****"}',
         )
         self.assertEqual(
             logs[1]["body"],
-            '{"some-thing": "with recording span", "some-super-secret-stuff": "****"}',
+            '{"some-thing": "with recording span", "some-super-sekret-stuff": "****"}',
         )
 
         for log in logs:
@@ -89,35 +87,19 @@ class TestLogging(unittest.TestCase):
         self.assertEqual(log_attributes["otelServiceName"], "logging-app")
         self.assertEqual(log_attributes["otelTraceSampled"], True)
 
-    def test_secret_scrubbing_string(self):
-        run_logging_app(logging_enabled=True, log_as_string=True)
-
-        logs = LogsContainer.get_logs_from_file()
-
-        self.assertEqual(len(logs), 2)
-
-        self.assertEqual(
-            logs[0]["body"],
-            '{"some-thing": "with no recording span", "some-super-secret-stuff": "****"}',
-        )
-        self.assertEqual(
-            logs[1]["body"],
-            '{"some-thing": "with recording span", "some-super-secret-stuff": "****"}',
-        )
-
-    def test_secret_scrubbing_object(self):
-        run_logging_app(logging_enabled=True, log_as_string=False)
+    def test_secret_scrubbing_body(self):
+        run_logging_app(logging_enabled=True)
 
         logs = LogsContainer.get_logs_from_file()
 
         self.assertEqual(len(logs), 2)
         self.assertEqual(
-            logs[0]["body"],
-            '{"some-thing": "with no recording span", "some-super-secret-stuff": "****"}',
+            json.loads(logs[0]["body"]),
+            {"some-thing": "with no recording span", "some-super-sekret-stuff": "****"},
         )
         self.assertEqual(
-            logs[1]["body"],
-            '{"some-thing": "with recording span", "some-super-secret-stuff": "****"}',
+            json.loads(logs[1]["body"]),
+            {"some-thing": "with recording span", "some-super-sekret-stuff": "****"},
         )
 
     def test_logging_disabled(self):
