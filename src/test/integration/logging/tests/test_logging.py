@@ -13,20 +13,18 @@ def run_logging_app(logging_enabled: bool, log_dump_file: str = None):
         path.dirname(path.abspath(__file__)),
         "../app/logging_app.py",
     )
-    root_src_path = path.abspath("../../..")
 
     completed_process = subprocess.run(
         [sys.executable, app_path],
         env={
             **os.environ,
-            "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
             "OTEL_SERVICE_NAME": "logging-app",
             "LUMIGO_ENABLE_LOGS": str(logging_enabled).lower(),
             "LUMIGO_DEBUG_LOGDUMP": log_dump_file
             or os.environ.get("LUMIGO_DEBUG_LOGDUMP"),
             "LUMIGO_SECRET_MASKING_REGEX": '[".*super-sekret.*"]',
             # Without this, requiring the lumigo_opentelemetry package will fail in the test app
-            "PYTHONPATH": root_src_path,
+            "PYTHONPATH": os.environ.get("NOX_SITE_PACKAGES_PATH"),
         },
         capture_output=True,
     )
