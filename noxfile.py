@@ -1026,6 +1026,7 @@ def integration_tests_logging(session):
                 "-s",
                 "./tests/test_logging.py",
                 env={
+                    "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
                     "LUMIGO_DEBUG_LOGDUMP": temp_file,
                     "LUMIGO_DEBUG": "true",
                 },
