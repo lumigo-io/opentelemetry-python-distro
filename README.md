@@ -10,7 +10,7 @@ The Lumigo OpenTelemetry Distribution for Python is made of several upstream Ope
 
 ## Logging support
 The Lumigo OpenTelemetry Distribution also allows logging span-correlated records. See the [configuration](#logging-instrumentation) section for details on how to enable this feature.
-When using the logging feature, the same set of rules for [secret masking](#lumigo-specific-configurations) applies on the content of the log message.
+When using the logging feature, the same set of rules for [secret masking](#lumigo-specific-configurations) applies on the content of the log message, with only `LUMIGO_SECRET_MASKING_REGEX` being considered.
 
 **Note:** If you are looking for the Lumigo Python tracer for AWS Lambda functions, [`lumigo-tracer`](https://pypi.org/project/lumigo-tracer/) is the package you should use instead.
 
