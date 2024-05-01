@@ -12,13 +12,16 @@ from lumigo_opentelemetry import init
 
 
 class TestDistroInit(unittest.TestCase):
-    def test_access_trace_provider(self):
-        from lumigo_opentelemetry import tracer_provider
+    def test_access_trace_and_logging_providers(self):
+        from lumigo_opentelemetry import tracer_provider, logger_provider
 
         self.assertIsNotNone(tracer_provider)
-
         self.assertTrue(hasattr(tracer_provider, "force_flush"))
         self.assertTrue(hasattr(tracer_provider, "shutdown"))
+
+        self.assertIsNotNone(logger_provider)
+        self.assertTrue(hasattr(logger_provider, "force_flush"))
+        self.assertTrue(hasattr(logger_provider, "shutdown"))
 
 
 class TestDependencyReport(TestCase):

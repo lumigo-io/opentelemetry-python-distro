@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import platform
+from posixpath import abspath
 import re
 import sys
 import tempfile
@@ -1005,6 +1006,38 @@ def integration_tests_redis(
                 )
             finally:
                 kill_process_and_clean_outputs(temp_file, "test_redis", session)
+
+
+@nox.session()
+@nox.parametrize(
+    "python",
+    [(python) for python in python_versions()],
+)
+def integration_tests_logging(session):
+    session.install(".")
+    temp_file = create_it_tempfile("logging")
+    site_packages_path = abspath(
+        f"{session.virtualenv.location_name}/lib/python{session.python}/site-packages"
+    )
+    with session.chdir("src/test/integration/logging"):
+        try:
+            session.run(
+                "pytest",
+                "--tb=native",
+                "--log-cli-level=INFO",
+                "--color=yes",
+                "-v",
+                "-s",
+                "./tests/test_logging.py",
+                env={
+                    "LUMIGO_DEBUG_LOGDUMP": temp_file,
+                    "LUMIGO_DEBUG": "true",
+                    "NOX_SITE_PACKAGES_PATH": site_packages_path,
+                },
+            )
+        finally:
+            # No need to run kill_process_and_clean_outputs() here, as the logging tests are a script that runs and exits
+            clean_outputs(temp_file, session)
 
 
 def kill_process_and_clean_outputs(full_path: str, process_name: str, session) -> None:
