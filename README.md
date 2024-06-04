@@ -221,7 +221,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 | Instrumentation | Package | Supported Versions | | | | |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
 | | | 3.7 | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.33.13|1.17.22~1.34.117|1.17.22~1.34.117|1.17.22~1.34.117|1.17.22~1.34.117|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.33.13|1.17.22~1.34.118|1.17.22~1.34.118|1.17.22~1.34.118|1.17.22~1.34.118|
 | django | [django](https://pypi.org/project/django) | 3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|
 | | | 3.2| 4.0.1~4.2.13| 4.0.1~4.2.13| 4.0.1~4.2.13| 4.0.1~4.2.13|
 | | | | 3.2| 3.2| 5.0.1~5.1.1| 5.0.1~5.1.1|
@@ -247,7 +247,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 |  | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|
 | | | | 0.24.0~0.30.1| 0.24.0~0.30.1| 0.24.0~0.30.1| 0.24.0~0.30.1|
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|
-| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.62.2|1.45.0~1.64.0rc1|1.45.0~1.64.0rc1|1.45.0~1.64.0rc1|1.49.0~1.64.0rc1|
+| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.62.2|1.45.0~1.64.1|1.45.0~1.64.1|1.45.0~1.64.1|1.49.0~1.64.1|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|
 | pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|1.0.0|
 | | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
