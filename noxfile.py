@@ -347,7 +347,7 @@ def integration_tests_fastapi(
     fastapi_version,
     uvicorn_version,
 ):
-    install_package("pip3", "24.0", session)
+    install_package("pip", "24.0", session)
     install_package("uvicorn", uvicorn_version, session)
     install_package("fastapi", fastapi_version, session)
 
