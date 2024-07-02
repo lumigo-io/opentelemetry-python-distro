@@ -30,7 +30,8 @@ class KafkaPythonInstrumentor(AbstractInstrumentor):
         def _consume_hook(
             span: Span, record: ABCRecord, args: List[Any], kwargs: Dict[Any, Any]
         ) -> None:
-            add_body_attribute(span, record.value, "messaging.consume.body")
+            with lumigo_safe_execute("kafka _consume_hook"):
+                add_body_attribute(span, record.value, "messaging.consume.body")
 
         KafkaInstrumentor().instrument(
             produce_hook=_produce_hook, consume_hook=_consume_hook
