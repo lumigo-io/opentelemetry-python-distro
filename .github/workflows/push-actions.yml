@@ -44,7 +44,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - run: pip3 --version
+      - run: pip3 install pip==21.4.0
       - run: pip3 install -r requirements.txt
       - run: python3 -m nox -e "${{ matrix.integration-test-family }}"
 
