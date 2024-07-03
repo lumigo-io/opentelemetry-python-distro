@@ -6,6 +6,7 @@ from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 from lumigo_opentelemetry.instrumentations.instrumentation_utils import (
     add_body_attribute,
 )
+from lumigo_opentelemetry.libs.general_utils import lumigo_safe_execute
 
 
 class RedisInstrumentor(AbstractInstrumentor):
@@ -22,13 +23,15 @@ class RedisInstrumentor(AbstractInstrumentor):
         def request_hook(
             span: Span, instance: Connection, args: List[Any], kwargs: Dict[Any, Any]
         ) -> None:
-            # a db.statement attribute is automatically added by the RedisInstrumentor
-            # when this hook is called, but only includes the command name for some
-            # versions so we need to set it ourselves.
-            add_body_attribute(span, " ".join(args), "db.statement")
+            with lumigo_safe_execute("redis_request_hook"):
+                # a db.statement attribute is automatically added by the RedisInstrumentor
+                # when this hook is called, but only includes the command name for some
+                # versions so we need to set it ourselves.
+                add_body_attribute(span, " ".join(args), "db.statement")
 
         def response_hook(span: Span, instance: Connection, response: Any) -> None:
-            add_body_attribute(span, response, "db.response.body")
+            with lumigo_safe_execute("redis_response_hook"):
+                add_body_attribute(span, response, "db.response.body")
 
         RedisInstrumentor().instrument(
             request_hook=request_hook,
