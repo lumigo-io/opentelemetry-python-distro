@@ -33,6 +33,7 @@ workflows:
     - lumigo-orb/be-deploy:
         context: common
         skip_on_auto_test_update: true
+        save_project_folder: false
         requires:
           - lumigo-orb/is_environment_available
 
