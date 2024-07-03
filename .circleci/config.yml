@@ -55,13 +55,6 @@ workflows:
           - lumigo-orb/prep-it-resources
           - lumigo-orb/prep-k8s-and-operator
 
-    - lumigo-orb/integration-test-cleanup:
-        name: post-test-cleanup
-        context: common
-        skip_on_auto_test_update: true
-        requires:
-          - lumigo-orb/integration-test-parallel
-
     - lumigo-orb/e2e-test:
         context: common
         skip_on_auto_test_update: true
@@ -69,6 +62,14 @@ workflows:
           - lumigo-orb/be-deploy
           - lumigo-orb/prep-it-resources
           - lumigo-orb/prep-k8s-and-operator
+
+    - lumigo-orb/integration-test-cleanup:
+        name: post-test-cleanup
+        context: common
+        skip_on_auto_test_update: true
+        requires:
+          - lumigo-orb/integration-test-parallel
+          - lumigo-orb/e2e-test
 
     - lumigo-orb/workflow-completed-successfully:
         context: common
