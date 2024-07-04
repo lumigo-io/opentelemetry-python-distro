@@ -45,8 +45,8 @@ class TestRedisSpans(unittest.TestCase):
 
             spans_container = SpansContainer.parse_spans_from_file()
 
-            self.assertGreaterEqual(len(spans_container.spans), 2)
-            set_span, get_span = spans_container.spans
+            self.assertGreaterEqual(len(spans_container.spans), 4)
+            set_span, get_span, set_bytes_span, get_bytes_span = spans_container.spans
             self.assertEqual(set_span[ATTRIBUTES][DB_SYSTEM], "redis")
             self.assertEqual(
                 set_span[ATTRIBUTES][DB_STATEMENT],
@@ -57,6 +57,21 @@ class TestRedisSpans(unittest.TestCase):
             self.assertEqual(get_span[ATTRIBUTES][DB_SYSTEM], "redis")
             self.assertEqual(get_span[ATTRIBUTES][DB_STATEMENT], "GET my-key")
             self.assertEqual(get_span[ATTRIBUTES][REDIS_RESPONSE_BODY], "my-value")
+
+            self.assertEqual(set_bytes_span[ATTRIBUTES][DB_SYSTEM], "redis")
+            self.assertEqual(
+                set_bytes_span[ATTRIBUTES][DB_STATEMENT],
+                "SET my-bytes-key b'my-bytes-value'",
+            )
+            self.assertEqual(set_bytes_span[ATTRIBUTES][REDIS_RESPONSE_BODY], "True")
+
+            self.assertEqual(get_bytes_span[ATTRIBUTES][DB_SYSTEM], "redis")
+            self.assertEqual(
+                get_bytes_span[ATTRIBUTES][DB_STATEMENT], "GET my-bytes-key"
+            )
+            self.assertEqual(
+                get_bytes_span[ATTRIBUTES][REDIS_RESPONSE_BODY], "my-bytes-value"
+            )
 
     def test_redis_hash(self):
         with RedisContainer("redis:latest") as redis_server:

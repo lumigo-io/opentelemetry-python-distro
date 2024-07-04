@@ -27,7 +27,9 @@ class RedisInstrumentor(AbstractInstrumentor):
                 # a db.statement attribute is automatically added by the RedisInstrumentor
                 # when this hook is called, but only includes the command name for some
                 # versions so we need to set it ourselves.
-                add_body_attribute(span, " ".join(args), "db.statement")
+                add_body_attribute(
+                    span, " ".join(str(arg) for arg in args), "db.statement"
+                )
 
         def response_hook(span: Span, instance: Connection, response: Any) -> None:
             with lumigo_safe_execute("redis_response_hook"):
