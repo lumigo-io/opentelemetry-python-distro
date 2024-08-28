@@ -43,11 +43,6 @@ jobs:
           python-version: 3.7
       - run: mkdir versions_artifacts
       - uses: actions/download-artifact@v2
-        continue-on-error: true  # when there aren't changes the artifact won't be uploaded and this step will fail
-        with:
-          name: 3.7
-          path: versions_artifacts/3.7
-      - uses: actions/download-artifact@v2
         continue-on-error: true
         with:
           name: 3.8
