@@ -214,7 +214,7 @@ get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 
 ## Supported runtimes
 
-* cpython: 3.7.x, 3.8.x, 3.9.x, 3.10.x, 3.11.x
+* cpython: 3.8.x, 3.9.x, 3.10.x, 3.11.x
 
 ## Supported packages
 
