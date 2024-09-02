@@ -103,3 +103,31 @@ class TestDependencyReport(TestCase):
         assert resource_attributes and resource_attributes["lumigo.distro.version"]
         assert "process.environ" not in resource_attributes.keys()
         assert dependencies
+
+
+class TestPythonVersionCheck(TestCase):
+    @patch("sys.version_info", (3, 7))  # Set Python version to 3.7
+    def test_python_version_too_old(self):
+        with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
+            result = init()
+        self.assertEqual(result, {})
+        self.assertIn(
+            "Unsupported Python version 3.7; only Python 3.8 to 3.11 are supported.",
+            cm.output[0],
+        )
+
+    @patch("sys.version_info", (3, 8))  # Set Python version to 3.8
+    def test_python_version_supported(self):
+        with self.assertLogs("lumigo-opentelemetry", level="WARNING"):
+            result = init()
+        self.assertIsInstance(result, dict)
+
+    @patch("sys.version_info", (3, 12))  # Set Python version to 3.12
+    def test_python_version_too_new(self):
+        with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
+            result = init()
+        self.assertEqual(result, {})
+        self.assertIn(
+            "Unsupported Python version 3.12; only Python 3.8 to 3.11 are supported.",
+            cm.output[0],
+        )

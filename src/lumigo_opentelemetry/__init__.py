@@ -77,6 +77,15 @@ def auto_load(_: Any) -> None:
 
 
 def init() -> Dict[str, Any]:
+    """Initialize the Lumigo OpenTelemetry distribution."""
+    python_version = sys.version_info
+    if not (python_version >= (3, 8) and python_version <= (3, 11)):
+        logger.warning(
+            f"Unsupported Python version {python_version[0]}.{python_version[1]}; "
+            "only Python 3.8 to 3.11 are supported."
+        )
+        return {}
+
     if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
         logger.info(
             "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
