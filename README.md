@@ -212,6 +212,13 @@ from opentelemetry.trace import get_current_span
 get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 ```
 
+## Python 3.7 Support
+
+**Deprecation Notice:** As of version 1.0.156, support for Python 3.7 has been deprecated. The last version of the Lumigo OpenTelemetry Distro to support Python 3.7 is version 1.0.155. 
+
+For users on Python 3.7, we recommend upgrading to a newer version of Python to ensure continued compatibility and access to the latest features and improvements.
+
+
 ## Supported runtimes
 
 * cpython: 3.8.x, 3.9.x, 3.10.x, 3.11.x
