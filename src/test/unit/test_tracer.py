@@ -1,8 +1,9 @@
+import sys
 import unittest
 import httpretty
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from httpretty import HTTPretty
 
 from json import loads
@@ -106,28 +107,43 @@ class TestDependencyReport(TestCase):
 
 
 class TestPythonVersionCheck(TestCase):
-    @patch("sys.version_info", (3, 7))  # Set Python version to 3.7
+    @patch("sys.version_info", Mock())
     def test_python_version_too_old(self):
+        # Mock version_info for Python 3.7
+        sys.version_info.major = 3
+        sys.version_info.minor = 7
+
         with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
             result = init()
+
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.7; only Python 3.8 to 3.11 are supported.",
+            "Unsupported Python version 3.7; only Python 3.8 to 3.12 are supported.",
             cm.output[0],
         )
 
-    @patch("sys.version_info", (3, 8))  # Set Python version to 3.8
+    @patch("sys.version_info", Mock())
     def test_python_version_supported(self):
+        # Mock version_info for Python 3.8
+        sys.version_info.major = 3
+        sys.version_info.minor = 8
+
         with self.assertLogs("lumigo-opentelemetry", level="WARNING"):
             result = init()
+
         self.assertIsInstance(result, dict)
 
-    @patch("sys.version_info", (3, 12))  # Set Python version to 3.12
+    @patch("sys.version_info", Mock())
     def test_python_version_too_new(self):
+        # Mock version_info for Python 3.13
+        sys.version_info.major = 3
+        sys.version_info.minor = 13
+
         with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
             result = init()
+
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.12; only Python 3.8 to 3.11 are supported.",
+            "Unsupported Python version 3.13; only Python 3.8 to 3.12 are supported.",
             cm.output[0],
         )
