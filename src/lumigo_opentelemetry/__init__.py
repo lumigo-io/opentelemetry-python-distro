@@ -89,15 +89,15 @@ def init() -> Dict[str, Any]:
             )
             return {}
 
-        if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
-            logger.info(
-                "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
-            )
-            return {}
-
-    except AttributeError as e:  # Catch any issues with accessing sys.version_info
+    except Exception as e:  # Catch any issues with accessing sys.version_info
         # Log a warning if there is a failure in verifying the Python version
         logger.warning("Failed to verify the Python version due to: %s", str(e))
+        return {}
+
+    if str(os.environ.get("LUMIGO_SWITCH_OFF", False)).lower() == "true":
+        logger.info(
+            "Lumigo OpenTelemetry distribution disabled via the 'LUMIGO_SWITCH_OFF' environment variable"
+        )
         return {}
 
     # Multiple packages are passed to autowrapt in comma-separated form
