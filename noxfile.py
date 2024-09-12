@@ -481,10 +481,7 @@ def integration_tests_flask(session, flask_version):
 
             # override the default Werkzeug version for flask v2 compatibility
             if flask_version.startswith("2."):
-                if python == "3.7":
-                    session.install("werkzeug==2.2.3")
-                else:
-                    session.install("werkzeug==2.3.7")
+                session.install("werkzeug==2.3.7")
 
             try:
                 session.run(

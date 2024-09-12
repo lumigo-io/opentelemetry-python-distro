@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         # If this key gets renamed, noxfile.py needs to be updated accordingly
-        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
     name: test-untested-versions
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
       - run: git --no-pager diff
       - run: mkdir versions_artifact
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.python-version }}
           path: versions_artifact
@@ -42,11 +42,6 @@ jobs:
         with:
           python-version: 3.7
       - run: mkdir versions_artifacts
-      - uses: actions/download-artifact@v2
-        continue-on-error: true  # when there aren't changes the artifact won't be uploaded and this step will fail
-        with:
-          name: 3.7
-          path: versions_artifacts/3.7
       - uses: actions/download-artifact@v2
         continue-on-error: true
         with:

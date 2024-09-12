@@ -60,10 +60,9 @@ class TestLogging(unittest.TestCase):
         )
 
         for log in logs:
-            # "resource" is currently not a proper dictionary, but a string from a repr(...) call over the resource attributes.
-            # Pending a fix in https://github.com/open-telemetry/opentelemetry-python/pull/3346
-            self.assertIn("'service.name': 'logging-app'", log["resource"])
-            # self.assertEqual(log["resource"]["service.name"], "logging-app")
+            self.assertEqual(
+                log["resource"]["attributes"]["service.name"], "logging-app"
+            )
 
         self.assertIn("attributes", logs[0])
 

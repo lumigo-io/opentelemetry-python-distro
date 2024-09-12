@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PACKAGE_NAME="$1"
-SUPPORTED_VERSIONS=(3.7 3.8 3.9 3.10 3.11)
+SUPPORTED_VERSIONS=(3.8 3.9 3.10 3.11)
 
 if [ -z "$PACKAGE_NAME" ]; then
     echo "Usage: $0 <PACKAGE_NAME>"
