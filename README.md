@@ -228,9 +228,9 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | Instrumentation | Package | Supported Versions | | | |
 | --- | --- | :---: | :---: | :---: | :---: |
 | | | 3.8 | 3.9 | 3.10 | 3.11 |
-| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.34.144|1.17.22~1.34.144|1.17.22~1.34.144|1.17.22~1.34.144|
+| botocore | [boto3](https://pypi.org/project/boto3) | 1.17.22~1.35.15|1.17.22~1.35.15|1.17.22~1.35.15|1.17.22~1.35.15|
 | django | [django](https://pypi.org/project/django) | 3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|3.2.1~3.2.25|
-| | | 4.0.1~4.2.14| 4.0.1~4.2.14| 4.0.1~4.2.14| 4.0.1~4.2.14|
+| | | 4.0.1~4.2.16| 4.0.1~4.2.16| 4.0.1~4.2.16| 4.0.1~4.2.16|
 | | | 3.2| 3.2| 5.0.1~5.1.1| 5.0.1~5.1.1|
 | | | 4.0| 4.0| 3.2| 3.2|
 | | | 4.0.a1| 4.0.a1| 4.0| 4.0|
@@ -249,24 +249,26 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | | | | | 4.2rc1| 4.2rc1|
 | | | | | 5.0| 5.0|
 | | | | | 5.0rc1| 5.0rc1|
+| | | | | 5.1| 5.1|
+| | | | | 5.1rc1| 5.1rc1|
 | fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
-| | | 0.100.0b2~0.111.0.dev1| 0.100.0b2~0.111.0.dev1| 0.100.0b2~0.111.0.dev1| 0.100.0b2~0.111.0.dev1|
+| | | 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0|
 |  | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|
-| | | 0.24.0~0.30.1| 0.24.0~0.30.1| 0.24.0~0.30.1| 0.24.0~0.30.1|
+| | | 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.6|
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|
-| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.65.0rc2|1.45.0~1.65.0rc2|1.45.0~1.65.0rc2|1.49.0~1.65.0rc2|
+| grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.66.1|1.45.0~1.66.1|1.45.0~1.66.1|1.49.0~1.66.1|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|
 | pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|
 | | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
 | | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2|
-| psycopg | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.4~3.2.1|
-| | | 3.1| 3.1| 3.1| |
-|  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|
+| psycopg | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|
 | | | 3.1| 3.1| 3.1| 3.1|
-| psycopg2 | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
+|  | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.4~3.2.1|
+| | | 3.1| 3.1| 3.1| |
+| psycopg2 | [psycopg2](https://pypi.org/project/psycopg2) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.8| |
-|  | [psycopg2](https://pypi.org/project/psycopg2) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
+|  | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.9.5~2.9.9| |
 | | | 2.9| 2.9| 2.8| |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|
