@@ -261,14 +261,14 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|1.0.0|
 | | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
 | | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2|
-| psycopg | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.4~3.2.1|3.1.4~3.2.1|
-| | | 3.1| 3.1| 3.1| | |
-|  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|
+| psycopg | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|
 | | | 3.1| 3.1| 3.1| 3.1| 3.1|
-| psycopg2 | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
+|  | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.4~3.2.1|3.1.4~3.2.1|
+| | | 3.1| 3.1| 3.1| | |
+| psycopg2 | [psycopg2](https://pypi.org/project/psycopg2) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.9.5~2.9.9| | |
 | | | 2.9| 2.9| 2.8| | |
-|  | [psycopg2](https://pypi.org/project/psycopg2) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
+|  | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.9.5~2.9.9| | |
 | | | 2.9| 2.9| 2.8| | |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|
