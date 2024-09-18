@@ -81,11 +81,11 @@ def init() -> Dict[str, Any]:
 
     try:
         python_version = sys.version_info
-        # Check if the major version is 3 and the minor version is between 8 and 11
-        if python_version.major != 3 or not (8 <= python_version.minor <= 11):
+        # Check if the major version is 3 and the minor version is between 8 and 12
+        if python_version.major != 3 or not (8 <= python_version.minor <= 12):
             logger.warning(
                 f"Unsupported Python version {python_version.major}.{python_version.minor}; "
-                "only Python 3.8 to 3.11 are supported."
+                "only Python 3.8 to 3.12 are supported."
             )
             return {}
 
