@@ -8,7 +8,7 @@ class PsycopgInstrumentor(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("psycopg")
 
-    def check_if_applicable(self) -> None:
+    def assert_instrumented_package_importable(self) -> None:
         import psycopg  # noqa
 
     def install_instrumentation(self) -> None:

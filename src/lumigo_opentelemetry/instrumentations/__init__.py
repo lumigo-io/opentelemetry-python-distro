@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+import os
 
 
 class AbstractInstrumentor(ABC):
@@ -12,10 +13,24 @@ class AbstractInstrumentor(ABC):
     def __init__(self, instrumentation_id: str):
         self._instrumentation_id = instrumentation_id
 
+    def is_applicable(self) -> bool:
+        tracing_enabled = (
+            os.environ.get("LUMIGO_ENABLE_TRACES", "TRUE").upper() == "TRUE"
+        )
+        if not tracing_enabled:
+            return False
+
+        try:
+            self.assert_instrumented_package_importable()
+            return True
+        except ImportError:
+            return False
+
     @abstractmethod
-    def check_if_applicable(self) -> None:
-        # TODO Implement version lookup per instrumented package, and check that the version is supported
-        raise Exception("'check_if_applicable' method not implemented!")
+    def assert_instrumented_package_importable(self) -> None:
+        raise Exception(
+            "'assert_instrumented_package_importable' method not implemented!"
+        )
 
     @abstractmethod
     def install_instrumentation(self) -> None:

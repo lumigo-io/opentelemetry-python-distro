@@ -14,7 +14,7 @@ class BotoCoreInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("botocore")
 
-    def check_if_applicable(self) -> None:
+    def assert_instrumented_package_importable(self) -> None:
         from botocore.client import BaseClient  # noqa
         from botocore.endpoint import Endpoint  # noqa
         from botocore.exceptions import ClientError  # noqa
