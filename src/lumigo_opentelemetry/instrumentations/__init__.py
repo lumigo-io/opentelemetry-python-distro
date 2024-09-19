@@ -15,7 +15,7 @@ class AbstractInstrumentor(ABC):
 
     def is_applicable(self) -> bool:
         tracing_enabled = (
-            os.environ.get("LUMIGO_ENABLE_TRACES", "TRUE").upper() == "TRUE"
+            os.environ.get("LUMIGO_ENABLE_TRACES", "true").lower() == "true"
         )
         if not tracing_enabled:
             return False
