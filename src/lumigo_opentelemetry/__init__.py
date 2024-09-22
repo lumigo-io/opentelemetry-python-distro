@@ -177,6 +177,10 @@ def init() -> Dict[str, Any]:
                     ),
                 )
             )
+        else:
+            logger.info(
+                'Tracing is disabled (the "LUMIGO_ENABLE_TRACES" environment variable is not set to "true"): no traces will be sent to Lumigo.'
+            )
 
         if logging_enabled:
             logger_provider.add_log_record_processor(
@@ -186,6 +190,10 @@ def init() -> Dict[str, Any]:
                         headers={"Authorization": f"LumigoToken {lumigo_token}"},
                     )
                 )
+            )
+        else:
+            logger.info(
+                'Logging is disabled (the "LUMIGO_ENABLE_LOGS" environment variable is not set to "true"): no logs will be sent to Lumigo.'
             )
 
         if lumigo_report_dependencies:
