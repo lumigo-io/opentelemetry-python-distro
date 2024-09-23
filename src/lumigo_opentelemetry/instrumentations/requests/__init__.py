@@ -11,7 +11,7 @@ class RequestsInstrumentor(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("requests")
 
-    def check_if_applicable(self) -> None:
+    def assert_instrumented_package_importable(self) -> None:
         from requests.models import Response  # noqa
         from requests.sessions import Session  # noqa
         from requests.structures import CaseInsensitiveDict  # noqa

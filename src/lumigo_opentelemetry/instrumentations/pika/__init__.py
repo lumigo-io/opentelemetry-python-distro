@@ -10,7 +10,7 @@ class PikaInstrumentor(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("pika")
 
-    def check_if_applicable(self) -> None:
+    def assert_instrumented_package_importable(self) -> None:
         import pika  # noqa
 
     def install_instrumentation(self) -> None:

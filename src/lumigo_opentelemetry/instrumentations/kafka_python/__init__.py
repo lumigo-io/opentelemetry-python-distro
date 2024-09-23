@@ -13,7 +13,7 @@ class KafkaPythonInstrumentor(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("kafka_python")
 
-    def check_if_applicable(self) -> None:
+    def assert_instrumented_package_importable(self) -> None:
         import kafka  # noqa
 
     def install_instrumentation(self) -> None:

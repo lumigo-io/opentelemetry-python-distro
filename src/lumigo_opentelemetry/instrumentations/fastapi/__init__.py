@@ -6,7 +6,7 @@ class FastApiInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("fast-api")
 
-    def check_if_applicable(self) -> None:
+    def assert_instrumented_package_importable(self) -> None:
         import fastapi  # noqa
 
     def install_instrumentation(self) -> None:

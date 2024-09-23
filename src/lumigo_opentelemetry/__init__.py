@@ -135,7 +135,8 @@ def init() -> Dict[str, Any]:
     lumigo_report_dependencies = (
         os.getenv("LUMIGO_REPORT_DEPENDENCIES", "true").lower() == "true"
     )
-    logging_enabled = os.getenv("LUMIGO_ENABLE_LOGS", "").lower() == "true"
+    logging_enabled = os.getenv("LUMIGO_ENABLE_LOGS", "false").lower() == "true"
+    tracing_enabled = os.getenv("LUMIGO_ENABLE_TRACES", "true").lower() == "true"
     spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
     logdump_file = os.getenv("LUMIGO_DEBUG_LOGDUMP")
 
@@ -167,14 +168,19 @@ def init() -> Dict[str, Any]:
     logger_provider.add_log_record_processor(LumigoLogRecordProcessor())
 
     if lumigo_token:
-        tracer_provider.add_span_processor(
-            LumigoSpanProcessor(
-                OTLPSpanExporter(
-                    endpoint=lumigo_traces_endpoint,
-                    headers={"Authorization": f"LumigoToken {lumigo_token}"},
-                ),
+        if tracing_enabled:
+            tracer_provider.add_span_processor(
+                LumigoSpanProcessor(
+                    OTLPSpanExporter(
+                        endpoint=lumigo_traces_endpoint,
+                        headers={"Authorization": f"LumigoToken {lumigo_token}"},
+                    ),
+                )
             )
-        )
+        else:
+            logger.info(
+                'Tracing is disabled (the "LUMIGO_ENABLE_TRACES" environment variable is not set to "true"): no traces will be sent to Lumigo.'
+            )
 
         if logging_enabled:
             logger_provider.add_log_record_processor(
@@ -184,6 +190,10 @@ def init() -> Dict[str, Any]:
                         headers={"Authorization": f"LumigoToken {lumigo_token}"},
                     )
                 )
+            )
+        else:
+            logger.info(
+                'Logging is disabled (the "LUMIGO_ENABLE_LOGS" environment variable is not set to "true"): no logs will be sent to Lumigo.'
             )
 
         if lumigo_report_dependencies:

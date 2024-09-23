@@ -37,12 +37,8 @@ instrumentors: List[AbstractInstrumentor] = [
     redis_instrumentor,
     requests_instrumentor,
 ]
-for instrumentor in instrumentors:
-    try:
-        instrumentor.check_if_applicable()
-    except ImportError:
-        continue
-
+applicable_instumentors = [inst for inst in instrumentors if inst.is_applicable()]
+for instrumentor in applicable_instumentors:
     try:
         instrumentor.install_instrumentation()
         installed_instrumentations.append(instrumentor.instrumentation_id)
@@ -56,7 +52,7 @@ for instrumentor in instrumentors:
         )
 
 logger.debug(
-    "Installed instrumentations: %s", ", ".join(list(installed_instrumentations))
+    "Installed instrumentations: [%s]", ", ".join(list(installed_instrumentations))
 )
 
 frameworks = list(
