@@ -44,7 +44,7 @@ class FastAPIParser:
                 with instance.tracer.start_as_current_span("receive_body") as send_span:
                     send_span.set_attribute(
                         "http.request.body",
-                        dump_with_context("requestBody", return_value),
+                        dump_with_context("requestBody", return_value.get("body")),
                     )
             return return_value
 
