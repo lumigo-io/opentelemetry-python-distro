@@ -2,7 +2,7 @@ import functools
 import logging
 
 try:
-    from collections import Iterable  # type: ignore
+    from collections import Iterable  # type: ignore[attr-defined]
 except ImportError:
     # collections.Iterables was removed in Python 3.10
     from collections.abc import Iterable
