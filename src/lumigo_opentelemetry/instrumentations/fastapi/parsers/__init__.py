@@ -42,10 +42,16 @@ class FastAPIParser:
             return_value = await original_otel_receive()
             with lumigo_safe_execute("FastAPIParser: new_otel_receive"):
                 with instance.tracer.start_as_current_span("receive_body") as send_span:
-                    send_span.set_attribute(
-                        "http.request.body",
-                        dump_with_context("requestBody", return_value.get("body")),
-                    )
+                    if isinstance(return_value, dict) and "body" in return_value:
+                        send_span.set_attribute(
+                            "http.request.body",
+                            dump_with_context("requestBody", return_value.get("body")),
+                        )
+                    else:
+                        send_span.set_attribute(
+                            "http.request.body",
+                            dump_with_context("requestBody", return_value),
+                        )
             return return_value
 
         return new_otel_receive
