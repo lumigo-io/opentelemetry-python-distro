@@ -120,6 +120,12 @@ class TestFastApiSpans(unittest.TestCase):
                     internals, "http.request.body"
                 )
             )
+            self.assertEqual(
+                spans_container.get_attribute_from_list_of_spans(
+                    internals, "http.request.body"
+                ),
+                '{"a": "b"}',
+            )
             self.assertIsNotNone(
                 spans_container.get_attribute_from_list_of_spans(
                     internals, "http.response.headers"
