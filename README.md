@@ -59,8 +59,11 @@ Replace `<service name> with the desired name of the service`.
 
 ### Tracer activation
 
-There are two ways to activate the `lumigo_opentelemetry` package: one based on importing the package in code (manual activation), and the other via the environment (no-code activation).
-The [no-code activation](#no-code-activation) approach is the preferred one.
+There are several ways to activate the `lumigo_opentelemetry` package:
+
+1. [No-code activation](#no-code-activation) (preferred approach).
+2. [Manual activation](#manual-activation).
+3. [Decorator-based activation](#decorator-based-activation).
 
 #### No-code activation
 
@@ -68,19 +71,37 @@ The [no-code activation](#no-code-activation) approach is the preferred one.
 
 Set the following environment variable:
 
-```console
+```sh
 AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 ```
 
 #### Manual activation
 
-**Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) section.
+**Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) and [Decorator-based activation](#decorator-based-activation) sections.
 
 Import `lumigo_opentelemetry` at the beginning of your main file:
 
 ```python
 import lumigo_opentelemetry
 ```
+
+### Decorator-based activation
+
+For simple Python scripts that are not built around Lumigo or OpenTelemetry-instrumented libraries, you can use the `@lumigo_wrapped` decorator for activation. This approach is especially useful for standalone scripts, cron jobs, or similar use cases.
+
+Import the `lumigo_wrapped` decorator and wrap your functions to automatically create OpenTelemetry spans:
+
+```python
+from lumigo_opentelemetry import lumigo_wrapped
+
+@lumigo_wrapped
+def your_function():
+    pass
+```
+
+See the [Using the `@lumigo_wrapped` Decorator](#using-the-lumigo_wrapped-decorator) section for more details.
+
+---
 
 ## Configuration
 
@@ -211,6 +232,35 @@ from opentelemetry.trace import get_current_span
 
 get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 ```
+
+### Using the `@lumigo_wrapped` Decorator
+
+The `@lumigo_wrapped` decorator is a convenient way to add OpenTelemetry tracing to functions in scripts that are not using libraries or frameworks instrumented by Lumigo or OpenTelemetry.
+
+When applied, the decorator creates an OpenTelemetry span for the decorated function, adding attributes such as:
+
+- `input_args`: The positional arguments passed to the function.
+- `input_kwargs`: The keyword arguments passed to the function.
+- `return_value`: The value returned by the function.
+
+This approach is particularly useful for standalone Python scripts or cron jobs where use of the [OpenTelemetry SDK](https://opentelemetry.io/docs/languages/java/) is not feasible.
+
+Here's a simple example using the `@lumigo_wrapped` decorator:
+
+```python
+from lumigo_opentelemetry import lumigo_wrapped
+
+@lumigo_wrapped
+def calculate_sum(start, end):
+    """Calculates the sum of numbers in a given range."""
+    return sum(range(start, end + 1))
+
+if __name__ == "__main__":
+    result = calculate_sum(1, 100)
+    print(f"The sum of numbers from 1 to 100 is: {result}")
+
+```
+In the example above, a span will be created automatically when calculate_sum() is called, capturing the function arguments (start and end) and the return value (the calculated sum) as span attributes.
 
 ## Python 3.7 Support
 
