@@ -74,7 +74,7 @@ AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 
 #### Manual activation
 
-**Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) and [Decorator-based activation](#decorator-based-activation) sections.
+**Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) section.
 
 Import `lumigo_opentelemetry` at the beginning of your main file:
 
