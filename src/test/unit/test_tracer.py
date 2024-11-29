@@ -9,6 +9,8 @@ from httpretty import HTTPretty
 from json import loads
 from os import environ
 
+from opentelemetry.sdk.trace import SpanProcessor
+
 from lumigo_opentelemetry import init
 
 
@@ -147,3 +149,35 @@ class TestPythonVersionCheck(TestCase):
             "Unsupported Python version 3.13; only Python 3.8 to 3.12 are supported.",
             cm.output[0],
         )
+
+
+class TestCreateProgrammaticError(unittest.TestCase):
+    @httpretty.activate(allow_net_connect=False)
+    def test_create_event_with_correct_attributes(self):
+        from lumigo_opentelemetry import create_programmatic_error, tracer_provider
+
+        self.assertIsNotNone(create_programmatic_error)
+
+        span_processor = Mock(SpanProcessor)
+        tracer_provider.add_span_processor(span_processor)
+
+        tracer = tracer_provider.get_tracer(__name__)
+        with tracer.start_as_current_span("Root") as span:
+            create_programmatic_error("Error message", "ErrorType")
+
+        # Verify `on_start` was called
+        span_processor.on_start.assert_called()
+
+        # Capture the span passed to `on_start`
+        span = span_processor.on_start.call_args[0][
+            0
+        ]  # Extract the `span` argument from the first call
+
+        events = span.events
+        # Verify the event was added
+        self.assertEqual(len(events), 1)
+
+        event = events[0]
+        # Verify the event has the correct attributes
+        self.assertEqual(event.name, "Error message")
+        self.assertEqual(event.attributes["lumigo.type"], "ErrorType")
