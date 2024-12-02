@@ -82,7 +82,7 @@ Import `lumigo_opentelemetry` at the beginning of your main file:
 import lumigo_opentelemetry
 ```
 
-##### Script instrumentation
+#### Script instrumentation
 
 For simple Python scripts that are not built around Lumigo or OpenTelemetry-instrumented libraries, you can use the `@lumigo_wrapped` decorator for activation. This approach is especially useful for standalone scripts, cron jobs, or similar use cases.
 
@@ -245,8 +245,6 @@ When applied, the decorator creates an OpenTelemetry span for the decorated func
 - `input_args`: The positional arguments passed to the function.
 - `input_kwargs`: The keyword arguments passed to the function.
 - `return_value`: The value returned by the function.
-
-This approach is particularly useful for standalone Python scripts or cron jobs where use of the [OpenTelemetry SDK](https://opentelemetry.io/docs/languages/python/) is not feasible.
 
 Here's a simple example using the `@lumigo_wrapped` decorator:
 
