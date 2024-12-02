@@ -98,13 +98,7 @@ def your_function():
 
 See the [Using the `@lumigo_wrapped` Decorator](#using-the-lumigo_wrapped-decorator) section for more details.
 
-#### Limitations
-
-When activating the tracer, consider the following limitations:
-
-1. **Loss of the spans**: The final spans might not be sent to Lumigo if the script ends abruptly or before they can be flushed. To mitigate this, you can use the `force_flush` method on the tracer provider (see [Ensure spans are flushed to Lumigo before shutdown](#ensure-spans-are-flushed-to-lumigo-before-shutdown)).
-
-2. **No traces generated without outbound requests**: If no outbound requests are made (e.g., the code crashes before the first call is executed), the script run will not generate any traces in Lumigo. This limitation is inherent to the OpenTelemetry behavior and the need for spans to be triggered by instrumentation or custom tracing calls.
+**Note:** If no outbound requests are made (e.g., the code crashes before the first call is executed), the script run will not generate any traces in Lumigo. This limitation is inherent to the OpenTelemetry behavior and the need for spans to be triggered by instrumentation or custom tracing calls.
 
 ## Configuration
 
