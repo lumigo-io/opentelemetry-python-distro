@@ -209,10 +209,20 @@ For example, you can add a programmatic error as follows:
 ```python
 from lumigo_opentelemetry import create_programmatic_error
 
-create_programmatic_error("Error message", "ErrorType")
+create_programmatic_error("The customer 123 was not found", "CustomerNotExist")
 ```
 
 The first argument, "Error message", is a descriptive message for the error, while the second argument, "ErrorType", represents the type of the error.
+
+Alternately, programmatic errors can also be created by adding [span events](https://opentelemetry.io/docs/instrumentation/python/manual/#adding-events) with a custom attribute being set with the key name `lumigo.type`.
+
+For example, you could add a programmatic error as follows:
+
+```python
+from opentelemetry.trace import get_current_span
+
+get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
+```
 
 ## Python 3.7 Support
 
