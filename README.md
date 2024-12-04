@@ -68,7 +68,7 @@ The [no-code activation](#no-code-activation) approach is the preferred one.
 
 Set the following environment variable:
 
-```console
+```sh
 AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 ```
 
@@ -81,6 +81,24 @@ Import `lumigo_opentelemetry` at the beginning of your main file:
 ```python
 import lumigo_opentelemetry
 ```
+
+#### Script instrumentation
+
+For simple Python scripts that are not built around Lumigo or OpenTelemetry-instrumented libraries, you can use the `@lumigo_wrapped` decorator for activation. This approach is especially useful for standalone scripts, cron jobs, or similar use cases.
+
+Import the `lumigo_wrapped` decorator and wrap your functions to automatically create OpenTelemetry spans:
+
+```python
+from lumigo_opentelemetry import lumigo_wrapped
+
+@lumigo_wrapped
+def your_function():
+    pass
+```
+
+See the [Using the `@lumigo_wrapped` Decorator](#using-the-lumigo_wrapped-decorator) section for more details.
+
+**Note:** If no outbound requests are made (e.g., the code crashes before the first call is executed), the script run will not generate any traces in Lumigo. This limitation is inherent to the OpenTelemetry behavior and the need for spans to be triggered by instrumentation or custom tracing calls.
 
 ## Configuration
 
@@ -223,6 +241,33 @@ from opentelemetry.trace import get_current_span
 
 get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 ```
+
+### Using the `@lumigo_wrapped` Decorator
+
+The `@lumigo_wrapped` decorator is a convenient way to add Lumigo tracing to functions in scripts that are not using libraries or frameworks instrumented by Lumigo or OpenTelemetry.
+
+When applied, the decorator creates an OpenTelemetry span for the decorated function, adding attributes such as:
+
+- `input_args`: The positional arguments passed to the function.
+- `input_kwargs`: The keyword arguments passed to the function.
+- `return_value`: The value returned by the function.
+
+Here's a simple example using the `@lumigo_wrapped` decorator:
+
+```python
+from lumigo_opentelemetry import lumigo_wrapped
+
+@lumigo_wrapped
+def calculate_sum(start, end):
+    """Calculates the sum of numbers in a given range."""
+    return sum(range(start, end + 1))
+
+if __name__ == "__main__":
+    result = calculate_sum(1, 100)
+    print(f"The sum of numbers from 1 to 100 is: {result}")
+
+```
+In the example above, a span will be created automatically when calculate_sum() is called, capturing the function arguments (start and end) and the return value (the calculated sum) as span attributes.
 
 ## Python 3.7 Support
 

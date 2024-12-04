@@ -181,3 +181,45 @@ class TestCreateProgrammaticError(unittest.TestCase):
         # Verify the event has the correct attributes
         self.assertEqual(event.name, "Error message")
         self.assertEqual(event.attributes["lumigo.type"], "ErrorType")
+
+
+class TestLumigoWrapped(unittest.TestCase):
+    @httpretty.activate(allow_net_connect=False)
+    def test_access_lumigo_wrapped(self):
+        from lumigo_opentelemetry import lumigo_wrapped, tracer_provider
+
+        self.assertIsNotNone(lumigo_wrapped)
+        self.assertIsNotNone(tracer_provider)
+
+        span_processor = Mock(SpanProcessor)
+        tracer_provider.add_span_processor(span_processor)
+
+        @lumigo_wrapped
+        def sample_function(x, y):
+            return x + y
+
+        result = sample_function(1, 2)
+
+        self.assertEqual(result, 3)
+
+        # Assert `on_start` was called at least once
+        span_processor.on_start.assert_called()
+
+        # Verify `on_start` was called
+        span_processor.on_start.assert_called()
+
+        # Capture the span passed to `on_start`
+        span = span_processor.on_start.call_args[0][
+            0
+        ]  # Extract the `span` argument from the first call
+
+        # Assess attributes of the span
+        self.assertEqual(
+            span.attributes["input_args"], "[1, 2]"
+        )  # Check serialized input args
+        self.assertEqual(
+            span.attributes["input_kwargs"], "{}"
+        )  # Check serialized input kwargs
+        self.assertEqual(
+            span.attributes["return_value"], "3"
+        )  # Check serialized return value
