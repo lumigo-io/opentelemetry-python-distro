@@ -296,6 +296,12 @@ def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
+def create_programmatic_error(error_message: str, error_type: str) -> None:
+    from opentelemetry.trace import get_current_span
+
+    get_current_span().add_event(error_message, {"lumigo.type": error_type})
+
+
 # Load the package on import
 init_data = init()
 
@@ -309,4 +315,5 @@ __all__ = [
     "logger",
     "tracer_provider",
     "logger_provider",
+    "create_programmatic_error",
 ]
