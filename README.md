@@ -308,10 +308,10 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | | | | | 5.0rc1| 5.0rc1| 5.0rc1|
 | | | | | 5.1| 5.1| |
 | | | | | 5.1rc1| 5.1rc1| |
-| fastapi | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
-| | | 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.111.0.dev1|
-|  | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|0.12.0~0.22.0|
+| fastapi | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|0.12.0~0.22.0|
 | | | 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.1|
+|  | [fastapi](https://pypi.org/project/fastapi) | 0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|0.56.1~0.100.0|
+| | | 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.111.0.dev1|
 | flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|
 | grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.66.1|1.45.0~1.66.1|1.45.0~1.66.1|1.49.0~1.66.1|1.59.0~1.65.0rc2|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2| |
@@ -322,10 +322,10 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | | | 3.1| 3.1| 3.1| | |
 |  | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|
 | | | 3.1| 3.1| 3.1| 3.1| 3.1|
-| psycopg2 | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
+| psycopg2 | [psycopg2](https://pypi.org/project/psycopg2) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.9.5~2.9.9| | |
 | | | 2.9| 2.9| 2.8| | |
-|  | [psycopg2](https://pypi.org/project/psycopg2) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
+|  | [psycopg2-binary](https://pypi.org/project/psycopg2-binary) | 2.8.1~2.9.9|2.8.1~2.9.9|2.8.1~2.8.6|2.9.5~2.9.9|2.9.5~2.9.9|
 | | | 2.8| 2.8| 2.9.5~2.9.9| | |
 | | | 2.9| 2.9| 2.8| | |
 | pymongo | [pymongo](https://pypi.org/project/pymongo) | 3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|3.1.1~3.3.1|
