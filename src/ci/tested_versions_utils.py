@@ -322,7 +322,7 @@ def generate_support_matrix_markdown(
         f"| Instrumentation | Package | Supported Versions |{'|'.join([' ' for _ in package_support_version_runtimes[:-1]])}|",
         # | | | :---: | :---: | ... |
         f"| --- | --- | {' | '.join([':---:' for _ in package_support_version_runtimes])} |",
-        # | | | 3.7 | 3.8 | ... |
+        # | | | 3.9 | 3.10 | ... |
         f"| | | {' | '.join(package_support_version_runtimes)} |",
     ]
 

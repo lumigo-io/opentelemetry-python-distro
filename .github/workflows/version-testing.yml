@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         # If this key gets renamed, noxfile.py needs to be updated accordingly
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
+        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
     name: test-untested-versions
     steps:
       - uses: actions/checkout@v3
@@ -42,11 +42,6 @@ jobs:
         with:
           python-version: 3.7
       - run: mkdir versions_artifacts
-      - uses: actions/download-artifact@v3
-        continue-on-error: true
-        with:
-          name: 3.8
-          path: versions_artifacts/3.8
       - uses: actions/download-artifact@v3
         continue-on-error: true
         with:
