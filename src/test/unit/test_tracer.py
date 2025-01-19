@@ -111,16 +111,16 @@ class TestDependencyReport(TestCase):
 class TestPythonVersionCheck(TestCase):
     @patch("sys.version_info", Mock())
     def test_python_version_too_old(self):
-        # Mock version_info for Python 3.9
+        # Mock version_info for Python 3.8
         sys.version_info.major = 3
-        sys.version_info.minor = 9
+        sys.version_info.minor = 8
 
         with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
             result = init()
 
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.9; only Python 3.9 to 3.12 are supported.",
+            "Unsupported Python version 3.8; only Python 3.9 to 3.12 are supported.",
             cm.output[0],
         )
 
