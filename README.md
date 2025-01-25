@@ -278,7 +278,7 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 
 ## Supported runtimes
 
-* cpython: 3.9.x, 3.10.x, 3.11.x
+* cpython: 3.9.x, 3.10.x, 3.11.x, 3.12.x, 3.13.x
 
 ## Supported packages
 
