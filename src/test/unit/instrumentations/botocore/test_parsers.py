@@ -123,6 +123,7 @@ def test_parse_sqs_response_handles_empty_result(should_skip_mock):
     # In case of an authentication error
     result = None
 
+    # Check that no error is raised
     SqsParser.parse_response(span, service_name, operation_name, result)
 
 
