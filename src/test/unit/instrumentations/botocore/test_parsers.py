@@ -111,6 +111,21 @@ def test_parse_sqs_response_not_skipping_polls_no_output_log(should_skip_mock, c
     # Make sure that there is an info log
 
 
+@patch(
+    "lumigo_opentelemetry.instrumentations.botocore.parsers.SqsParser._should_skip_empty_sqs_polling_response"
+)
+def test_parse_sqs_response_handles_empty_result(should_skip_mock):
+    should_skip_mock.return_value = False
+    span = Mock(set_attribute=Mock())
+    service_name = "sqs"
+    operation_name = "ReceiveMessage"
+
+    # In case of an authentication error
+    result = None
+
+    SqsParser.parse_response(span, service_name, operation_name, result)
+
+
 @patch("lumigo_opentelemetry.instrumentations.botocore.parsers.dump_with_context")
 def test_parse_response_handles_unparsable_payload(dump_with_context_mock, caplog):
     dump_with_context_mock.side_effect = Exception("Boom!")
