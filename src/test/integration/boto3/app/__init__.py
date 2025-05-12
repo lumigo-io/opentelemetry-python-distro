@@ -15,8 +15,7 @@ async def root():
 @app.post("/invoke-boto3")
 def invoke_boto3():
     s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
-    # raises (AccessDenied)
     try:
-        s3.list_objects(Bucket="sentinel-s2-l1c")
+        s3.list_objects(Bucket="non-existing-bucket")
     except Exception:
         return {"status": "ok"}
