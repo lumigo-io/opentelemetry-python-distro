@@ -346,7 +346,11 @@ class SqsParser(AwsParser):
         cls, span: Span, service_name: str, operation_name: str, result: Dict[Any, Any]
     ) -> None:
         trigger_details = parse_triggers(
-            {"service_name": service_name, "operation_name": operation_name, **result}
+            {
+                "service_name": service_name,
+                "operation_name": operation_name,
+                **(result or {}),
+            }
         )
         if trigger_details:
             span.set_attributes(
