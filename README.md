@@ -59,10 +59,10 @@ Replace `<service name> with the desired name of the service`.
 
 ### Tracer activation
 
-There are two ways to activate the `lumigo_opentelemetry` package: one based on importing the package in code (manual activation), and the other via the environment (no-code activation).
-The [no-code activation](#no-code-activation) approach is the preferred one.
+There are three ways to activate the `lumigo_opentelemetry` package.
+The [no-code activation](#no-code-activation) approach is the most straightforward. But if you prefer importing the package from within the code instead, you can use the [manual activation](#manual-activation) mode instead. For simple scripts that don't use any of the supported libraries, use the [script instrumentation](#script-instrumentation) approach.
 
-#### No-code activation
+#### Option 1: No-code activation
 
 **Note:** The instructions in this section are mutually exclusive with those provided in the [Manual activation](#manual-activation) section.
 
@@ -72,7 +72,7 @@ Set the following environment variable:
 AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 ```
 
-#### Manual activation
+#### Option 2: Manual activation
 
 **Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) section.
 
@@ -82,7 +82,7 @@ Import `lumigo_opentelemetry` at the beginning of your main file:
 import lumigo_opentelemetry
 ```
 
-#### Script instrumentation
+#### Option 3: Script instrumentation
 
 For simple Python scripts that are not built around Lumigo or OpenTelemetry-instrumented libraries, you can use the `@lumigo_wrapped` decorator for activation. This approach is especially useful for standalone scripts, cron jobs, or similar use cases.
 
@@ -97,8 +97,6 @@ def your_function():
 ```
 
 See the [Using the `@lumigo_wrapped` Decorator](#using-the-lumigo_wrapped-decorator) section for more details.
-
-**Note:** If no outbound requests are made (e.g., the code crashes before the first call is executed), the script run will not generate any traces in Lumigo. This limitation is inherent to the OpenTelemetry behavior and the need for spans to be triggered by instrumentation or custom tracing calls.
 
 ## Configuration
 
