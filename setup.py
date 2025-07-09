@@ -20,7 +20,7 @@ setup(
         "opentelemetry-api==1.34.1",
         "opentelemetry-sdk==1.34.1",
         "opentelemetry-sdk-extension-aws==2.0.2",
-        "opentelemetry-exporter-otlp-proto-http==1.34.0",
+        "opentelemetry-exporter-otlp-proto-http==1.34.1",
         "opentelemetry-semantic-conventions==0.55b1",
         "opentelemetry-instrumentation==0.55b1",
         "opentelemetry-instrumentation-asgi==0.55b1",
