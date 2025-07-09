@@ -25,3 +25,4 @@ types-urllib3<1.27
 typing_extensions==4.12.2
 Werkzeug==2.0.2
 zipp==3.8.0
+setuptools==80.9.0

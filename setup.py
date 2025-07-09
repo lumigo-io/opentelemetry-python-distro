@@ -39,5 +39,6 @@ setup(
         "opentelemetry-instrumentation-logging==0.51b0",
         "typing_extensions==4.12.2",
         "importlib-metadata==6.7.0",
+        "setuptools==80.9.0",
     ],
 )
