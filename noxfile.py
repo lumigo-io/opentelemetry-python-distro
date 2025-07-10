@@ -337,7 +337,7 @@ def integration_tests_fastapi_uvicorn(
     ):
         integration_tests_fastapi(
             session=session,
-            fastapi_version="0.78.0",  # arbitrary version
+            fastapi_version="0.114.0",  # arbitrary version
             uvicorn_version=uvicorn_version,
         )
 
