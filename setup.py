@@ -39,6 +39,6 @@ setup(
         "opentelemetry-instrumentation-logging==0.55b1",
         "typing_extensions==4.7.1; python_version<'3.8'",
         "importlib-metadata==6.7.0; python_version<'3.8'",
-        "setuptools==80.9.0",
+        "setuptools<=80.9.0",
     ],
 )
