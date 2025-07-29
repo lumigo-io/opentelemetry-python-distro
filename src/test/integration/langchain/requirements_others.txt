@@ -1,5 +1,4 @@
-pytest
-json-stream
-requests
-psutil
-parameterized
+langchain-aws
+langgraph
+langchain
+opentelemetry-instrumentation-langchain

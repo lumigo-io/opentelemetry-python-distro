@@ -520,15 +520,22 @@ def integration_tests_langchain(session, langchain_version):
 
         session.install(".")
 
-        temp_file = create_it_tempfile("flask")
+        temp_file = create_it_tempfile("langchain")
         with session.chdir("src/test/integration/langchain"):
             session.install("-r", OTHER_REQUIREMENTS)
 
-            # override the default Werkzeug version for flask v2 compatibility
-            if langchain_version.startswith("2."):
-                session.install("werkzeug==2.3.7")
-
             try:
+                session.run(
+                    "python3",
+                    "./app/app.py",
+                    env={
+                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
+                        "LUMIGO_DEBUG": "true",
+                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
+                        "OTEL_SERVICE_NAME": "app",
+                    },
+                    external=True,
+                )
                 session.run(
                     "pytest",
                     "--tb",
@@ -542,7 +549,8 @@ def integration_tests_langchain(session, langchain_version):
                     },
                 )
             finally:
-                kill_process_and_clean_outputs(temp_file, "flask", session)
+                pass
+                # kill_process_and_clean_outputs(temp_file, "test_langchain", session)
 
 
 @nox.session()
