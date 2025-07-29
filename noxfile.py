@@ -502,59 +502,6 @@ def integration_tests_flask(session, flask_version):
 
 @nox.session()
 @nox.parametrize(
-    "python,langchain_version",
-    [
-        (python, langchain_version)
-        for python in python_versions()
-        for langchain_version in dependency_versions_to_be_tested(
-            python=python,
-            directory="langchain",
-            dependency_name="langchain",
-        )
-    ],
-)
-def integration_tests_langchain(session, langchain_version):
-    python = session.python
-    with TestedVersions.save_tests_result("langchain", python, "langchain", langchain_version):
-        install_package("langchain", langchain_version, session)
-
-        session.install(".")
-
-        temp_file = create_it_tempfile("langchain")
-        with session.chdir("src/test/integration/langchain"):
-            session.install("-r", OTHER_REQUIREMENTS)
-
-            try:
-                session.run(
-                    "python3",
-                    "./app/app.py",
-                    env={
-                        "AUTOWRAPT_BOOTSTRAP": "lumigo_opentelemetry",
-                        "LUMIGO_DEBUG": "true",
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                        "OTEL_SERVICE_NAME": "app",
-                    },
-                    external=True,
-                )
-                session.run(
-                    "pytest",
-                    "--tb",
-                    "native",
-                    "--log-cli-level=INFO",
-                    "--color=yes",
-                    "-v",
-                    "./tests/test_langchain.py",
-                    env={
-                        "LUMIGO_DEBUG_SPANDUMP": temp_file,
-                    },
-                )
-            finally:
-                pass
-                # kill_process_and_clean_outputs(temp_file, "test_langchain", session)
-
-
-@nox.session()
-@nox.parametrize(
     "python,grpcio_version",
     [
         (python, grpcio_version)

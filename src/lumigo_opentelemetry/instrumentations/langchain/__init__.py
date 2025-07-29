@@ -6,12 +6,12 @@ from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
 
-class OpenLLMetryInstrumentorWrapper(AbstractInstrumentor):
+class LangchainInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self) -> None:
-        super().__init__("openllmetry")
+        super().__init__("langchain")
 
     def assert_instrumented_package_importable(self) -> None:
-        import langgraph  # noqa
+        import langchain  # noqa
 
     def install_instrumentation(self) -> None:
         from opentelemetry.instrumentation.langchain import LangchainInstrumentor
@@ -20,4 +20,4 @@ class OpenLLMetryInstrumentorWrapper(AbstractInstrumentor):
         LangchainInstrumentor().instrument()
 
 
-instrumentor: AbstractInstrumentor = OpenLLMetryInstrumentorWrapper()
+instrumentor: AbstractInstrumentor = LangchainInstrumentorWrapper()
