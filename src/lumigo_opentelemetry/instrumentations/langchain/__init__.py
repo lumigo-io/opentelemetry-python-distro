@@ -1,6 +1,3 @@
-from typing import Any, Dict
-
-from opentelemetry.trace.span import Span
 from lumigo_opentelemetry import logger
 
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
