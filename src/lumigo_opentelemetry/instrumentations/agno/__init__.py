@@ -17,5 +17,4 @@ class AgnoInstrumentorWrapper(AbstractInstrumentor):
         AgnoInstrumentor().instrument()
 
 
-
 instrumentor: AbstractInstrumentor = AgnoInstrumentorWrapper()
