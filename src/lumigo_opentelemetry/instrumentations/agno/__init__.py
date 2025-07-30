@@ -5,7 +5,7 @@ from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
 
 class AgnoInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self) -> None:
-        super().__init__("langchain")
+        super().__init__("agno")
 
     def assert_instrumented_package_importable(self) -> None:
         import agno  # noqa
