@@ -276,6 +276,16 @@ def init() -> Dict[str, Any]:
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
 
+def lumigo_instrument_lambda(func):
+    from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
+    from opentelemetry import trace
+    def wrapper(*args, **kwargs):
+        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        result = func(*args, **kwargs)
+        return result
+    return wrapper
+
+
 def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
     CONTEXT_NAME = "lumigo"
     PARENT_IDENTICATOR = "LumigoRoot"
