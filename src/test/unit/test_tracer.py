@@ -223,3 +223,23 @@ class TestLumigoWrapped(unittest.TestCase):
         self.assertEqual(
             span.attributes["return_value"], "3"
         )  # Check serialized return value
+
+
+class TestLumigoWrapped2(unittest.TestCase):
+    @httpretty.activate(allow_net_connect=False)
+    def test_access_lumigo_wrapped(self):
+        from lumigo_opentelemetry import lumigo_instrument_lambda, tracer_provider
+
+        self.assertIsNotNone(lumigo_instrument_lambda)
+        self.assertIsNotNone(tracer_provider)
+
+        span_processor = Mock(SpanProcessor)
+        tracer_provider.add_span_processor(span_processor)
+
+        @lumigo_instrument_lambda
+        def sample_function(x, y):
+            return x + y
+
+        result = sample_function(1, 2)
+
+        self.assertEqual(result, 3)
