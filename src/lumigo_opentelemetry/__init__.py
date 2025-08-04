@@ -276,11 +276,11 @@ def init() -> Dict[str, Any]:
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
 
-def lumigo_instrument_lambda(func):
+def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
 
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: List[Any], **kwargs: Dict[Any, Any]) -> T:
         AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
         result = func(*args, **kwargs)
         return result
