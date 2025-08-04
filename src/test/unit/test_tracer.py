@@ -258,4 +258,7 @@ def test_access_lumigo_id_generator(monkeypatch):
         "_X_AMZN_TRACE_ID",
         "Root=1-688b6f15-89baf8f65f4f119e1f635c3e;Parent=0993133fcbf11ff2;Sampled=0;Lineage=1:9b83d1cd:0",
     )
-    assert hex(tracer.id_generator.generate_trace_id()) == "0x89baf8f65f4f119e1f635c3e"
+    assert (
+        hex(tracer.id_generator.generate_trace_id())
+        == "0x89baf8f65f4f119e1f635c3e00000000"
+    )

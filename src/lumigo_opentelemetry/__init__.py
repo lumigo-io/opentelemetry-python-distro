@@ -168,7 +168,7 @@ def init() -> Dict[str, Any]:
             if match:
                 trace_id = match.group(1)
                 if len(trace_id) == 24:
-                    return int(trace_id, 16)
+                    return int(trace_id, 16) << 32
             return self.random_id_generator.generate_trace_id()  # type: ignore
 
     infrastructure_resource = get_infrastructure_resource()
