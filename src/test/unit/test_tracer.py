@@ -224,10 +224,13 @@ class TestLumigoWrapped(unittest.TestCase):
             span.attributes["return_value"], "3"
         )  # Check serialized return value
 
+        tracer = tracer_provider.get_tracer("lumigo")
+        assert tracer
 
-class TestLumigoWrapped2(unittest.TestCase):
+
+class TestLumigoInstrumentLambda(unittest.TestCase):
     @httpretty.activate(allow_net_connect=False)
-    def test_access_lumigo_wrapped(self):
+    def test_access_lumigo_instrument_lambda(self):
         from lumigo_opentelemetry import lumigo_instrument_lambda, tracer_provider
 
         self.assertIsNotNone(lumigo_instrument_lambda)
@@ -243,3 +246,16 @@ class TestLumigoWrapped2(unittest.TestCase):
         result = sample_function(1, 2)
 
         self.assertEqual(result, 3)
+
+
+def test_access_lumigo_id_generator(monkeypatch):
+    from lumigo_opentelemetry import tracer_provider
+
+    tracer = tracer_provider.get_tracer("lumigo")
+    assert type(tracer.id_generator).__name__ == "LambdaTraceIdGenerator"
+    assert tracer.id_generator.generate_trace_id()
+    monkeypatch.setenv(
+        "_X_AMZN_TRACE_ID",
+        "Root=1-688b6f15-89baf8f65f4f119e1f635c3e;Parent=0993133fcbf11ff2;Sampled=0;Lineage=1:9b83d1cd:0",
+    )
+    assert hex(tracer.id_generator.generate_trace_id()) == "0x89baf8f65f4f119e1f635c3e"
