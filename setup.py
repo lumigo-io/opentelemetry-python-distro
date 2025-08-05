@@ -37,6 +37,7 @@ setup(
         "opentelemetry-instrumentation-redis==0.55b1",
         "opentelemetry-instrumentation-django==0.55b1",
         "opentelemetry-instrumentation-logging==0.55b1",
+        "opentelemetry-instrumentation-aws-lambda==0.55b1",
         "opentelemetry-instrumentation-langchain==0.43.1",
         "openinference-instrumentation-agno>=0.1.10",
         "typing_extensions==4.7.1; python_version<'3.8'",

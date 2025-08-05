@@ -7,6 +7,9 @@ class AgnoInstrumentorWrapper(AbstractInstrumentor):
     def __init__(self) -> None:
         super().__init__("agno")
 
+    def is_disabled_on_lambda(self) -> bool:
+        return False
+
     def assert_instrumented_package_importable(self) -> None:
         import agno  # noqa
 
