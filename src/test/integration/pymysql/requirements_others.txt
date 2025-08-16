@@ -1,6 +1,6 @@
 pytest==7.1.1
 uvicorn[standard]==0.18.0
-fastapi==0.70.1
+fastapi==0.114.0
 json-stream==1.4.2
 requests==2.27.1
 psutil==5.9.1

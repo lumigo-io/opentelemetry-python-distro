@@ -19,6 +19,8 @@ from .pymongo import instrumentor as pymongo_instrumentor
 from .pymysql import instrumentor as pymysql_instrumentor
 from .redis import instrumentor as redis_instrumentor
 from .requests import instrumentor as requests_instrumentor
+from .langchain import instrumentor as langchain_instrumentor
+from .agno import instrumentor as agno_instrumentor
 
 installed_instrumentations: List[str] = []
 instrumentors: List[AbstractInstrumentor] = [
@@ -36,6 +38,8 @@ instrumentors: List[AbstractInstrumentor] = [
     pymysql_instrumentor,
     redis_instrumentor,
     requests_instrumentor,
+    langchain_instrumentor,
+    agno_instrumentor,
 ]
 applicable_instumentors = [inst for inst in instrumentors if inst.is_applicable()]
 for instrumentor in applicable_instumentors:
