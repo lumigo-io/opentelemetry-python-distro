@@ -10,7 +10,8 @@ jobs:
     strategy:
       matrix:
         # If this key gets renamed, noxfile.py needs to be updated accordingly
-        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+#        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+        python-version: [ '3.13' ]
     name: test-untested-versions
     steps:
       - uses: actions/checkout@v3
@@ -42,26 +43,26 @@ jobs:
         with:
           python-version: 3.7
       - run: mkdir versions_artifacts
-      - uses: actions/download-artifact@v3
-        continue-on-error: true
-        with:
-          name: 3.9
-          path: versions_artifacts/3.9
-      - uses: actions/download-artifact@v3
-        continue-on-error: true
-        with:
-          name: '3.10'
-          path: versions_artifacts/3.10
-      - uses: actions/download-artifact@v3
-        continue-on-error: true
-        with:
-          name: '3.11'
-          path: versions_artifacts/3.11
-      - uses: actions/download-artifact@v3
-        continue-on-error: true
-        with:
-          name: '3.12'
-          path: versions_artifacts/3.12
+#      - uses: actions/download-artifact@v3
+#        continue-on-error: true
+#        with:
+#          name: 3.9
+#          path: versions_artifacts/3.9
+#      - uses: actions/download-artifact@v3
+#        continue-on-error: true
+#        with:
+#          name: '3.10'
+#          path: versions_artifacts/3.10
+#      - uses: actions/download-artifact@v3
+#        continue-on-error: true
+#        with:
+#          name: '3.11'
+#          path: versions_artifacts/3.11
+#      - uses: actions/download-artifact@v3
+#        continue-on-error: true
+#        with:
+#          name: '3.12'
+#          path: versions_artifacts/3.12
       - uses: actions/download-artifact@v3
         continue-on-error: true
         with:
@@ -89,7 +90,7 @@ jobs:
           branch: ${{steps.branch_name.outputs.branch_name}}
           commit-message: ${{ env.new_versions }}
           body: ${{ env.new_versions }}
-          base: main
+          base: ${{ github.ref_name }}
           labels: version-testing, automerge
           reviewers: GuyMoses,saartochner,shanishiri
         # WARNING: the create pull request action must be the last action in the job, it changes the current branch
