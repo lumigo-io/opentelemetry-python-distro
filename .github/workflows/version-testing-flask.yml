@@ -1,8 +1,8 @@
 name: Version Testing - flask
 on:
   push:
-  schedule:
-    - cron: "0 7 * * *"
+    branches:
+      - RD-14670-python-3.13-support
 jobs:
   # If this key gets renamed, noxfile.py needs to be updated accordingly
   test-untested-versions:
@@ -72,20 +72,4 @@ jobs:
           body: ${{ env.new_versions }}
           base: ${{ github.ref_name }}
           labels: version-testing, automerge
-          reviewers: GuyMoses,saartochner,shanishiri
         # WARNING: the create pull request action must be the last action in the job, it changes the current branch
-      - run: |  # post update to #microservices slack channel
-          slack_channel_webhook="${{secrets.VERSION_TESTING_SLACK_CHANNEL_WEBHOOK}}"
-          if [[ -n "$slack_channel_webhook" ]]; then
-            branch_name="${{steps.branch_name.outputs.branch_name}}"
-            text_property="New version testing PR has been opened:
-              \nRepository: opentelemetry-python-distro
-              \nFramework: flask
-              \nBranch name: ${branch_name}
-              \n
-              \nPlease review, approve and merge the PR *only* if the results are desirable."
-            echo \{ \"text\": "$text_property" \} | \
-              curl -X POST "${slack_channel_webhook}" --header "Content-Type: application/json" -v --data-binary @-
-          else
-            echo "Slack channel webhook is not set, skipping posting to slack"
-          fi
