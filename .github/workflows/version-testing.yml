@@ -41,7 +41,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: '3.9'
       - run: mkdir versions_artifacts
 #      - uses: actions/download-artifact@v4
 #        continue-on-error: true
