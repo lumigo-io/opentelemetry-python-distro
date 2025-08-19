@@ -1,4 +1,4 @@
-name: Version Testing
+name: Version Testing - pymysql
 on:
   push:
   schedule:
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox -e integration_tests_boto3
+      - run: python3 -m nox -e integration_tests_pymysql
         continue-on-error: true
         env:
           TEST_ONLY_UNTESTED_NEW_VERSIONS: true
@@ -29,7 +29,7 @@ jobs:
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.python-version }}
+          name: pymysql-${{ matrix.python-version }}
           path: versions_artifact
 
   create-pr-for-new-versions:
@@ -43,36 +43,16 @@ jobs:
         with:
           python-version: '3.9'
       - run: mkdir versions_artifacts
-#      - uses: actions/download-artifact@v4
-#        continue-on-error: true
-#        with:
-#          name: 3.9
-#          path: versions_artifacts/3.9
-#      - uses: actions/download-artifact@v4
-#        continue-on-error: true
-#        with:
-#          name: '3.10'
-#          path: versions_artifacts/3.10
-#      - uses: actions/download-artifact@v4
-#        continue-on-error: true
-#        with:
-#          name: '3.11'
-#          path: versions_artifacts/3.11
-#      - uses: actions/download-artifact@v4
-#        continue-on-error: true
-#        with:
-#          name: '3.12'
-#          path: versions_artifacts/3.12
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: '3.13'
+          name: 'pymysql-3.13'
           path: versions_artifacts/3.13
       - run: python3 -m pip install -r requirements.txt
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
-      - run: echo "::set-output name=branch_name::$(date +version-testing-%Y%m%d)"
+      - run: echo "::set-output name=branch_name::$(date +version-testing-pymysql-%Y%m%d)"
         id: branch_name
       - run: |  # update 'Supported packages' section in README.md
           python3 -m scripts.update_supported_packages_documentation
@@ -100,6 +80,7 @@ jobs:
             branch_name="${{steps.branch_name.outputs.branch_name}}"
             text_property="New version testing PR has been opened:
               \nRepository: opentelemetry-python-distro
+              \nFramework: pymysql
               \nBranch name: ${branch_name}
               \n
               \nPlease review, approve and merge the PR *only* if the results are desirable."
@@ -108,12 +89,3 @@ jobs:
           else
             echo "Slack channel webhook is not set, skipping posting to slack"
           fi
-
-#  delete-old-version-testing-branches:
-#    runs-on: ubuntu-latest
-#    name: delete-old-version-testing-branches
-#    needs: create-pr-for-new-versions
-#    steps:
-#      - uses: actions/checkout@v3
-#      - run: |  # remove all the version testing branches that aren't from today
-#          ./scripts/delete_old_version_testing_branches.sh
