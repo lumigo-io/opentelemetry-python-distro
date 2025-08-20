@@ -1,4 +1,4 @@
-name: Version Testing - pika
+name: Version Testing - fastapi
 on:
   push:
     branches:
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox -e integration_tests_pika
+      - run: python3 -m nox -e integration_tests_fastapi_fastapi
         continue-on-error: true
         env:
           TEST_ONLY_UNTESTED_NEW_VERSIONS: true
@@ -29,7 +29,7 @@ jobs:
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
       - uses: actions/upload-artifact@v4
         with:
-          name: pika-${{ matrix.python-version }}
+          name: fastapi-${{ matrix.python-version }}
           path: versions_artifact
 
   create-pr-for-new-versions:
@@ -46,13 +46,13 @@ jobs:
       - uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: 'pika-3.13'
+          name: 'fastapi-3.13'
           path: versions_artifacts/3.13
       - run: python3 -m pip install -r requirements.txt
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
-      - run: echo "::set-output name=branch_name::$(date +version-testing-pika-%Y%m%d)"
+      - run: echo "::set-output name=branch_name::$(date +version-testing-fastapi-%Y%m%d)"
         id: branch_name
       - run: |  # update 'Supported packages' section in README.md
           python3 -m scripts.update_supported_packages_documentation
