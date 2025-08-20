@@ -1,0 +1,75 @@
+name: Version Testing - boto3-sqs
+on:
+  push:
+    branches:
+      - RD-14670-python-3.13-support
+jobs:
+  # If this key gets renamed, noxfile.py needs to be updated accordingly
+  test-untested-versions:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # If this key gets renamed, noxfile.py needs to be updated accordingly
+#        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+        python-version: [ '3.13' ]
+    name: test-untested-versions
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip3 install -r requirements.txt
+      - run: python3 -m nox -e integration_tests_boto3_sqs
+        continue-on-error: true
+        env:
+          TEST_ONLY_UNTESTED_NEW_VERSIONS: true
+      - run: git --no-pager diff
+      - run: mkdir versions_artifact
+      - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: boto3-sqs-${{ matrix.python-version }}
+          path: versions_artifact
+
+  create-pr-for-new-versions:
+    runs-on: ubuntu-latest
+    name: create-pr-for-new-versions
+    needs: test-untested-versions
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: mkdir versions_artifacts
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: 'boto3-sqs-3.13'
+          path: versions_artifacts/3.13
+      - run: python3 -m pip install -r requirements.txt
+      - run: python3 -m scripts.gather_version_artifacts
+      - run: git --no-pager diff
+      - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
+      - run: echo "::set-output name=branch_name::$(date +version-testing-boto3-sqs-%Y%m%d)"
+        id: branch_name
+      - run: |  # update 'Supported packages' section in README.md
+          python3 -m scripts.update_supported_packages_documentation
+      - run: |  # need to set an env var in order to support multi-lines output https://trstringer.com/github-actions-multiline-strings/
+          new_versions="$(./scripts/describe_supported_versions_diff.sh)"
+          echo "new_versions<<EOF" >> $GITHUB_ENV
+          echo "$new_versions" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Create Pull Request
+        # WARNING: the create pull request action must be the last action in the job, it changes the current branch
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          title: ${{steps.branch_name.outputs.branch_name}}
+          branch: ${{steps.branch_name.outputs.branch_name}}
+          commit-message: ${{ env.new_versions }}
+          body: ${{ env.new_versions }}
+          base: ${{ github.ref_name }}
+          labels: version-testing, automerge
+        # WARNING: the create pull request action must be the last action in the job, it changes the current branch
