@@ -305,9 +305,9 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.66.1|1.45.0~1.66.1|1.49.0~1.66.1|1.59.0~1.65.0rc2|1.66.2~1.67.0|
 | | | | | | | 1.67.1~1.74.0rc1|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2| | |
-| pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0| |
-| | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| |
-| | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| |
+| pika | [pika](https://pypi.org/project/pika) | 1.0.0|1.0.0|1.0.0|1.0.0|1.0.0|
+| | | 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0| 1.0.1~1.3.0|
+| | | 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.0rc5~1.3.2| 1.3.1~1.3.2|
 | psycopg | [psycopg](https://pypi.org/project/psycopg) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1|3.1.1~3.2.1| |
 | | | 3.1| 3.1| 3.1| 3.1| |
 |  | [psycopg-binary](https://pypi.org/project/psycopg-binary) | 3.1.1~3.2.1|3.1.1~3.2.1|3.1.4~3.2.1|3.1.4~3.2.1| |
