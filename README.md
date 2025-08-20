@@ -299,7 +299,9 @@ For users on Python 3.7, we recommend upgrading to a newer version of Python to 
 | | | 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.114.0| 0.100.0b2~0.111.0.dev1| |
 |  | [uvicorn](https://pypi.org/project/uvicorn) | 0.11.3~0.22.0|0.11.3~0.22.0|0.12.0~0.22.0|0.12.0~0.22.0| |
 | | | 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.6| 0.24.0~0.30.1| |
-| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5| |
+| flask | [flask](https://pypi.org/project/flask) | 2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0~2.2.5|2.0.0|
+| | | | | | | 2.0.1~2.3.3|
+| | | | | | | 3.0.0~3.1.1|
 | grpcio | [grpcio](https://pypi.org/project/grpcio) | 1.45.0~1.66.1|1.45.0~1.66.1|1.49.0~1.66.1|1.59.0~1.65.0rc2|1.66.2~1.67.0|
 | | | | | | | 1.67.1~1.74.0rc1|
 | kafka_python | [kafka_python](https://pypi.org/project/kafka_python) | 2.0.0~2.0.2|2.0.0~2.0.2|2.0.0~2.0.2| | |
