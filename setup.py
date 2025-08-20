@@ -24,6 +24,7 @@ setup(
         "opentelemetry-semantic-conventions==0.55b1",
         "opentelemetry-instrumentation==0.55b1",
         "opentelemetry-instrumentation-asgi==0.55b1",
+        "opentelemetry-instrumentation-aws-lambda==0.55b1",
         "opentelemetry-instrumentation-boto==0.55b1",
         "opentelemetry-instrumentation-fastapi==0.55b1",
         "opentelemetry-instrumentation-flask==0.55b1",
