@@ -135,3 +135,6 @@ src/test/integration/*/spans.json
 
 /**/*/*tempfile*
 /**/*/temp_*.txt
+
+# Archive folder
+.archive/
