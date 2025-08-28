@@ -3,26 +3,30 @@
 [![Tracer Testing](https://github.com/lumigo-io/opentelemetry-python-distro/actions/workflows/push-actions.yml/badge.svg)](https://github.com/lumigo-io/opentelemetry-python-distro/actions/workflows/push-actions.yml)
 ![Version](https://badge.fury.io/py/lumigo_opentelemetry.svg)
 
-The Lumigo OpenTelemetry Distribution for Python is a package that provides no-code distributed tracing for containerized applications.
-
-The Lumigo OpenTelemetry Distribution for Python is made of several upstream OpenTelemetry packages, with additional automated quality-assurance and customizations that optimize for no-code injection, meaning that you should need to update exactly zero lines of code in your application in order to make use of the Lumigo OpenTelemetry Distribution.
-(See the [No-code activation](#no-code-activation) section for auto-instrumentation instructions)
-
-## Logging support
-The Lumigo OpenTelemetry Distribution also allows logging span-correlated records. See the [configuration](#logging-instrumentation) section for details on how to enable this feature.
-When using the logging feature, the same set of rules for [secret masking](#lumigo-specific-configurations) applies on the content of the log message, with only `LUMIGO_SECRET_MASKING_REGEX` being considered.
+The Lumigo OpenTelemetry Distribution for Python is a package that provides no-code distributed tracing and log capturing. It is made of several upstream OpenTelemetry packages, with additional automated quality-assurance and customizations that optimize for no-code injection, meaning that you should need to update exactly zero lines of code in your application in order to get started.
 
 **Note:** If you are looking for the Lumigo Python tracer for AWS Lambda functions, [`lumigo-tracer`](https://pypi.org/project/lumigo-tracer/) is the package you should use instead.
 
 ## Setup
 
-Adding the Lumigo OpenTelemetry Distro for Python to your application is a three-step process:
+The setup can be as easy as:
 
-1. [Add the Lumigo OpenTelemetry Distro for Python as dependency](#add-lumigo_opentelemetry-as-dependency)
+```
+pip install lumigo_opentelemetry
+
+AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry LUMIGO_TRACER_TOKEN=<token> \
+python your_app.py
+```
+
+But it's recommended that you read the full instructions to ensure you apply the best configuration for your case. For example, scripts and jobs might require an [additional step](#using-the-lumigo_wrapped-decorator).
+
+Adding the Lumigo OpenTelemetry Distro to your application is a three-step process:
+
+1. [Add the Lumigo OpenTelemetry Distro as dependency](#add-lumigo_opentelemetry-as-dependency)
 2. [Provide configurations through environment variables](#environment-based-configuration)
-3. [Activate the tracer](#tracer-activation), which can also be achieved through environment variables
+3. [Activate the Distro](#distro-activation)
 
-### Add lumigo_opentelemetry as dependency
+### Step 1: Add lumigo_opentelemetry as dependency
 
 The [`lumigo_opentelemetry` package](https://pypi.org/project/lumigo_opentelemetry/) needs to be a dependency of your application.
 In most cases, you will add `lumigo_opentelemetry` as a line in `requirements.txt`:
@@ -37,7 +41,7 @@ Or, you may use `pip`:
 pip install lumigo_opentelemetry
 ```
 
-### Environment-based configuration
+### Step 2: Environment-based configuration
 
 Configure the `LUMIGO_TRACER_TOKEN` environment variable with the token value generated for you by the Lumigo platform, under `Settings --> Tracing --> Manual tracing`:
 
@@ -55,14 +59,15 @@ OTEL_SERVICE_NAME=<service name>
 
 Replace `<service name> with the desired name of the service`.
 
-**Note:** While you are providing environment variables for configuration, consider also providing the one needed for [no-code tracer activation](#no-code-activation) :-)
+For the full list of possible configuration parameters, see the [Configuration section](#configuration).
 
-### Tracer activation
+### Distro activation
 
-There are three ways to activate the `lumigo_opentelemetry` package.
-The [no-code activation](#no-code-activation) approach is the most straightforward. But if you prefer importing the package from within the code instead, you can use the [manual activation](#manual-activation) mode instead. For simple scripts that don't use any of the supported libraries, use the [script instrumentation](#script-instrumentation) approach.
+There are two ways to activate the Distro. The [no-code activation](#no-code-activation) approach is the most straightforward. But if you prefer importing the package from within the code instead, you can use the [manual activation](#manual-activation) mode.
 
-#### Option 1: No-code activation
+**Important:** Scripts and jobs (such as batch or cron jobs) often aren't designed to start running upon receiving a request (like web servers and APIs/microservices do), and require an extra step after activation. Refer to the instructions on how to [add the wrapped decorator](#using-the-lumigo_wrapped-decorator).
+
+#### No-code activation
 
 **Note:** The instructions in this section are mutually exclusive with those provided in the [Manual activation](#manual-activation) section.
 
@@ -72,7 +77,7 @@ Set the following environment variable:
 AUTOWRAPT_BOOTSTRAP=lumigo_opentelemetry
 ```
 
-#### Option 2: Manual activation
+#### Manual activation
 
 **Note:** The instructions in this section are mutually exclusive with those provided in the [No-code activation](#no-code-activation) section.
 
@@ -82,25 +87,9 @@ Import `lumigo_opentelemetry` at the beginning of your main file:
 import lumigo_opentelemetry
 ```
 
-#### Option 3: Script instrumentation
-
-For simple Python scripts that are not built around Lumigo or OpenTelemetry-instrumented libraries, you can use the `@lumigo_wrapped` decorator for activation. This approach is especially useful for standalone scripts, cron jobs, or similar use cases.
-
-Import the `lumigo_wrapped` decorator and wrap your functions to automatically create OpenTelemetry spans:
-
-```python
-from lumigo_opentelemetry import lumigo_wrapped
-
-@lumigo_wrapped
-def your_function():
-    pass
-```
-
-See the [Using the `@lumigo_wrapped` Decorator](#using-the-lumigo_wrapped-decorator) section for more details.
-
 ## Configuration
 
-### OpenTelemetry configurations
+### OpenTelemetry configuration options
 
 The Lumigo OpenTelemetry Distro for Python is made of several upstream OpenTelemetry packages, together with additional logic and, as such, the environment variables that work with "vanilla" OpenTelemetry work also with the Lumigo OpenTelemetry Distro for Python. Specifically supported are:
 
@@ -110,6 +99,8 @@ The Lumigo OpenTelemetry Distro for Python is made of several upstream OpenTelem
 ### Lumigo-specific configurations
 
 The `lumigo_opentelemetry` package additionally supports the following configuration options as environment variables:
+
+> Note: For secret masking of captured logs, only `LUMIGO_SECRET_MASKING_REGEX` is being considered.
 
 * `LUMIGO_TRACER_TOKEN`: [Required] Required configuration to send data to Lumigo; you will find the right value in Lumigo under `Settings -> Tracing -> Manual tracing`.
 * `LUMIGO_DEBUG=true`: Enables debug logging
@@ -128,15 +119,14 @@ The `lumigo_opentelemetry` package additionally supports the following configura
 #### Logging instrumentation
 
 * `LUMIGO_ENABLE_LOGS` - Default: `false`. When set to `true`, turns on the `logging` instrumentation to capture log-records logged by Python's `logging` builtin library and send them to Lumigo. Emitted logs will also get injected with the active span context (see [list](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/logging/logging.html#module-opentelemetry.instrumentation.logging)).
-
 * `LUMIGO_DEBUG_LOGDUMP` - similar to `LUMIGO_DEBUG_SPANDUMP`, only for logs instead of spans. Effective only when `LUMIGO_ENABLE_LOGS` is set to `true`.
 
-### Execution Tags
+## Execution Tags
 
 [Execution Tags](https://docs.lumigo.io/docs/execution-tags) allow you to dynamically add dimensions to your invocations so that they can be identified, searched for, and filtered in Lumigo.
 For example: in multi-tenanted systems, execution tags are often used to mark with the identifiers of the end-users that trigger them for analysis (e.g., [Explore view](https://docs.lumigo.io/docs/explore)) and alerting purposes.
 
-#### Creating Execution Tags
+### Creating Execution Tags
 
 In the Lumigo OpenTelemetry Distro for Python, execution tags are represented as [span attributes](https://opentelemetry.io/docs/reference/specification/common/#attribute) and, specifically, as span attributes with the `lumigo.execution_tags.` prefix.
 For example, you could add an execution tag as follows:
@@ -202,14 +192,14 @@ Which spans are merged in the same invocation depends on the parent-child relati
 Explaining this topic is outside the scope of this documentation; a good first read to get deeper into the topic is the [Traces](https://opentelemetry.io/docs/concepts/signals/traces/) documentation of OpenTelemetry.
 In case your execution tags on different spans appear on different invocations than what you would expect, get in touch with [Lumigo support](https://docs.lumigo.io/docs/support).
 
-#### Execution Tag Limitations
+### Execution Tag Limitations
 
 * Up to 50 execution tag keys per invocation in Lumigo, irrespective of how many spans are part of the invocation or how many values each execution tag has.
 * The `key` of an execution tag cannot contain the `.` character; for example: `lumigo.execution_tags.my.tag` is not a valid tag. The OpenTelemetry `Span.set_attribute()` API will not fail or log warnings, but that will be displayed as `my` in Lumigo.
 * Each execution tag key can be at most 50 characters long; the `lumigo.execution_tags.` prefix does _not_ count against the 50 characters limit.
 * Each execution tag value can be at most 70 characters long.
 
-### Programmatic Errors
+## Programmatic Errors
 
 [Programmatic Errors](https://docs.lumigo.io/docs/programmatic-errors) allow you to customize errors, monitor and troubleshoot issues that should not necessarily interfere with the service.
 For example, an application tries to remove a user who doesn't exist. These custom errors can be captured by adding just a few lines of additional code to your application.
@@ -240,9 +230,9 @@ from opentelemetry.trace import get_current_span
 get_current_span().add_event('<error-message>', {'lumigo.type': '<error-type>'})
 ```
 
-### Using the `@lumigo_wrapped` Decorator
+## Using the `@lumigo_wrapped` Decorator
 
-The `@lumigo_wrapped` decorator is a convenient way to add Lumigo tracing to functions in scripts that are not using libraries or frameworks instrumented by Lumigo or OpenTelemetry.
+The `@lumigo_wrapped` decorator is a convenient way to add Lumigo tracing to functions in scripts that are not using libraries or frameworks instrumented by Lumigo or OpenTelemetry, or that aren't triggered by a web request.
 
 When applied, the decorator creates an OpenTelemetry span for the decorated function, adding attributes such as:
 
