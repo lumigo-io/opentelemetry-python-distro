@@ -120,7 +120,7 @@ class TestPythonVersionCheck(TestCase):
 
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.8; only Python 3.9 to 3.12 are supported.",
+            "Unsupported Python version 3.8; only Python 3.9 to 3.13 are supported.",
             cm.output[0],
         )
 
@@ -136,17 +136,28 @@ class TestPythonVersionCheck(TestCase):
         self.assertIsInstance(result, dict)
 
     @patch("sys.version_info", Mock())
-    def test_python_version_too_new(self):
+    def test_python_version_313_supported(self):
         # Mock version_info for Python 3.13
         sys.version_info.major = 3
         sys.version_info.minor = 13
+
+        with self.assertLogs("lumigo-opentelemetry", level="WARNING"):
+            result = init()
+
+        self.assertIsInstance(result, dict)
+
+    @patch("sys.version_info", Mock())
+    def test_python_version_too_new(self):
+        # Mock version_info for Python 3.14
+        sys.version_info.major = 3
+        sys.version_info.minor = 14
 
         with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
             result = init()
 
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.13; only Python 3.9 to 3.12 are supported.",
+            "Unsupported Python version 3.14; only Python 3.9 to 3.13 are supported.",
             cm.output[0],
         )
 
@@ -223,3 +234,42 @@ class TestLumigoWrapped(unittest.TestCase):
         self.assertEqual(
             span.attributes["return_value"], "3"
         )  # Check serialized return value
+
+        tracer = tracer_provider.get_tracer("lumigo")
+        assert tracer
+
+
+class TestLumigoInstrumentLambda(unittest.TestCase):
+    @httpretty.activate(allow_net_connect=False)
+    def test_access_lumigo_instrument_lambda(self):
+        from lumigo_opentelemetry import lumigo_instrument_lambda, tracer_provider
+
+        self.assertIsNotNone(lumigo_instrument_lambda)
+        self.assertIsNotNone(tracer_provider)
+
+        span_processor = Mock(SpanProcessor)
+        tracer_provider.add_span_processor(span_processor)
+
+        @lumigo_instrument_lambda
+        def sample_function(x, y):
+            return x + y
+
+        result = sample_function(1, 2)
+
+        self.assertEqual(result, 3)
+
+
+def test_access_lumigo_id_generator(monkeypatch):
+    from lumigo_opentelemetry import tracer_provider
+
+    tracer = tracer_provider.get_tracer("lumigo")
+    assert type(tracer.id_generator).__name__ == "LambdaTraceIdGenerator"
+    assert tracer.id_generator.generate_trace_id()
+    monkeypatch.setenv(
+        "_X_AMZN_TRACE_ID",
+        "Root=1-688b6f15-89baf8f65f4f119e1f635c3e;Parent=0993133fcbf11ff2;Sampled=0;Lineage=1:9b83d1cd:0",
+    )
+    assert (
+        hex(tracer.id_generator.generate_trace_id())
+        == "0x89baf8f65f4f119e1f635c3e00000000"
+    )

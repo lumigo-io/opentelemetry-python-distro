@@ -81,11 +81,11 @@ def init() -> Dict[str, Any]:
 
     try:
         python_version = sys.version_info
-        # Check if the major version is 3 and the minor version is between 8 and 12
-        if python_version.major != 3 or not (9 <= python_version.minor <= 12):
+        # Check if the major version is 3 and the minor version is between 9 and 13
+        if python_version.major != 3 or not (9 <= python_version.minor <= 13):
             logger.warning(
                 f"Unsupported Python version {python_version.major}.{python_version.minor}; "
-                "only Python 3.9 to 3.12 are supported."
+                "only Python 3.9 to 3.13 are supported."
             )
             return {}
 
@@ -150,6 +150,26 @@ def init() -> Dict[str, Any]:
         get_process_resource,
         get_resource,
     )
+    import re
+    from opentelemetry.sdk.trace import IdGenerator, RandomIdGenerator
+
+    class LambdaTraceIdGenerator(IdGenerator):
+        random_id_generator = RandomIdGenerator()
+
+        def generate_span_id(self) -> int:
+            return self.random_id_generator.generate_span_id()  # type: ignore
+
+        def generate_trace_id(self) -> int:
+            match = re.search(
+                r"Root=1-[\da-f]+-([\da-f]{24})",
+                os.environ.get("_X_AMZN_TRACE_ID", ""),
+                re.IGNORECASE,
+            )
+            if match:
+                trace_id = match.group(1)
+                if len(trace_id) == 24:
+                    return int(trace_id, 16) << 32
+            return self.random_id_generator.generate_trace_id()  # type: ignore
 
     infrastructure_resource = get_infrastructure_resource()
     process_resource = get_process_resource()
@@ -162,6 +182,7 @@ def init() -> Dict[str, Any]:
         resource=resource,
         sampler=_get_lumigo_sampler(),
         span_limits=(SpanLimits(max_span_attribute_length=(get_max_size()))),
+        id_generator=LambdaTraceIdGenerator(),
     )
 
     logger_provider = LoggerProvider(resource=resource)
@@ -274,6 +295,19 @@ def init() -> Dict[str, Any]:
             logger.debug("Storing a copy of the log data under: %s", logdump_file)
 
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
+
+
+def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
+    from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
+    from opentelemetry import trace
+
+    def wrapper(*args: List[Any], **kwargs: Dict[Any, Any]) -> T:
+        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        result = func(*args, **kwargs)
+        trace.get_tracer_provider().force_flush()
+        return result
+
+    return wrapper
 
 
 def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:

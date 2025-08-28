@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 import os
+from lumigo_opentelemetry import logger
 
 
 class AbstractInstrumentor(ABC):
@@ -19,12 +20,20 @@ class AbstractInstrumentor(ABC):
         )
         if not tracing_enabled:
             return False
+        if "AWS_LAMBDA_FUNCTION_NAME" in os.environ and self.is_disabled_on_lambda():
+            logger.info(
+                "Disabling instrumentation '%s' on Lambda", self.instrumentation_id
+            )
+            return False
 
         try:
             self.assert_instrumented_package_importable()
             return True
         except ImportError:
             return False
+
+    def is_disabled_on_lambda(self) -> bool:
+        return True
 
     @abstractmethod
     def assert_instrumented_package_importable(self) -> None:
