@@ -327,13 +327,10 @@ def _flush_with_timeout(args: List[Any]) -> None:
             if len(args) >= 2 and hasattr(args[1], "get_remaining_time_in_millis"):
                 context = args[1]
                 remaining_time_ms = context.get_remaining_time_in_millis()
-
-                buffer_time_ms = remaining_time_ms * 0.10
-                timeout_seconds = (remaining_time_ms - buffer_time_ms) / 1000
-                timeout_ms = int(timeout_seconds * 1000)
+                timeout_ms = int(remaining_time_ms * 0.90)
 
                 logger.debug(
-                    f"Lambda remaining time: {remaining_time_ms}ms, calculated flush timeout: {timeout_seconds}s"
+                    f"Lambda remaining time: {remaining_time_ms}ms, calculated flush timeout: {timeout_ms}ms"
                 )
             else:
                 logger.debug(
