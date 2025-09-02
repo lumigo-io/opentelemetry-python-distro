@@ -323,10 +323,10 @@ class TestForceFlushWithDynamicTimeout(unittest.TestCase):
 
         # Should take max timeout
         self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=60000
+            timeout_millis=10000
         )
         self.mock_logger.debug.assert_called_with(
-            "Lambda remaining time: 80000ms, calculated flush timeout: 60000ms"
+            "Lambda remaining time: 80000ms, calculated flush timeout: 10000ms"
         )
 
     def test_flush_with_context_without_method(self):

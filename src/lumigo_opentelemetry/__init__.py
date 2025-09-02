@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
-MAX_FLUSH_TIMEOUT_MS = 60000  # 60 seconds
+MAX_FLUSH_TIMEOUT_MS = 10000  # 10 seconds
 USING_DEFAULT_TIMEOUT_MESSAGE = f"Using default {DEFAULT_TIMEOUT_MS}ms timeout."
 
 T = TypeVar("T")
