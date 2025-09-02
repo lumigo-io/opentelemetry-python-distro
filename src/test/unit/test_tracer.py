@@ -313,6 +313,22 @@ class TestForceFlushWithDynamicTimeout(unittest.TestCase):
         self.tracer_provider_patcher.stop()
         self.logger_patcher.stop()
 
+    def test_flush_with_lambda_context_take_max_timeout(self):
+        from lumigo_opentelemetry import _flush_with_timeout
+
+        context = MockLambdaContext(remaining_time_ms=80000)
+        args = ["event", context]
+
+        _flush_with_timeout(args)
+
+        # Should take max timeout
+        self.mock_tracer_provider.force_flush.assert_called_once_with(
+            timeout_millis=60000
+        )
+        self.mock_logger.debug.assert_called_with(
+            "Lambda remaining time: 80000ms, calculated flush timeout: 60000ms"
+        )
+
     def test_flush_with_context_without_method(self):
         """Test flush when context doesn't have get_remaining_time_in_millis method"""
         from lumigo_opentelemetry import _flush_with_timeout

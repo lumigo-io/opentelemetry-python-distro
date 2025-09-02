@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
+MAX_FLUSH_TIMEOUT_MS = 60000  # 60 seconds
 USING_DEFAULT_TIMEOUT_MESSAGE = f"Using default {DEFAULT_TIMEOUT_MS}ms timeout."
 
 T = TypeVar("T")
@@ -328,6 +329,8 @@ def _flush_with_timeout(args: List[Any]) -> None:
                 context = args[1]
                 remaining_time_ms = context.get_remaining_time_in_millis()
                 timeout_ms = int(remaining_time_ms * 0.90)
+                if timeout_ms > MAX_FLUSH_TIMEOUT_MS:
+                    timeout_ms = MAX_FLUSH_TIMEOUT_MS
 
                 logger.debug(
                     f"Lambda remaining time: {remaining_time_ms}ms, calculated flush timeout: {timeout_ms}ms"
