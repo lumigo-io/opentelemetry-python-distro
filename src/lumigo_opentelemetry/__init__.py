@@ -6,6 +6,9 @@ import sys
 from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
+DEFAULT_TIMEOUT_MS = 1000
+MAX_FLUSH_TIMEOUT_MS = 10000  # 10 seconds
+USING_DEFAULT_TIMEOUT_MESSAGE = f"Using default {DEFAULT_TIMEOUT_MS}ms timeout."
 
 T = TypeVar("T")
 
@@ -297,15 +300,67 @@ def init() -> Dict[str, Any]:
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
 
+def _flush_with_timeout(args: List[Any]) -> None:
+    """
+    Flush with dynamic timeout based on Lambda context remaining time.
+    Supports environment variable override via LUMIGO_FLUSH_TIMEOUT.
+
+    Args:
+        args: Function arguments where args[1] should be Lambda context if available
+    """
+    from opentelemetry import trace
+
+    timeout_ms = DEFAULT_TIMEOUT_MS
+    try:
+        custom_timeout_env = os.getenv("LUMIGO_FLUSH_TIMEOUT")
+        if custom_timeout_env:
+            custom_timeout_ms = int(custom_timeout_env)
+            if custom_timeout_ms > 0:
+                timeout_ms = custom_timeout_ms
+                logger.debug(
+                    f"Using custom flush timeout from LUMIGO_FLUSH_TIMEOUT: {timeout_ms}ms"
+                )
+            else:
+                logger.warning(
+                    f"Invalid LUMIGO_FLUSH_TIMEOUT value '{custom_timeout_env}' (must be > 0). {USING_DEFAULT_TIMEOUT_MESSAGE}"
+                )
+        else:
+            if len(args) >= 2 and hasattr(args[1], "get_remaining_time_in_millis"):
+                context = args[1]
+                remaining_time_ms = context.get_remaining_time_in_millis()
+                timeout_ms = int(remaining_time_ms * 0.90)
+                if timeout_ms > MAX_FLUSH_TIMEOUT_MS:
+                    timeout_ms = MAX_FLUSH_TIMEOUT_MS
+
+                logger.debug(
+                    f"Lambda remaining time: {remaining_time_ms}ms, calculated flush timeout: {timeout_ms}ms"
+                )
+            else:
+                logger.debug(
+                    f"Context does not have get_remaining_time_in_millis method or insufficient args. {USING_DEFAULT_TIMEOUT_MESSAGE}"
+                )
+    except Exception as e:
+        logger.warning(
+            f"Failed to calculate flush timeout: {e}. {USING_DEFAULT_TIMEOUT_MESSAGE}"
+        )
+
+    trace.get_tracer_provider().force_flush(timeout_millis=timeout_ms)
+
+
 def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
 
-    def wrapper(*args: List[Any], **kwargs: Dict[Any, Any]) -> T:
+    def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
         AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
-        result = func(*args, **kwargs)
-        trace.get_tracer_provider().force_flush()
-        return result
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            try:
+                _flush_with_timeout(list(args))
+            except Exception as flush_error:
+                logger.error(f"Failed to force flush: {flush_error}")
 
     return wrapper
 
