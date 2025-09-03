@@ -52,4 +52,4 @@ repos:
     - id: bandit
       exclude: ^src/test/
       args: ["-lll"]
-      additional_dependencies: ['importlib-metadata==4.2.0', 'pbr==5']
+      additional_dependencies: ['importlib-metadata==4.2.0','pbr==5.11.1']
