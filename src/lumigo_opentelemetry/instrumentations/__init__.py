@@ -21,16 +21,16 @@ class AbstractInstrumentor(ABC):
         )
         if not tracing_enabled:
             return False
-        
+
         # Check if this instrumentation is explicitly disabled
         disabled_instrumentations = get_disabled_instrumentations()
         if self.instrumentation_id in disabled_instrumentations:
             logger.info(
-                "Instrumentation '%s' is disabled via LUMIGO_DISABLE_INSTRUMENTATION", 
-                self.instrumentation_id
+                "Instrumentation '%s' is disabled via LUMIGO_DISABLE_INSTRUMENTATION",
+                self.instrumentation_id,
             )
             return False
-            
+
         if "AWS_LAMBDA_FUNCTION_NAME" in os.environ and self.is_disabled_on_lambda():
             logger.info(
                 "Disabling instrumentation '%s' on Lambda", self.instrumentation_id

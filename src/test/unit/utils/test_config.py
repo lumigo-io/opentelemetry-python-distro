@@ -1,6 +1,9 @@
 import pytest
 
-from lumigo_opentelemetry.utils.config import get_connection_timeout_seconds, get_disabled_instrumentations
+from lumigo_opentelemetry.utils.config import (
+    get_connection_timeout_seconds,
+    get_disabled_instrumentations,
+)
 
 
 def test_get_connection_seconds_timeout_default():

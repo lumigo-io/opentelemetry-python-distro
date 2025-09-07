@@ -40,12 +40,12 @@ def test_instrumentation_disabled_via_env_var_single(monkeypatch):
 def test_instrumentation_disabled_via_env_var_multiple(monkeypatch):
     """Test that multiple instrumentations can be disabled via LUMIGO_DISABLE_INSTRUMENTATION"""
     monkeypatch.setenv("LUMIGO_DISABLE_INSTRUMENTATION", "boto,langchain")
-    
+
     # Test boto is disabled
     fake_boto = MagicMock()
     with patch.dict("sys.modules", {"boto": fake_boto}):
         assert boto_instrumentor.is_applicable() is False
-    
+
     # Test langchain is disabled
     fake_langchain = MagicMock()
     with patch.dict("sys.modules", {"langchain": fake_langchain}):
