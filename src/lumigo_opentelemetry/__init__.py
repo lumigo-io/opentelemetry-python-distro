@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
@@ -351,8 +352,10 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
 
-    AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+    mod = sys.modules[func.__module__]
+    name = func.__name__
 
+    @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
         try:
             result = func(*args, **kwargs)
@@ -363,7 +366,10 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
             except Exception as flush_error:
                 logger.error(f"Failed to force flush: {flush_error}")
 
-    return wrapper
+    setattr(mod, name, wrapper)
+    AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+
+    return getattr(mod, name)  # type: ignore
 
 
 def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
