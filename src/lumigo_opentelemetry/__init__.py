@@ -350,9 +350,9 @@ def _flush_with_timeout(args: List[Any]) -> None:
 def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
+    AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
         try:
             result = func(*args, **kwargs)
             return result
