@@ -351,6 +351,7 @@ def _flush_with_timeout(args: List[Any]) -> None:
 def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
+    from lumigo_opentelemetry.libs.json_utils import dump
 
     # Validate function has required attributes
     if not hasattr(func, "__module__") or func.__module__ is None:
@@ -374,7 +375,20 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
         try:
+            # Capture event (first argument) and add to current span if available
+            current_span = trace.get_current_span()
+            if current_span and current_span.is_recording():
+                if args:
+                    current_span.set_attribute("faas.event", dump(args[0]))
+                if kwargs:
+                    current_span.set_attribute("faas.event_kwargs", dump(kwargs))
+
             result = func(*args, **kwargs)
+
+            # Capture return value and add to current span if available
+            if current_span and current_span.is_recording():
+                current_span.set_attribute("faas.return_value", dump(result))
+
             return result
         finally:
             try:

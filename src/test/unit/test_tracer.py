@@ -373,6 +373,65 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
         # Cleanup
         del sys.modules["test_replacement_module"]
 
+    def test_event_and_return_value_capture(self):
+        """Test that event and return_value are captured in span attributes"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+        from unittest.mock import Mock, patch
+        import json
+
+        # Mock the current span to verify attributes are set
+        mock_span = Mock()
+        mock_span.is_recording.return_value = True
+
+        with patch("opentelemetry.trace.get_current_span", return_value=mock_span):
+
+            @lumigo_instrument_lambda
+            def lambda_handler(event, context):
+                return {
+                    "statusCode": 200,
+                    "body": f"Hello, {event.get('name', 'World')}!",
+                }
+
+            # Test event and return value capture
+            test_event = {"name": "Claude", "requestId": "12345"}
+            test_context = {"requestId": "12345", "functionName": "test-function"}
+
+            result = lambda_handler(test_event, test_context)
+
+            # Verify return value
+            self.assertEqual(result["statusCode"], 200)
+            self.assertIn("Hello, Claude!", result["body"])
+
+            # Verify that set_attribute was called with our expected attributes
+            set_attribute_calls = mock_span.set_attribute.call_args_list
+
+            # Check for faas.event attribute
+            event_attr_call = None
+            return_attr_call = None
+
+            for call in set_attribute_calls:
+                args, kwargs = call
+                if args[0] == "faas.event":
+                    event_attr_call = call
+                elif args[0] == "faas.return_value":
+                    return_attr_call = call
+
+            # Verify event attribute was set
+            self.assertIsNotNone(
+                event_attr_call, "faas.event attribute should have been set"
+            )
+            event_data = json.loads(event_attr_call[0][1])
+            self.assertEqual(event_data["name"], "Claude")
+            self.assertEqual(event_data["requestId"], "12345")
+
+            # Verify return value attribute was set
+            self.assertIsNotNone(
+                return_attr_call, "faas.return_value attribute should have been set"
+            )
+            return_data = json.loads(return_attr_call[0][1])
+            self.assertEqual(return_data["statusCode"], 200)
+            self.assertIn("Hello, Claude!", return_data["body"])
+
 
 def test_access_lumigo_id_generator(monkeypatch):
     from lumigo_opentelemetry import tracer_provider
