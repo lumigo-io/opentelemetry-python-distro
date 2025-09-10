@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
@@ -351,8 +352,27 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
 
+    # Validate function has required attributes
+    if not hasattr(func, "__module__") or func.__module__ is None:
+        logger.warning("Function missing __module__ attribute, returning unwrapped")
+        return func
+
+    if not hasattr(func, "__name__"):
+        logger.warning("Function missing __name__ attribute, returning unwrapped")
+        return func
+
+    try:
+        mod = sys.modules[func.__module__]
+    except KeyError:
+        logger.warning(
+            f"Module {func.__module__} not found in sys.modules, returning unwrapped"
+        )
+        return func
+
+    name = func.__name__
+
+    @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
         try:
             result = func(*args, **kwargs)
             return result
@@ -362,7 +382,17 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
             except Exception as flush_error:
                 logger.error(f"Failed to force flush: {flush_error}")
 
-    return wrapper
+    # Safely replace function in module namespace
+    try:
+        setattr(mod, name, wrapper)
+        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        return getattr(mod, name)  # type: ignore
+    except (AttributeError, TypeError) as e:
+        logger.error(
+            f"Failed to replace function in module: {e}, returning wrapper directly"
+        )
+        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        return wrapper
 
 
 def lumigo_wrapped(func: Callable[..., T]) -> Callable[..., T]:
