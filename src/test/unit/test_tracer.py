@@ -259,6 +259,120 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
 
         self.assertEqual(result, 3)
 
+    def test_function_without_module_attribute(self):
+        """Test decorator handles functions without __module__ gracefully"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+
+        # Create a function-like object without __module__
+        class FakeFunc:
+            def __call__(self, x, y):
+                return x + y
+
+        fake_func = FakeFunc()
+        result = lumigo_instrument_lambda(fake_func)
+        self.assertIs(result, fake_func)  # Should return original function
+
+    def test_function_without_name_attribute(self):
+        """Test decorator handles functions without __name__ gracefully"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+
+        # Create a function-like object without __name__
+        class FuncWithoutName:
+            def __call__(self):
+                return "test"
+
+        sample_func = FuncWithoutName()
+
+        result = lumigo_instrument_lambda(sample_func)
+        self.assertIs(result, sample_func)  # Should return original function
+
+    def test_function_with_none_module(self):
+        """Test decorator handles functions with None __module__"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+
+        def sample_func():
+            return "test"
+
+        sample_func.__module__ = None
+
+        result = lumigo_instrument_lambda(sample_func)
+        self.assertIs(result, sample_func)  # Should return original function
+
+    def test_function_module_not_in_sys_modules(self):
+        """Test decorator handles missing module in sys.modules"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+
+        def sample_func():
+            return "test"
+
+        sample_func.__module__ = "nonexistent_module"
+
+        result = lumigo_instrument_lambda(sample_func)
+        self.assertIs(result, sample_func)  # Should return original function
+
+    def test_setattr_failure_on_readonly_module(self):
+        """Test decorator handles setattr failure gracefully"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+
+        # Create a module-like object that raises on setattr
+        class ReadOnlyModule:
+            def __setattr__(self, name, value):
+                raise AttributeError("Read-only module")
+
+        readonly_module = ReadOnlyModule()
+
+        def sample_func():
+            return "test"
+
+        sample_func.__module__ = "test_module"
+
+        # Mock sys.modules to return our readonly module
+        import sys
+
+        original_module = sys.modules.get("test_module")
+        sys.modules["test_module"] = readonly_module
+
+        try:
+            # Should not raise exception, should return wrapper directly
+            result = lumigo_instrument_lambda(sample_func)
+            self.assertIsNotNone(result)
+            self.assertNotEqual(result, sample_func)  # Should be wrapper
+        finally:
+            # Cleanup
+            if original_module is None:
+                sys.modules.pop("test_module", None)
+            else:
+                sys.modules["test_module"] = original_module
+
+    def test_module_namespace_replacement(self):
+        """Test that function is properly replaced in module namespace"""
+        import sys
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+
+        # Create a test module
+        test_module = type(sys)("test_replacement_module")
+        sys.modules["test_replacement_module"] = test_module
+
+        def sample_func():
+            return "original"
+
+        sample_func.__module__ = "test_replacement_module"
+        sample_func.__name__ = "sample_func"
+
+        # Set original function in module
+        setattr(test_module, "sample_func", sample_func)
+
+        # Decorate
+        result = lumigo_instrument_lambda(sample_func)
+
+        # Check that module now contains the wrapper
+        module_func = getattr(test_module, "sample_func")
+        self.assertIs(result, module_func)
+        self.assertNotEqual(module_func, sample_func)  # Should be wrapper
+
+        # Cleanup
+        del sys.modules["test_replacement_module"]
+
 
 def test_access_lumigo_id_generator(monkeypatch):
     from lumigo_opentelemetry import tracer_provider
