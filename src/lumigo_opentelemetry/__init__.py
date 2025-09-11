@@ -6,6 +6,8 @@ import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
+from opentelemetry.trace import Span
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
 MAX_FLUSH_TIMEOUT_MS = 10000  # 10 seconds
@@ -351,6 +353,7 @@ def _flush_with_timeout(args: List[Any]) -> None:
 def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
+    from lumigo_opentelemetry.libs.json_utils import dump
 
     # Validate function has required attributes
     if not hasattr(func, "__module__") or func.__module__ is None:
@@ -371,6 +374,55 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
     name = func.__name__
 
+    tracer = trace.get_tracer(__name__)
+    internal_span = None
+
+    def request_hook(span: Span, event_context_dict: Dict[str, Any]) -> None:
+        """Hook called before Lambda function execution to capture event data."""
+        nonlocal internal_span
+
+        # Create internal span only if no span is recording
+        target_span = span
+        if not span or not span.is_recording():
+            internal_span = tracer.start_span("lambda_handler")
+            target_span = internal_span
+
+        # Always set attributes on the target span
+        if target_span:
+            event = event_context_dict.get("event")
+            context = event_context_dict.get("context")
+
+            if event is not None:
+                target_span.set_attribute("faas.event", dump(event))
+            if context is not None:
+                if hasattr(context, "function_name"):
+                    target_span.set_attribute("faas.name", context.function_name)
+                if hasattr(context, "aws_request_id"):
+                    target_span.set_attribute("faas.execution", context.aws_request_id)
+
+    def response_hook(span: Span, response_dict: Dict[str, Any]) -> None:
+        """Hook called after Lambda function execution to capture return value."""
+        nonlocal internal_span
+
+        # Use internal span if it was created, otherwise use the provided span
+        target_span = internal_span if internal_span else span
+
+        # Always set attributes on the target span
+        if target_span:
+            err = response_dict.get("err")
+            res = response_dict.get("res")
+
+            if err:
+                if isinstance(err, Exception):
+                    target_span.set_attribute("faas.error", str(err))
+            if res is not None:
+                target_span.set_attribute("faas.return_value", dump(res))
+
+        # End internal span if it was created
+        if internal_span:
+            internal_span.end()
+            internal_span = None
+
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
         try:
@@ -385,13 +437,21 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     # Safely replace function in module namespace
     try:
         setattr(mod, name, wrapper)
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        AwsLambdaInstrumentor().instrument(
+            tracer_provider=trace.get_tracer_provider(),
+            request_hook=request_hook,
+            response_hook=response_hook,
+        )
         return getattr(mod, name)  # type: ignore
     except (AttributeError, TypeError) as e:
         logger.error(
             f"Failed to replace function in module: {e}, returning wrapper directly"
         )
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        AwsLambdaInstrumentor().instrument(
+            tracer_provider=trace.get_tracer_provider(),
+            request_hook=request_hook,
+            response_hook=response_hook,
+        )
         return wrapper
 
 
