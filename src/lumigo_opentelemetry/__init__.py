@@ -374,31 +374,54 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
     name = func.__name__
 
+    tracer = trace.get_tracer(__name__)
+    internal_span = None
+
     def request_hook(span: Span, event_context_dict: Dict[str, Any]) -> None:
         """Hook called before Lambda function execution to capture event data."""
-        if span and span.is_recording():
+        nonlocal internal_span
+
+        # Create internal span only if no span is recording
+        target_span = span
+        if not span or not span.is_recording():
+            internal_span = tracer.start_span("lambda_handler")
+            target_span = internal_span
+
+        # Always set attributes on the target span
+        if target_span:
             event = event_context_dict.get("event")
             context = event_context_dict.get("context")
 
             if event is not None:
-                span.set_attribute("faas.event", dump(event))
+                target_span.set_attribute("faas.event", dump(event))
             if context is not None:
                 if hasattr(context, "function_name"):
-                    span.set_attribute("faas.name", context.function_name)
+                    target_span.set_attribute("faas.name", context.function_name)
                 if hasattr(context, "aws_request_id"):
-                    span.set_attribute("faas.execution", context.aws_request_id)
+                    target_span.set_attribute("faas.execution", context.aws_request_id)
 
     def response_hook(span: Span, response_dict: Dict[str, Any]) -> None:
         """Hook called after Lambda function execution to capture return value."""
-        if span and span.is_recording():
+        nonlocal internal_span
+
+        # Use internal span if it was created, otherwise use the provided span
+        target_span = internal_span if internal_span else span
+
+        # Always set attributes on the target span
+        if target_span:
             err = response_dict.get("err")
             res = response_dict.get("res")
 
             if err:
                 if isinstance(err, Exception):
-                    span.set_attribute("faas.error", str(err))
+                    target_span.set_attribute("faas.error", str(err))
             if res is not None:
-                span.set_attribute("faas.return_value", dump(res))
+                target_span.set_attribute("faas.return_value", dump(res))
+
+        # End internal span if it was created
+        if internal_span:
+            internal_span.end()
+            internal_span = None
 
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
