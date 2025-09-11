@@ -6,6 +6,8 @@ import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
+from opentelemetry.trace import Span
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
 MAX_FLUSH_TIMEOUT_MS = 10000  # 10 seconds
@@ -372,23 +374,36 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
     name = func.__name__
 
+    def request_hook(span: Span, event_context_dict: Dict[str, Any]) -> None:
+        """Hook called before Lambda function execution to capture event data."""
+        if span and span.is_recording():
+            event = event_context_dict.get("event")
+            context = event_context_dict.get("context")
+
+            if event is not None:
+                span.set_attribute("faas.event", dump(event))
+            if context is not None:
+                if hasattr(context, "function_name"):
+                    span.set_attribute("faas.name", context.function_name)
+                if hasattr(context, "aws_request_id"):
+                    span.set_attribute("faas.execution", context.aws_request_id)
+
+    def response_hook(span: Span, response_dict: Dict[str, Any]) -> None:
+        """Hook called after Lambda function execution to capture return value."""
+        if span and span.is_recording():
+            err = response_dict.get("err")
+            res = response_dict.get("res")
+
+            if err:
+                if isinstance(err, Exception):
+                    span.set_attribute("faas.error", str(err))
+            if res is not None:
+                span.set_attribute("faas.return_value", dump(res))
+
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
         try:
-            # Capture event (first argument) and add to current span if available
-            current_span = trace.get_current_span()
-            if current_span and current_span.is_recording():
-                if args:
-                    current_span.set_attribute("faas.event", dump(args[0]))
-                if kwargs:
-                    current_span.set_attribute("faas.event_kwargs", dump(kwargs))
-
             result = func(*args, **kwargs)
-
-            # Capture return value and add to current span if available
-            if current_span and current_span.is_recording():
-                current_span.set_attribute("faas.return_value", dump(result))
-
             return result
         finally:
             try:
@@ -399,13 +414,21 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     # Safely replace function in module namespace
     try:
         setattr(mod, name, wrapper)
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        AwsLambdaInstrumentor().instrument(
+            tracer_provider=trace.get_tracer_provider(),
+            request_hook=request_hook,
+            response_hook=response_hook,
+        )
         return getattr(mod, name)  # type: ignore
     except (AttributeError, TypeError) as e:
         logger.error(
             f"Failed to replace function in module: {e}, returning wrapper directly"
         )
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        AwsLambdaInstrumentor().instrument(
+            tracer_provider=trace.get_tracer_provider(),
+            request_hook=request_hook,
+            response_hook=response_hook,
+        )
         return wrapper
 
 

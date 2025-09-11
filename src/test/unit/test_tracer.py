@@ -374,7 +374,7 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
         del sys.modules["test_replacement_module"]
 
     def test_event_and_return_value_capture(self):
-        """Test that event and return_value are captured in span attributes"""
+        """Test that event and return_value hooks work correctly when called"""
         from lumigo_opentelemetry import lumigo_instrument_lambda
         from unittest.mock import Mock, patch
         import json
@@ -383,7 +383,25 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
         mock_span = Mock()
         mock_span.is_recording.return_value = True
 
-        with patch("opentelemetry.trace.get_current_span", return_value=mock_span):
+        # We'll test the hooks directly by calling the internal functions
+        # that create the request and response hooks
+        with patch(
+            "opentelemetry.trace.get_current_span", return_value=mock_span
+        ), patch(
+            "opentelemetry.instrumentation.aws_lambda.AwsLambdaInstrumentor"
+        ) as mock_instrumentor_class:
+
+            # Setup mock instrumentor
+            mock_instrumentor = Mock()
+            mock_instrumentor_class.return_value = mock_instrumentor
+
+            # Create hooks storage
+            stored_hooks = {}
+
+            def capture_hooks(**kwargs):
+                stored_hooks.update(kwargs)
+
+            mock_instrumentor.instrument.side_effect = capture_hooks
 
             @lumigo_instrument_lambda
             def lambda_handler(event, context):
@@ -392,15 +410,36 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
                     "body": f"Hello, {event.get('name', 'World')}!",
                 }
 
-            # Test event and return value capture
+            # Verify the instrumentor was called and hooks were provided
+            mock_instrumentor.instrument.assert_called_once()
+
+            # Extract the hooks from the call
+            call_kwargs = mock_instrumentor.instrument.call_args.kwargs
+            request_hook = call_kwargs.get("request_hook")
+            response_hook = call_kwargs.get("response_hook")
+
+            self.assertIsNotNone(request_hook, "Request hook should have been provided")
+            self.assertIsNotNone(
+                response_hook, "Response hook should have been provided"
+            )
+
+            # Test event and return value capture by calling hooks directly
             test_event = {"name": "Claude", "requestId": "12345"}
-            test_context = {"requestId": "12345", "functionName": "test-function"}
+            test_context = Mock()
+            test_context.function_name = "test-function"
+            test_context.aws_request_id = "aws-12345"
 
-            result = lambda_handler(test_event, test_context)
+            # Test the request hook
+            event_context_dict = {"event": test_event, "context": test_context}
+            request_hook(mock_span, event_context_dict)
 
-            # Verify return value
-            self.assertEqual(result["statusCode"], 200)
-            self.assertIn("Hello, Claude!", result["body"])
+            # Test the response hook
+            result = {
+                "statusCode": 200,
+                "body": "Hello, Claude!",
+            }
+            response_dict = {"res": result, "err": None}
+            response_hook(mock_span, response_dict)
 
             # Verify that set_attribute was called with our expected attributes
             set_attribute_calls = mock_span.set_attribute.call_args_list
@@ -408,6 +447,8 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
             # Check for faas.event attribute
             event_attr_call = None
             return_attr_call = None
+            name_attr_call = None
+            execution_attr_call = None
 
             for call in set_attribute_calls:
                 args, kwargs = call
@@ -415,6 +456,10 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
                     event_attr_call = call
                 elif args[0] == "faas.return_value":
                     return_attr_call = call
+                elif args[0] == "faas.name":
+                    name_attr_call = call
+                elif args[0] == "faas.execution":
+                    execution_attr_call = call
 
             # Verify event attribute was set
             self.assertIsNotNone(
@@ -431,6 +476,17 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
             return_data = json.loads(return_attr_call[0][1])
             self.assertEqual(return_data["statusCode"], 200)
             self.assertIn("Hello, Claude!", return_data["body"])
+
+            # Verify context attributes were set
+            self.assertIsNotNone(
+                name_attr_call, "faas.name attribute should have been set"
+            )
+            self.assertEqual(name_attr_call[0][1], "test-function")
+
+            self.assertIsNotNone(
+                execution_attr_call, "faas.execution attribute should have been set"
+            )
+            self.assertEqual(execution_attr_call[0][1], "aws-12345")
 
 
 def test_access_lumigo_id_generator(monkeypatch):
