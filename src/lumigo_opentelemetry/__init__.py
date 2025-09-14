@@ -6,7 +6,6 @@ import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
-from opentelemetry.trace import Span
 
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
@@ -374,59 +373,42 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
     name = func.__name__
 
-    tracer = trace.get_tracer(__name__)
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
+        # Capture event and context from Lambda arguments
+        event = args[0] if len(args) > 0 else None
+        context = args[1] if len(args) > 1 else None
 
-    def request_hook(span: Span, event_context_dict: Dict[str, Any]) -> None:
-        """Hook called before Lambda function execution to capture event data."""
-        print("request_hook called")
-        target_span = span
-        if not span or not span.is_recording():
-            target_span = tracer.start_span("lambda_handler")
+        # Get current span to add attributes
+        current_span = trace.get_current_span()
 
-        if target_span:
-            event = event_context_dict.get("event")
-            context = event_context_dict.get("context")
-
-            target_span.set_attribute(
+        # Set event attributes on the current span
+        if current_span and current_span.is_recording():
+            current_span.set_attribute(
                 "faas.event", dump(event) if event is not None else "null"
             )
 
             if context is not None:
                 if hasattr(context, "function_name"):
-                    target_span.set_attribute("faas.name", context.function_name)
+                    current_span.set_attribute("faas.name", context.function_name)
                 if hasattr(context, "aws_request_id"):
-                    target_span.set_attribute("faas.execution", context.aws_request_id)
+                    current_span.set_attribute("faas.execution", context.aws_request_id)
 
-        if target_span != span:
-            target_span.end()
-
-    def response_hook(span: Span, response_dict: Dict[str, Any]) -> None:
-        """Hook called after Lambda function execution to capture return value."""
-        print("response_hook called")
-        target_span = span
-        if not span or not span.is_recording():
-            target_span = tracer.start_span("lambda_handler")
-
-        if target_span:
-            err = response_dict.get("err")
-            res = response_dict.get("res")
-
-            if err:
-                if isinstance(err, Exception):
-                    target_span.set_attribute("faas.error", str(err))
-
-            target_span.set_attribute(
-                "faas.return_value", dump(res) if res is not None else "null"
-            )
-
-        if target_span != span:
-            target_span.end()
-
-    @wraps(func)
-    def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
         try:
             result = func(*args, **kwargs)
+
+            # Set return value attribute on the current span
+            if current_span and current_span.is_recording():
+                current_span.set_attribute(
+                    "faas.return_value", dump(result) if result is not None else "null"
+                )
+
             return result
+        except Exception as e:
+            # Set error attribute on the current span
+            if current_span and current_span.is_recording():
+                current_span.set_attribute("faas.error", str(e))
+            raise
         finally:
             try:
                 _flush_with_timeout(list(args))
@@ -438,8 +420,6 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
         setattr(mod, name, wrapper)
         AwsLambdaInstrumentor().instrument(
             tracer_provider=trace.get_tracer_provider(),
-            request_hook=request_hook,
-            response_hook=response_hook,
         )
         return getattr(mod, name)  # type: ignore
     except (AttributeError, TypeError) as e:
@@ -448,8 +428,6 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
         )
         AwsLambdaInstrumentor().instrument(
             tracer_provider=trace.get_tracer_provider(),
-            request_hook=request_hook,
-            response_hook=response_hook,
         )
         return wrapper
 

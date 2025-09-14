@@ -374,7 +374,7 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
         del sys.modules["test_replacement_module"]
 
     def test_event_and_return_value_capture(self):
-        """Test that event and return_value hooks work correctly when called"""
+        """Test that event and return_value are captured as span attributes"""
         from lumigo_opentelemetry import lumigo_instrument_lambda
         from unittest.mock import Mock, patch
         import json
@@ -383,8 +383,6 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
         mock_span = Mock()
         mock_span.is_recording.return_value = True
 
-        # We'll test the hooks directly by calling the internal functions
-        # that create the request and response hooks
         with patch(
             "opentelemetry.trace.get_current_span", return_value=mock_span
         ), patch(
@@ -394,14 +392,6 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
             mock_instrumentor = Mock()
             mock_instrumentor_class.return_value = mock_instrumentor
 
-            # Create hooks storage
-            stored_hooks = {}
-
-            def capture_hooks(**kwargs):
-                stored_hooks.update(kwargs)
-
-            mock_instrumentor.instrument.side_effect = capture_hooks
-
             @lumigo_instrument_lambda
             def lambda_handler(event, context):
                 return {
@@ -409,36 +399,14 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
                     "body": f"Hello, {event.get('name', 'World')}!",
                 }
 
-            # Verify the instrumentor was called and hooks were provided
-            mock_instrumentor.instrument.assert_called_once()
-
-            # Extract the hooks from the call
-            call_kwargs = mock_instrumentor.instrument.call_args.kwargs
-            request_hook = call_kwargs.get("request_hook")
-            response_hook = call_kwargs.get("response_hook")
-
-            self.assertIsNotNone(request_hook, "Request hook should have been provided")
-            self.assertIsNotNone(
-                response_hook, "Response hook should have been provided"
-            )
-
-            # Test event and return value capture by calling hooks directly
+            # Create test event and context
             test_event = {"name": "Claude", "requestId": "12345"}
             test_context = Mock()
             test_context.function_name = "test-function"
             test_context.aws_request_id = "aws-12345"
 
-            # Test the request hook
-            event_context_dict = {"event": test_event, "context": test_context}
-            request_hook(mock_span, event_context_dict)
-
-            # Test the response hook
-            result = {
-                "statusCode": 200,
-                "body": "Hello, Claude!",
-            }
-            response_dict = {"res": result, "err": None}
-            response_hook(mock_span, response_dict)
+            # Call the lambda function
+            lambda_handler(test_event, test_context)
 
             # Verify that set_attribute was called with our expected attributes
             set_attribute_calls = mock_span.set_attribute.call_args_list
@@ -503,25 +471,12 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
             mock_instrumentor = Mock()
             mock_instrumentor_class.return_value = mock_instrumentor
 
-            def capture_hooks(**kwargs):
-                pass
-
-            mock_instrumentor.instrument.side_effect = capture_hooks
-
             @lumigo_instrument_lambda
             def lambda_handler(event, context):
                 return None
 
-            call_kwargs = mock_instrumentor.instrument.call_args.kwargs
-            request_hook = call_kwargs.get("request_hook")
-            response_hook = call_kwargs.get("response_hook")
-
-            # Test with None event and None return value
-            event_context_dict = {"event": None, "context": None}
-            request_hook(mock_span, event_context_dict)
-
-            response_dict = {"res": None, "err": None}
-            response_hook(mock_span, response_dict)
+            # Call with None event and None return value
+            lambda_handler(None, None)
 
             # Verify null values were set
             set_attribute_calls = mock_span.set_attribute.call_args_list
@@ -541,59 +496,6 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
             self.assertTrue(
                 return_attr_found, "faas.return_value should be set to 'null'"
             )
-
-    def test_internal_span_creation(self):
-        """Test that internal span is created when no span is recording"""
-        from lumigo_opentelemetry import lumigo_instrument_lambda
-        from unittest.mock import Mock, patch
-
-        # Mock a span that is NOT recording
-        mock_span = Mock()
-        mock_span.is_recording.return_value = False
-
-        # Mock the tracer and internal span
-        mock_tracer = Mock()
-        mock_internal_span = Mock()
-        mock_tracer.start_span.return_value = mock_internal_span
-
-        with patch(
-            "opentelemetry.trace.get_current_span", return_value=mock_span
-        ), patch("opentelemetry.trace.get_tracer", return_value=mock_tracer), patch(
-            "opentelemetry.instrumentation.aws_lambda.AwsLambdaInstrumentor"
-        ) as mock_instrumentor_class:
-            mock_instrumentor = Mock()
-            mock_instrumentor_class.return_value = mock_instrumentor
-
-            def capture_hooks(**kwargs):
-                pass
-
-            mock_instrumentor.instrument.side_effect = capture_hooks
-
-            @lumigo_instrument_lambda
-            def lambda_handler(event, context):
-                return {"result": "success"}
-
-            call_kwargs = mock_instrumentor.instrument.call_args.kwargs
-            request_hook = call_kwargs.get("request_hook")
-            response_hook = call_kwargs.get("response_hook")
-
-            # Test with event and context
-            test_event = {"test": "data"}
-            event_context_dict = {"event": test_event, "context": None}
-            request_hook(mock_span, event_context_dict)
-
-            # Verify internal span was created
-            mock_tracer.start_span.assert_called_once_with("lambda_handler")
-
-            # Verify attributes were set on internal span (not the original span)
-            mock_internal_span.set_attribute.assert_called()
-
-            # Test response hook
-            response_dict = {"res": {"result": "success"}, "err": None}
-            response_hook(mock_span, response_dict)
-
-            # Verify internal span was ended (may be called twice - once per hook)
-            assert mock_internal_span.end.call_count >= 1
 
 
 def test_access_lumigo_id_generator(monkeypatch):
