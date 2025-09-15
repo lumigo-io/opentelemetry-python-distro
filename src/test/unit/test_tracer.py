@@ -373,6 +373,130 @@ class TestLumigoInstrumentLambda(unittest.TestCase):
         # Cleanup
         del sys.modules["test_replacement_module"]
 
+    def test_event_and_return_value_capture(self):
+        """Test that event and return_value are captured as span attributes"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+        from unittest.mock import Mock, patch
+        import json
+
+        # Mock the current span to verify attributes are set
+        mock_span = Mock()
+        mock_span.is_recording.return_value = True
+
+        with patch(
+            "opentelemetry.trace.get_current_span", return_value=mock_span
+        ), patch(
+            "opentelemetry.instrumentation.aws_lambda.AwsLambdaInstrumentor"
+        ) as mock_instrumentor_class:
+            # Setup mock instrumentor
+            mock_instrumentor = Mock()
+            mock_instrumentor_class.return_value = mock_instrumentor
+
+            @lumigo_instrument_lambda
+            def lambda_handler(event, context):
+                return {
+                    "statusCode": 200,
+                    "body": f"Hello, {event.get('name', 'World')}!",
+                }
+
+            # Create test event and context
+            test_event = {"name": "Claude", "requestId": "12345"}
+            test_context = Mock()
+            test_context.function_name = "test-function"
+            test_context.aws_request_id = "aws-12345"
+
+            # Call the lambda function
+            lambda_handler(test_event, test_context)
+
+            # Verify that set_attribute was called with our expected attributes
+            set_attribute_calls = mock_span.set_attribute.call_args_list
+
+            # Check for faas.event attribute
+            event_attr_call = None
+            return_attr_call = None
+            name_attr_call = None
+            execution_attr_call = None
+
+            for call in set_attribute_calls:
+                args, kwargs = call
+                if args[0] == "faas.event":
+                    event_attr_call = call
+                elif args[0] == "faas.return_value":
+                    return_attr_call = call
+                elif args[0] == "faas.name":
+                    name_attr_call = call
+                elif args[0] == "faas.execution":
+                    execution_attr_call = call
+
+            # Verify event attribute was set
+            self.assertIsNotNone(
+                event_attr_call, "faas.event attribute should have been set"
+            )
+            event_data = json.loads(event_attr_call[0][1])
+            self.assertEqual(event_data["name"], "Claude")
+            self.assertEqual(event_data["requestId"], "12345")
+
+            # Verify return value attribute was set
+            self.assertIsNotNone(
+                return_attr_call, "faas.return_value attribute should have been set"
+            )
+            return_data = json.loads(return_attr_call[0][1])
+            self.assertEqual(return_data["statusCode"], 200)
+            self.assertIn("Hello, Claude!", return_data["body"])
+
+            # Verify context attributes were set
+            self.assertIsNotNone(
+                name_attr_call, "faas.name attribute should have been set"
+            )
+            self.assertEqual(name_attr_call[0][1], "test-function")
+
+            self.assertIsNotNone(
+                execution_attr_call, "faas.execution attribute should have been set"
+            )
+            self.assertEqual(execution_attr_call[0][1], "aws-12345")
+
+    def test_event_and_return_value_null_handling(self):
+        """Test that null values are set when event and return value are empty"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
+        from unittest.mock import Mock, patch
+
+        mock_span = Mock()
+        mock_span.is_recording.return_value = True
+
+        with patch(
+            "opentelemetry.trace.get_current_span", return_value=mock_span
+        ), patch(
+            "opentelemetry.instrumentation.aws_lambda.AwsLambdaInstrumentor"
+        ) as mock_instrumentor_class:
+            mock_instrumentor = Mock()
+            mock_instrumentor_class.return_value = mock_instrumentor
+
+            @lumigo_instrument_lambda
+            def lambda_handler(event, context):
+                return None
+
+            # Call with None event and None return value
+            lambda_handler(None, None)
+
+            # Verify null values were set
+            set_attribute_calls = mock_span.set_attribute.call_args_list
+            event_attr_found = False
+            return_attr_found = False
+
+            for call in set_attribute_calls:
+                args, kwargs = call
+                if args[0] == "faas.event":
+                    self.assertEqual(args[1], "null")
+                    event_attr_found = True
+                elif args[0] == "faas.return_value":
+                    self.assertEqual(args[1], "null")
+                    return_attr_found = True
+
+            self.assertTrue(event_attr_found, "faas.event should be set to 'null'")
+            self.assertTrue(
+                return_attr_found, "faas.return_value should be set to 'null'"
+            )
+
 
 def test_access_lumigo_id_generator(monkeypatch):
     from lumigo_opentelemetry import tracer_provider

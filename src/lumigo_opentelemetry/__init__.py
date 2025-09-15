@@ -6,6 +6,7 @@ import sys
 from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
 MAX_FLUSH_TIMEOUT_MS = 10000  # 10 seconds
@@ -351,6 +352,7 @@ def _flush_with_timeout(args: List[Any]) -> None:
 def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace
+    from lumigo_opentelemetry.libs.json_utils import dump
 
     # Validate function has required attributes
     if not hasattr(func, "__module__") or func.__module__ is None:
@@ -373,9 +375,40 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Dict[Any, Any]) -> T:
+        # Capture event and context from Lambda arguments
+        event = args[0] if len(args) > 0 else None
+        context = args[1] if len(args) > 1 else None
+
+        # Get current span to add attributes
+        current_span = trace.get_current_span()
+
+        # Set event attributes on the current span
+        if current_span and current_span.is_recording():
+            current_span.set_attribute(
+                "faas.event", dump(event) if event is not None else "null"
+            )
+
+            if context is not None:
+                if hasattr(context, "function_name"):
+                    current_span.set_attribute("faas.name", context.function_name)
+                if hasattr(context, "aws_request_id"):
+                    current_span.set_attribute("faas.execution", context.aws_request_id)
+
         try:
             result = func(*args, **kwargs)
+
+            # Set return value attribute on the current span
+            if current_span and current_span.is_recording():
+                current_span.set_attribute(
+                    "faas.return_value", dump(result) if result is not None else "null"
+                )
+
             return result
+        except Exception as e:
+            # Record exception on the current span
+            if current_span and current_span.is_recording():
+                current_span.record_exception(e)
+            raise
         finally:
             try:
                 _flush_with_timeout(list(args))
@@ -385,13 +418,17 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     # Safely replace function in module namespace
     try:
         setattr(mod, name, wrapper)
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        AwsLambdaInstrumentor().instrument(
+            tracer_provider=trace.get_tracer_provider(),
+        )
         return getattr(mod, name)  # type: ignore
     except (AttributeError, TypeError) as e:
         logger.error(
             f"Failed to replace function in module: {e}, returning wrapper directly"
         )
-        AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+        AwsLambdaInstrumentor().instrument(
+            tracer_provider=trace.get_tracer_provider(),
+        )
         return wrapper
 
 
