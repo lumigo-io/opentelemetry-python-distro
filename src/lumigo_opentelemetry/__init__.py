@@ -405,9 +405,9 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
             return result
         except Exception as e:
-            # Set error attribute on the current span
+            # Record exception on the current span
             if current_span and current_span.is_recording():
-                current_span.set_attribute("faas.error", str(e))
+                current_span.record_exception(e)
             raise
         finally:
             try:
