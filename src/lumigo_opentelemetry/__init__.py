@@ -302,16 +302,17 @@ def init() -> Dict[str, Any]:
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
 
-def _flush_with_timeout(args: List[Any]) -> None:
+def _calculate_flush_timeout(args: List[Any]) -> int:
     """
-    Flush with dynamic timeout based on Lambda context remaining time.
+    Calculate flush timeout based on Lambda context remaining time.
     Supports environment variable override via LUMIGO_FLUSH_TIMEOUT.
 
     Args:
         args: Function arguments where args[1] should be Lambda context if available
-    """
-    from opentelemetry import trace
 
+    Returns:
+        Timeout in milliseconds
+    """
     timeout_ms = DEFAULT_TIMEOUT_MS
     try:
         custom_timeout_env = os.getenv("LUMIGO_FLUSH_TIMEOUT")
@@ -346,6 +347,20 @@ def _flush_with_timeout(args: List[Any]) -> None:
             f"Failed to calculate flush timeout: {e}. {USING_DEFAULT_TIMEOUT_MESSAGE}"
         )
 
+    return timeout_ms
+
+
+def _flush_with_timeout(args: List[Any]) -> None:
+    """
+    Flush with dynamic timeout based on Lambda context remaining time.
+    Supports environment variable override via LUMIGO_FLUSH_TIMEOUT.
+
+    Args:
+        args: Function arguments where args[1] should be Lambda context if available
+    """
+    from opentelemetry import trace
+
+    timeout_ms = _calculate_flush_timeout(args)
     trace.get_tracer_provider().force_flush(timeout_millis=timeout_ms)
 
 
@@ -379,6 +394,14 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
         event = args[0] if len(args) > 0 else None
         context = args[1] if len(args) > 1 else None
 
+        # Set AwsLambdaInstrumentor flush timeout based on remaining time
+        # Only set if not already configured by user
+        if "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT" not in os.environ:
+            timeout_ms = _calculate_flush_timeout(list(args))
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"] = str(
+                timeout_ms
+            )
+
         # Get current span to add attributes
         current_span = trace.get_current_span()
 
@@ -409,11 +432,6 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
             if current_span and current_span.is_recording():
                 current_span.record_exception(e)
             raise
-        finally:
-            try:
-                _flush_with_timeout(list(args))
-            except Exception as flush_error:
-                logger.error(f"Failed to force flush: {flush_error}")
 
     # Safely replace function in module namespace
     try:
