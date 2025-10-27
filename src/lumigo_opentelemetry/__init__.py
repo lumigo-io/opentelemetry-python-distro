@@ -350,20 +350,6 @@ def _calculate_flush_timeout(args: List[Any]) -> int:
     return timeout_ms
 
 
-def _flush_with_timeout(args: List[Any]) -> None:
-    """
-    Flush with dynamic timeout based on Lambda context remaining time.
-    Supports environment variable override via LUMIGO_FLUSH_TIMEOUT.
-
-    Args:
-        args: Function arguments where args[1] should be Lambda context if available
-    """
-    from opentelemetry import trace
-
-    timeout_ms = _calculate_flush_timeout(args)
-    trace.get_tracer_provider().force_flush(timeout_millis=timeout_ms)
-
-
 def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
     from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
     from opentelemetry import trace

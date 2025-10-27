@@ -12,7 +12,7 @@ from os import environ
 
 from opentelemetry.sdk.trace import SpanProcessor
 
-from lumigo_opentelemetry import init, USING_DEFAULT_TIMEOUT_MESSAGE
+from lumigo_opentelemetry import init
 
 
 class TestDistroInit(unittest.TestCase):
@@ -522,100 +522,6 @@ class MockLambdaContext:
 
     def get_remaining_time_in_millis(self):
         return self._remaining_time_ms
-
-
-class MockLambdaContextWithException:
-    """Mock Lambda context that raises exception when accessing get_remaining_time_in_millis"""
-
-    def get_remaining_time_in_millis(self):
-        raise RuntimeError("Failed to get remaining time")
-
-
-class MockContextWithoutMethod:
-    """Mock context without get_remaining_time_in_millis method"""
-
-    pass
-
-
-class TestForceFlushWithDynamicTimeout(unittest.TestCase):
-    def setUp(self):
-        self.tracer_provider_patcher = patch("opentelemetry.trace.get_tracer_provider")
-        self.mock_tracer_provider = Mock()
-        self.mock_tracer_provider_getter = self.tracer_provider_patcher.start()
-        self.mock_tracer_provider_getter.return_value = self.mock_tracer_provider
-
-        self.logger_patcher = patch("lumigo_opentelemetry.logger")
-        self.mock_logger = self.logger_patcher.start()
-
-    def tearDown(self):
-        self.tracer_provider_patcher.stop()
-        self.logger_patcher.stop()
-
-    def test_flush_with_lambda_context_take_max_timeout(self):
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        context = MockLambdaContext(remaining_time_ms=80000)
-        args = ["event", context]
-
-        _flush_with_timeout(args)
-
-        # Should take max timeout
-        self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=10000
-        )
-        self.mock_logger.debug.assert_called_with(
-            "Lambda remaining time: 80000ms, calculated flush timeout: 10000ms"
-        )
-
-    def test_flush_with_context_without_method(self):
-        """Test flush when context doesn't have get_remaining_time_in_millis method"""
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        context = MockContextWithoutMethod()
-        args = ["event", context]
-
-        _flush_with_timeout(args)
-
-        # Should use default 1-second timeout
-        self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=1000
-        )
-        self.mock_logger.debug.assert_called_with(
-            f"Context does not have get_remaining_time_in_millis method or insufficient args. {USING_DEFAULT_TIMEOUT_MESSAGE}"
-        )
-
-    def test_flush_with_context_method_exception(self):
-        """Test flush when context.get_remaining_time_in_millis raises exception"""
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        context = MockLambdaContextWithException()
-        args = ["event", context]
-
-        _flush_with_timeout(args)
-
-        # Should fallback to 1-second timeout
-        self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=1000
-        )
-        self.mock_logger.warning.assert_called_with(
-            f"Failed to calculate flush timeout: Failed to get remaining time. {USING_DEFAULT_TIMEOUT_MESSAGE}"
-        )
-
-    def test_flush_when_force_flush_raises_exception(self):
-        """Test that force_flush exceptions are caught and logged"""
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        # Make force_flush raise an exception
-        self.mock_tracer_provider.force_flush.side_effect = ConnectionError(
-            "Network error"
-        )
-
-        context = MockLambdaContext(remaining_time_ms=3000)
-        args = ["event", context]
-
-        with self.assertRaises(ConnectionError) as cm:
-            _flush_with_timeout(args)
-        self.assertEqual(str(cm.exception), "Network error")
 
 
 class TestLumigoInstrumentLambdaWithDynamicTimeout(unittest.TestCase):
