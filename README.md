@@ -212,6 +212,38 @@ In case your execution tags on different spans appear on different invocations t
 * Each execution tag key can be at most 50 characters long; the `lumigo.execution_tags.` prefix does _not_ count against the 50 characters limit.
 * Each execution tag value can be at most 70 characters long.
 
+#### Simplified Execution Tag API
+
+For convenience, the Lumigo OpenTelemetry Distro provides the `add_execution_tags` function that simplifies adding execution tags and supports automatic propagation to child spans:
+
+```python
+from lumigo_opentelemetry import add_execution_tags
+
+# Add execution tags that propagate to all child spans (default behavior)
+add_execution_tags({
+    "user_id": "user123",
+    "region": "us-east-1",
+    "environment": "prod",
+    "feature_flags": ["flag1", "flag2", "flag3"],  # Array values
+    "user_roles": ("admin", "editor"),  # Tuple values  
+    "debug_levels": [1, 2, 3]  # Mixed type arrays
+})
+
+# Add execution tags only to the current span
+add_execution_tags({
+    "debug": "true", 
+    "local_flag": "active",
+    "test_scenarios": ["unit", "integration"]
+}, only_current_span=True)
+```
+
+**Key Benefits:**
+- **Automatic Propagation**: By default, tags are added to all child spans in the same execution using OpenTelemetry Context
+- **Convenience**: Set multiple tags with a single function call
+- **Flexibility**: Choose between propagation (default) or current-span-only behavior
+- **Compatibility**: Works alongside the manual `span.set_attribute()` approach
+
+
 ### Programmatic Errors
 
 [Programmatic Errors](https://docs.lumigo.io/docs/programmatic-errors) allow you to customize errors, monitor and troubleshoot issues that should not necessarily interfere with the service.
