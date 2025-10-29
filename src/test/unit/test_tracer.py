@@ -12,7 +12,7 @@ from os import environ
 
 from opentelemetry.sdk.trace import SpanProcessor
 
-from lumigo_opentelemetry import init, USING_DEFAULT_TIMEOUT_MESSAGE
+from lumigo_opentelemetry import init
 
 
 class TestDistroInit(unittest.TestCase):
@@ -524,108 +524,10 @@ class MockLambdaContext:
         return self._remaining_time_ms
 
 
-class MockLambdaContextWithException:
-    """Mock Lambda context that raises exception when accessing get_remaining_time_in_millis"""
-
-    def get_remaining_time_in_millis(self):
-        raise RuntimeError("Failed to get remaining time")
-
-
-class MockContextWithoutMethod:
-    """Mock context without get_remaining_time_in_millis method"""
-
-    pass
-
-
-class TestForceFlushWithDynamicTimeout(unittest.TestCase):
-    def setUp(self):
-        self.tracer_provider_patcher = patch("opentelemetry.trace.get_tracer_provider")
-        self.mock_tracer_provider = Mock()
-        self.mock_tracer_provider_getter = self.tracer_provider_patcher.start()
-        self.mock_tracer_provider_getter.return_value = self.mock_tracer_provider
-
-        self.logger_patcher = patch("lumigo_opentelemetry.logger")
-        self.mock_logger = self.logger_patcher.start()
-
-    def tearDown(self):
-        self.tracer_provider_patcher.stop()
-        self.logger_patcher.stop()
-
-    def test_flush_with_lambda_context_take_max_timeout(self):
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        context = MockLambdaContext(remaining_time_ms=80000)
-        args = ["event", context]
-
-        _flush_with_timeout(args)
-
-        # Should take max timeout
-        self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=10000
-        )
-        self.mock_logger.debug.assert_called_with(
-            "Lambda remaining time: 80000ms, calculated flush timeout: 10000ms"
-        )
-
-    def test_flush_with_context_without_method(self):
-        """Test flush when context doesn't have get_remaining_time_in_millis method"""
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        context = MockContextWithoutMethod()
-        args = ["event", context]
-
-        _flush_with_timeout(args)
-
-        # Should use default 1-second timeout
-        self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=1000
-        )
-        self.mock_logger.debug.assert_called_with(
-            f"Context does not have get_remaining_time_in_millis method or insufficient args. {USING_DEFAULT_TIMEOUT_MESSAGE}"
-        )
-
-    def test_flush_with_context_method_exception(self):
-        """Test flush when context.get_remaining_time_in_millis raises exception"""
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        context = MockLambdaContextWithException()
-        args = ["event", context]
-
-        _flush_with_timeout(args)
-
-        # Should fallback to 1-second timeout
-        self.mock_tracer_provider.force_flush.assert_called_once_with(
-            timeout_millis=1000
-        )
-        self.mock_logger.warning.assert_called_with(
-            f"Failed to calculate flush timeout: Failed to get remaining time. {USING_DEFAULT_TIMEOUT_MESSAGE}"
-        )
-
-    def test_flush_when_force_flush_raises_exception(self):
-        """Test that force_flush exceptions are caught and logged"""
-        from lumigo_opentelemetry import _flush_with_timeout
-
-        # Make force_flush raise an exception
-        self.mock_tracer_provider.force_flush.side_effect = ConnectionError(
-            "Network error"
-        )
-
-        context = MockLambdaContext(remaining_time_ms=3000)
-        args = ["event", context]
-
-        with self.assertRaises(ConnectionError) as cm:
-            _flush_with_timeout(args)
-        self.assertEqual(str(cm.exception), "Network error")
-
-
 class TestLumigoInstrumentLambdaWithDynamicTimeout(unittest.TestCase):
     """Test lumigo_instrument_lambda decorator with dynamic timeout functionality"""
 
     def setUp(self):
-        # Mock the flush function to avoid complex setup
-        self.flush_patcher = patch("lumigo_opentelemetry._flush_with_timeout")
-        self.mock_flush = self.flush_patcher.start()
-
         # Mock AwsLambdaInstrumentor
         self.instrumentor_patcher = patch(
             "opentelemetry.instrumentation.aws_lambda.AwsLambdaInstrumentor"
@@ -634,13 +536,27 @@ class TestLumigoInstrumentLambdaWithDynamicTimeout(unittest.TestCase):
         self.mock_instrumentor = Mock()
         self.mock_instrumentor_class.return_value = self.mock_instrumentor
 
+        # Clear any existing environment variable
+        self.original_env_var = os.environ.get(
+            "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"
+        )
+        if "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT" in os.environ:
+            del os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"]
+
     def tearDown(self):
-        self.flush_patcher.stop()
         self.instrumentor_patcher.stop()
 
+        # Restore original environment variable
+        if self.original_env_var is not None:
+            os.environ[
+                "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"
+            ] = self.original_env_var
+        elif "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT" in os.environ:
+            del os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"]
+
     @httpretty.activate(allow_net_connect=False)
-    def test_successful_lambda_execution_with_flush(self):
-        """Test successful Lambda execution calls flush with correct args"""
+    def test_successful_lambda_execution_sets_timeout_env_var(self):
+        """Test successful Lambda execution sets AwsLambdaInstrumentor timeout env var"""
         from lumigo_opentelemetry import lumigo_instrument_lambda
 
         @lumigo_instrument_lambda
@@ -656,15 +572,14 @@ class TestLumigoInstrumentLambdaWithDynamicTimeout(unittest.TestCase):
         # Verify instrumentation was called
         self.mock_instrumentor.instrument.assert_called_once()
 
-        # Verify flush was called with correct args
-        self.mock_flush.assert_called_once()
-        args_passed_to_flush = self.mock_flush.call_args[0][0]
-        self.assertEqual(args_passed_to_flush[0], {"test": "event"})
-        self.assertEqual(args_passed_to_flush[1], context)
+        # Verify environment variable was set with calculated timeout (90% of 5000ms = 4500ms)
+        self.assertEqual(
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"], "4500"
+        )
 
     @httpretty.activate(allow_net_connect=False)
-    def test_lambda_exception_still_flushes(self):
-        """Test that Lambda function exceptions don't prevent flushing"""
+    def test_lambda_exception_still_sets_timeout_env_var(self):
+        """Test that Lambda function exceptions don't prevent setting timeout env var"""
         from lumigo_opentelemetry import lumigo_instrument_lambda
 
         @lumigo_instrument_lambda
@@ -682,15 +597,14 @@ class TestLumigoInstrumentLambdaWithDynamicTimeout(unittest.TestCase):
         # Verify instrumentation was called
         self.mock_instrumentor.instrument.assert_called_once()
 
-        # Verify flush was still called despite exception
-        self.mock_flush.assert_called_once()
-        args_passed_to_flush = self.mock_flush.call_args[0][0]
-        self.assertEqual(args_passed_to_flush[0], {"test": "event"})
-        self.assertEqual(args_passed_to_flush[1], context)
+        # Verify environment variable was set with calculated timeout (90% of 3000ms = 2700ms)
+        self.assertEqual(
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"], "2700"
+        )
 
     @httpretty.activate(allow_net_connect=False)
-    def test_lambda_with_non_lambda_context(self):
-        """Test decorator works with non-Lambda context"""
+    def test_lambda_with_non_lambda_context_uses_default_timeout(self):
+        """Test decorator works with non-Lambda context and uses default timeout"""
         from lumigo_opentelemetry import lumigo_instrument_lambda
 
         @lumigo_instrument_lambda
@@ -705,148 +619,74 @@ class TestLumigoInstrumentLambdaWithDynamicTimeout(unittest.TestCase):
         # Verify instrumentation was called
         self.mock_instrumentor.instrument.assert_called_once()
 
-        # Verify flush was called (will use fallback timeout)
-        self.mock_flush.assert_called_once()
+        # Verify environment variable was set with default timeout (1000ms)
+        self.assertEqual(
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"], "1000"
+        )
 
     @httpretty.activate(allow_net_connect=False)
-    def test_lambda_with_flush_exception_doesnt_mask_original_exception(self):
-        """Test that flush exceptions don't mask original Lambda exceptions"""
+    def test_lambda_with_max_timeout_cap(self):
+        """Test that timeout is capped at MAX_FLUSH_TIMEOUT_MS"""
         from lumigo_opentelemetry import lumigo_instrument_lambda
 
-        # Make flush raise an exception
-        self.mock_flush.side_effect = RuntimeError("Flush failed")
-
         @lumigo_instrument_lambda
-        def failing_lambda(event, context):
-            raise ValueError("Original Lambda error")
+        def sample_lambda(event, context):
+            return {"statusCode": 200, "body": "Success"}
 
-        context = MockLambdaContext(remaining_time_ms=2000)
+        # Use a very high remaining time to test the cap
+        context = MockLambdaContext(remaining_time_ms=80000)  # 80 seconds
+        result = sample_lambda({"test": "event"}, context)
 
-        # Verify the ORIGINAL exception is raised, not the flush exception
-        with self.assertRaises(ValueError) as cm:
-            failing_lambda({"test": "event"}, context)
+        # Verify function executed successfully
+        self.assertEqual(result, {"statusCode": 200, "body": "Success"})
 
-        self.assertEqual(str(cm.exception), "Original Lambda error")
-
-        # Verify flush was attempted
-        self.mock_flush.assert_called_once()
-
-    @httpretty.activate(allow_net_connect=False)
-    def test_force_flush_timeout_with_lambda_context_no_env_var(self):
-        """Test that force_flush is called with correct dynamic timeout when no env var is set"""
-        # Don't mock the flush function, mock the tracer provider instead to test actual timeout
-        self.flush_patcher.stop()
-
-        tracer_provider_patcher = patch("opentelemetry.trace.get_tracer_provider")
-        mock_tracer_provider = Mock()
-        mock_tracer_provider_getter = tracer_provider_patcher.start()
-        mock_tracer_provider_getter.return_value = mock_tracer_provider
-
-        logger_patcher = patch("lumigo_opentelemetry.logger")
-
-        try:
-            from lumigo_opentelemetry import lumigo_instrument_lambda
-
-            @lumigo_instrument_lambda
-            def sample_lambda(event, context):
-                return {"statusCode": 200, "body": "Success"}
-
-            context = MockLambdaContext(remaining_time_ms=5000)
-            result = sample_lambda({"test": "event"}, context)
-
-            # Verify function executed successfully
-            self.assertEqual(result, {"statusCode": 200, "body": "Success"})
-
-            # Verify force_flush was called with calculated timeout: (5000 - 500) / 1000 = 4.5s = 4500ms
-            mock_tracer_provider.force_flush.assert_called_once_with(
-                timeout_millis=4500
-            )
-
-        finally:
-            tracer_provider_patcher.stop()
-            logger_patcher.stop()
-            # Restart the original flush patcher for other tests
-            self.flush_patcher = patch("lumigo_opentelemetry._flush_with_timeout")
-            self.mock_flush = self.flush_patcher.start()
+        # Verify environment variable was set with capped timeout (10000ms, not 72000ms)
+        self.assertEqual(
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"], "10000"
+        )
 
     @httpretty.activate(allow_net_connect=False)
     @patch.dict(os.environ, {"LUMIGO_FLUSH_TIMEOUT": "2500"})
-    def test_force_flush_timeout_with_env_var_override(self):
-        """Test that force_flush is called with env var timeout when LUMIGO_FLUSH_TIMEOUT is set"""
-        # Don't mock the flush function, mock the tracer provider instead to test actual timeout
-        self.flush_patcher.stop()
+    def test_respects_existing_lumigo_flush_timeout_env_var(self):
+        """Test that LUMIGO_FLUSH_TIMEOUT is respected when calculating AwsLambdaInstrumentor timeout"""
+        from lumigo_opentelemetry import lumigo_instrument_lambda
 
-        tracer_provider_patcher = patch("opentelemetry.trace.get_tracer_provider")
-        mock_tracer_provider = Mock()
-        mock_tracer_provider_getter = tracer_provider_patcher.start()
-        mock_tracer_provider_getter.return_value = mock_tracer_provider
+        @lumigo_instrument_lambda
+        def sample_lambda(event, context):
+            return {"statusCode": 200, "body": "Success"}
 
-        logger_patcher = patch("lumigo_opentelemetry.logger")
+        context = MockLambdaContext(
+            remaining_time_ms=10000
+        )  # Would normally calculate 9000ms
+        result = sample_lambda({"test": "event"}, context)
 
-        try:
-            from lumigo_opentelemetry import lumigo_instrument_lambda
+        # Verify function executed successfully
+        self.assertEqual(result, {"statusCode": 200, "body": "Success"})
 
-            @lumigo_instrument_lambda
-            def sample_lambda(event, context):
-                return {"statusCode": 200, "body": "Success"}
-
-            context = MockLambdaContext(
-                remaining_time_ms=10000
-            )  # Would normally calculate 9000ms
-            result = sample_lambda({"test": "event"}, context)
-
-            # Verify function executed successfully
-            self.assertEqual(result, {"statusCode": 200, "body": "Success"})
-
-            # Verify force_flush was called with env var timeout (2500ms) instead of calculated (9000ms)
-            mock_tracer_provider.force_flush.assert_called_once_with(
-                timeout_millis=2500
-            )
-
-        finally:
-            tracer_provider_patcher.stop()
-            logger_patcher.stop()
-            # Restart the original flush patcher for other tests
-            self.flush_patcher = patch("lumigo_opentelemetry._flush_with_timeout")
-            self.mock_flush = self.flush_patcher.start()
+        # Verify environment variable was set with LUMIGO_FLUSH_TIMEOUT value, not calculated
+        self.assertEqual(
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"], "2500"
+        )
 
     @httpretty.activate(allow_net_connect=False)
-    @patch.dict(os.environ, {"LUMIGO_FLUSH_TIMEOUT": "1.5"})
-    def test_force_flush_timeout_with_unsupported_env_var_value_falls_back(self):
-        """Test that force_flush is called with env var timeout when LUMIGO_FLUSH_TIMEOUT is set"""
-        # Don't mock the flush function, mock the tracer provider instead to test actual timeout
-        self.flush_patcher.stop()
+    def test_does_not_override_existing_otel_env_var(self):
+        """Test that we don't override existing OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"""
+        # Set the environment variable before the test
+        os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"] = "7500"
 
-        tracer_provider_patcher = patch("opentelemetry.trace.get_tracer_provider")
-        mock_tracer_provider = Mock()
-        mock_tracer_provider_getter = tracer_provider_patcher.start()
-        mock_tracer_provider_getter.return_value = mock_tracer_provider
+        from lumigo_opentelemetry import lumigo_instrument_lambda
 
-        logger_patcher = patch("lumigo_opentelemetry.logger")
+        @lumigo_instrument_lambda
+        def sample_lambda(event, context):
+            return {"statusCode": 200, "body": "Success"}
 
-        try:
-            from lumigo_opentelemetry import lumigo_instrument_lambda
+        context = MockLambdaContext(remaining_time_ms=5000)  # Would calculate 4500ms
+        result = sample_lambda({"test": "event"}, context)
 
-            @lumigo_instrument_lambda
-            def sample_lambda(event, context):
-                return {"statusCode": 200, "body": "Success"}
+        # Verify function executed successfully
+        self.assertEqual(result, {"statusCode": 200, "body": "Success"})
 
-            context = MockLambdaContext(
-                remaining_time_ms=10000
-            )  # Would normally calculate 9000ms
-            result = sample_lambda({"test": "event"}, context)
-
-            # Verify function executed successfully
-            self.assertEqual(result, {"statusCode": 200, "body": "Success"})
-
-            # Verify force_flush was called with env var timeout (2500ms) instead of calculated (9000ms)
-            mock_tracer_provider.force_flush.assert_called_once_with(
-                timeout_millis=1000
-            )
-
-        finally:
-            tracer_provider_patcher.stop()
-            logger_patcher.stop()
-            # Restart the original flush patcher for other tests
-            self.flush_patcher = patch("lumigo_opentelemetry._flush_with_timeout")
-            self.mock_flush = self.flush_patcher.start()
+        # Verify environment variable was NOT changed from its original value
+        self.assertEqual(
+            os.environ["OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT"], "7500"
+        )
