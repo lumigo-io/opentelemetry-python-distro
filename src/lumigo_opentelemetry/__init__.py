@@ -7,6 +7,9 @@ from functools import wraps
 from typing import Any, Callable, Dict, List, TypeVar
 
 
+from lumigo_opentelemetry.utils.span_processor_utils import add_execution_tags
+
+
 LOG_FORMAT = "#LUMIGO# - %(asctime)s - %(levelname)s - %(message)s"
 DEFAULT_TIMEOUT_MS = 1000
 MAX_FLUSH_TIMEOUT_MS = 10000  # 10 seconds
@@ -124,7 +127,10 @@ def init() -> Dict[str, Any]:
     from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
     from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
     from opentelemetry.instrumentation.logging import LoggingInstrumentor
-    from lumigo_opentelemetry.resources.span_processor import LumigoSpanProcessor
+    from lumigo_opentelemetry.resources.span_processor import (
+        LumigoSpanProcessor,
+        LumigoExecutionTagProcessor,
+    )
 
     LUMIGO_ENDPOINT_BASE_URL = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1"
 
@@ -189,6 +195,8 @@ def init() -> Dict[str, Any]:
         span_limits=(SpanLimits(max_span_attribute_length=(get_max_size()))),
         id_generator=LambdaTraceIdGenerator(),
     )
+
+    tracer_provider.add_span_processor(LumigoExecutionTagProcessor())
 
     logger_provider = LoggerProvider(resource=resource)
     logger_provider.add_log_record_processor(LumigoLogRecordProcessor())
@@ -472,4 +480,5 @@ __all__ = [
     "tracer_provider",
     "logger_provider",
     "create_programmatic_error",
+    "add_execution_tags",
 ]
