@@ -19,6 +19,7 @@ from .pymongo import instrumentor as pymongo_instrumentor
 from .pymysql import instrumentor as pymysql_instrumentor
 from .redis import instrumentor as redis_instrumentor
 from .requests import instrumentor as requests_instrumentor
+from .httpx import instrumentor as httpx_instrumentor
 from .langchain import instrumentor as langchain_instrumentor
 from .agno import instrumentor as agno_instrumentor
 
@@ -38,6 +39,7 @@ instrumentors: List[AbstractInstrumentor] = [
     pymysql_instrumentor,
     redis_instrumentor,
     requests_instrumentor,
+    httpx_instrumentor,
     langchain_instrumentor,
     agno_instrumentor,
 ]
