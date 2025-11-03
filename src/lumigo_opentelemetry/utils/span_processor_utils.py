@@ -49,7 +49,7 @@ def add_execution_tags(
                 span_attribute_key = f"{EXECUTION_TAG_KEY_PREFIX}.{key}"
                 current_span.set_attribute(span_attribute_key, value)
         else:
-            logger.debug("No active span to add execution tags to")
+            logger.warning("No active span to add execution tags to")
     else:
         # Add tags to context for propagation to all child spans (default behavior)
         current_tags = otel_context.get_value(EXECUTION_TAGS_CONTEXT_KEY) or {}

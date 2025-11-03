@@ -4,6 +4,7 @@ from opentelemetry.trace import Span
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.attributes import SKIP_EXPORT_SPAN_ATTRIBUTE
+from lumigo_opentelemetry.utils.span_processor_utils import EXECUTION_TAG_KEY_PREFIX
 
 
 class LumigoSpanProcessor(BatchSpanProcessor):
@@ -62,10 +63,6 @@ class LumigoExecutionTagProcessor(SpanProcessor):
 
             # Add each execution tag as a span attribute
             for tag_key, tag_value in execution_tags.items():
-                from lumigo_opentelemetry.utils.span_processor_utils import (
-                    EXECUTION_TAG_KEY_PREFIX,
-                )
-
                 span_attribute_key = f"{EXECUTION_TAG_KEY_PREFIX}.{tag_key}"
                 # OpenTelemetry supports arrays/sequences as span attributes
                 span.set_attribute(span_attribute_key, tag_value)
