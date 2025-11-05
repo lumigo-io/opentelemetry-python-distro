@@ -431,6 +431,12 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
             if current_span and current_span.is_recording():
                 current_span.record_exception(e)
             raise
+        finally:
+            try:
+                if tracer_provider is not None:
+                    tracer_provider.force_flush()
+            except Exception as flush_error:
+                logger.error(f"Failed to force flush: {flush_error}")
 
     # Safely replace function in module namespace
     try:
