@@ -398,18 +398,22 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
 
         # Get current span to add attributes
         current_span = trace.get_current_span()
+        logger.debug(f"*****Current span: {current_span}")
 
         # Set event attributes on the current span
         if current_span and current_span.is_recording():
             current_span.set_attribute(
                 "faas.event", dump(event) if event is not None else "null"
             )
+            logger.debug(f"*****set faas.event attribute, event: {event}")
 
             if context is not None:
                 if hasattr(context, "function_name"):
                     current_span.set_attribute("faas.name", context.function_name)
+                    logger.debug(f"*****set function_name: {context.function_name}")
                 if hasattr(context, "aws_request_id"):
                     current_span.set_attribute("faas.execution", context.aws_request_id)
+                    logger.debug(f"*****set aws_request_id: {context.aws_request_id}")
 
         try:
             result = func(*args, **kwargs)
@@ -419,6 +423,7 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
                 current_span.set_attribute(
                     "faas.return_value", dump(result) if result is not None else "null"
                 )
+                logger.debug(f"****set faas.return_value, result: {result}")
 
             return result
         except Exception as e:
@@ -433,6 +438,7 @@ def lumigo_instrument_lambda(func: Callable[..., T]) -> Callable[..., T]:
         AwsLambdaInstrumentor().instrument(
             tracer_provider=trace.get_tracer_provider(),
         )
+        logger.debug("***** Instrumented AWS Lambda function successfully.")
         return getattr(mod, name)  # type: ignore
     except (AttributeError, TypeError) as e:
         logger.error(
