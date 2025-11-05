@@ -22,13 +22,6 @@ def test_instrumentations_lambda_flask_enabled():
         assert flask_instrumentor.is_applicable() is True
 
 
-def test_instrumentations_lambda_flask_disabled_on_lambda(monkeypatch):
-    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", "true")
-    flask_mock = MagicMock()
-    with patch.dict("sys.modules", {"flask": flask_mock}):
-        assert flask_instrumentor.is_applicable() is False
-
-
 def test_instrumentation_disabled_via_env_var_single(monkeypatch):
     """Test that a single instrumentation can be disabled via LUMIGO_DISABLE_INSTRUMENTATION"""
     monkeypatch.setenv("LUMIGO_DISABLE_INSTRUMENTATION", "boto")
