@@ -1,5 +1,6 @@
-from typing import Dict, Union, List, Tuple, Any
+from typing import Dict, Union, List, Tuple, Any, Optional
 import logging
+from contextvars import ContextVar
 
 from opentelemetry import context as otel_context
 
@@ -7,10 +8,37 @@ from opentelemetry import context as otel_context
 logger = logging.getLogger(__name__)
 EXECUTION_TAG_KEY_PREFIX = "lumigo.execution_tags"
 EXECUTION_TAGS_CONTEXT_KEY = "lumigo_execution_tags"
+_EXECUTION_TAGS_TOKENS_STACK: ContextVar[Optional[List[Any]]] = ContextVar(
+    "lumigo_execution_tags_tokens_stack",
+    default=None,
+)
 
 
-def _get_execution_tags() -> Dict[str, Any]:
-    return otel_context.get_value(EXECUTION_TAGS_CONTEXT_KEY) or {}
+def _get_execution_tags_token_stacks() -> List[Any]:
+    stack: Optional[List[Any]] = _EXECUTION_TAGS_TOKENS_STACK.get()
+    if stack is None:
+        stack = []
+        _EXECUTION_TAGS_TOKENS_STACK.set(stack)
+    return stack
+
+
+def _push_execution_tags_token(token: Any) -> None:
+    _get_execution_tags_token_stacks().append(token)
+
+
+def detach_execution_tags() -> None:
+    """
+    Detach all execution-tag contexts that were attached during this invocation.
+
+    This prevents context leakage across warm invocations (e.g., AWS Lambda).
+    """
+    stack = _get_execution_tags_token_stacks()
+    while stack:
+        token = stack.pop()
+        try:
+            otel_context.detach(token)
+        except Exception:
+            logger.debug("Failed to detach execution tags context", exc_info=True)
 
 
 def add_execution_tags(
@@ -57,9 +85,10 @@ def add_execution_tags(
         updated_tags = current_tags.copy()
         updated_tags.update(valid_tags)
 
-        # Set the updated tags in a new context and attach it
+        # Set the updated tags in a new context and attach it; track token for proper detach
         new_context = otel_context.set_value(EXECUTION_TAGS_CONTEXT_KEY, updated_tags)
-        otel_context.attach(new_context)
+        token = otel_context.attach(new_context)
+        _push_execution_tags_token(token)
 
 
 def _get_valid_tags(

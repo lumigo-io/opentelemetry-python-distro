@@ -5,6 +5,8 @@ from opentelemetry.trace import Span
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.attributes import SKIP_EXPORT_SPAN_ATTRIBUTE
 from lumigo_opentelemetry.utils.span_processor_utils import EXECUTION_TAG_KEY_PREFIX
+from opentelemetry import context as otel_context
+from lumigo_opentelemetry.utils.span_processor_utils import EXECUTION_TAGS_CONTEXT_KEY
 
 
 class LumigoSpanProcessor(BatchSpanProcessor):
@@ -55,11 +57,10 @@ class LumigoExecutionTagProcessor(SpanProcessor):
             span: The span that is starting
         """
         try:
-            from lumigo_opentelemetry.utils.span_processor_utils import (
-                _get_execution_tags,
+            # Read execution tags from the span's parent_context to avoid relying on ambient current context
+            execution_tags = (
+                otel_context.get_value(EXECUTION_TAGS_CONTEXT_KEY, parent_context) or {}
             )
-
-            execution_tags = _get_execution_tags()
 
             # Add each execution tag as a span attribute
             for tag_key, tag_value in execution_tags.items():

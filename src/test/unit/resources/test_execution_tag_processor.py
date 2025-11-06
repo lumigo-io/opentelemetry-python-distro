@@ -3,6 +3,10 @@ from unittest.mock import Mock, patch
 
 from lumigo_opentelemetry.resources.span_processor import LumigoExecutionTagProcessor
 from lumigo_opentelemetry.utils.span_processor_utils import EXECUTION_TAGS_CONTEXT_KEY
+from opentelemetry import context as otel_context
+from lumigo_opentelemetry.utils.span_processor_utils import (
+    detach_execution_tags,
+)
 
 
 def _make_hashable(obj):
@@ -18,6 +22,12 @@ def _clear_execution_tags_context():
     # Set empty dict to clear any existing tags
     new_context = otel_context.set_value(EXECUTION_TAGS_CONTEXT_KEY, {})
     otel_context.attach(new_context)
+
+
+def _assert_context_detached():
+    detach_execution_tags()
+    # After detach, we expect the context to be empty (the test's clear-set remains {})
+    assert otel_context.get_value(EXECUTION_TAGS_CONTEXT_KEY) == {}
 
 
 def test_on_start_with_single_execution_tag():
@@ -36,6 +46,8 @@ def test_on_start_with_single_execution_tag():
         "lumigo.execution_tags.env", "staging"
     )
 
+    _assert_context_detached()
+
 
 def test_on_start_without_execution_tags():
     """Test that no attribute is set when no execution tags are present."""
@@ -47,6 +59,8 @@ def test_on_start_without_execution_tags():
     # Since no execution tags are set, the processor should not log any errors
     processor.on_start(mock_span)
     mock_span.set_attribute.assert_not_called()
+
+    _assert_context_detached()
 
 
 def test_on_start_with_empty_execution_tags_dict():
@@ -64,6 +78,8 @@ def test_on_start_with_empty_execution_tags_dict():
 
     processor.on_start(mock_span)
     mock_span.set_attribute.assert_not_called()
+
+    _assert_context_detached()
 
 
 def test_on_start_with_empty_string_values():
@@ -97,6 +113,8 @@ def test_on_start_with_empty_string_values():
 
     # Verify no attributes were set (empty/whitespace values are filtered out)
     mock_span.set_attribute.assert_not_called()
+
+    _assert_context_detached()
 
 
 def test_on_start_with_mixed_valid_invalid_execution_tags():
@@ -165,6 +183,8 @@ def test_on_start_with_mixed_valid_invalid_execution_tags():
 
     assert set(actual_calls_tuples) == set(expected_calls_tuples)
 
+    _assert_context_detached()
+
 
 def test_on_start_with_duplicate_execution_tag_keys():
     """Test that execution tags with duplicate keys are properly overwritten."""
@@ -212,14 +232,16 @@ def test_on_start_with_duplicate_execution_tag_keys():
     # Compare as sets (order doesn't matter)
     assert set(actual_calls_tuples) == set(expected_calls_tuples)
 
+    _assert_context_detached()
 
-@patch("lumigo_opentelemetry.utils.span_processor_utils._get_execution_tags")
-def test_on_start_exception_handling(mock_get_execution_tags):
+
+@patch("lumigo_opentelemetry.resources.span_processor.otel_context.get_value")
+def test_on_start_exception_handling(mock_get_value):
     """Test that exceptions during tag retrieval don't break span creation."""
     _clear_execution_tags_context()
 
-    # Make _get_execution_tags raise an exception
-    mock_get_execution_tags.side_effect = Exception("Tag retrieval error")
+    # Make otel_context.get_value raise an exception
+    mock_get_value.side_effect = Exception("Tag retrieval error")
 
     processor = LumigoExecutionTagProcessor()
     mock_span = Mock()
