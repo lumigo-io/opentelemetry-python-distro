@@ -55,6 +55,9 @@ class LumigoExecutionTagProcessor(SpanProcessor):
 
         Args:
             span: The span that is starting
+            parent_context: The OpenTelemetry context to read execution tags from.
+                Using the provided parent context avoids relying on the ambient
+                current context and prevents context leakage across invocations.
         """
         try:
             # Read execution tags from the span's parent_context to avoid relying on ambient current context
