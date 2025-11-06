@@ -1,6 +1,6 @@
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import Span
+from opentelemetry.trace import Span, SpanKind
 
 from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.libs.attributes import SKIP_EXPORT_SPAN_ATTRIBUTE
@@ -16,6 +16,16 @@ class LumigoSpanProcessor(BatchSpanProcessor):
             return
 
         super().on_end(span)
+
+        # If this is the root server span, force flush to ensure it is exported
+        try:
+            if (
+                getattr(span, "kind", None) == SpanKind.SERVER
+                and getattr(span, "parent", None) is None
+            ):
+                self.force_flush()
+        except Exception:
+            logger.warning("Failed to force flush at server root span end")
 
 
 def should_skip_exporting_span(span: ReadableSpan) -> bool:
