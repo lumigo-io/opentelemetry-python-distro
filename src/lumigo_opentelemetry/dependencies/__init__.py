@@ -9,22 +9,45 @@
 # environment variable.
 
 from json import dumps
-from pkg_resources import Environment, get_distribution
-from typing import Any, Dict
+from importlib.metadata import distributions
+from typing import Any, Dict, List
 
 from opentelemetry.attributes import BoundedAttributes
 import requests
 
+from lumigo_opentelemetry import logger
 from lumigo_opentelemetry.utils.config import get_connection_timeout_seconds
 
 
 def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes) -> None:
+    dependencies: List[Dict[str, Any]] = []
+    for dist in distributions():
+        try:
+            name = dist.metadata.get("Name")
+            version = dist.version
+            if name and version:
+                dependencies.append(
+                    {
+                        "name": name,
+                        "version": version,
+                    }
+                )
+            else:
+                logger.debug(
+                    f"Skipping distribution with missing name or version: {dist}, name={name}, version={version}"
+                )
+        except Exception as e:
+            logger.debug(
+                f"Error processing distribution {dist}: {e}, not reporting this dependency."
+            )
+
     dependencies = [
         {
-            "name": distribution_name,
-            "version": get_distribution(distribution_name).version,
+            "name": dist.metadata["Name"],
+            "version": dist.version,
         }
-        for distribution_name in Environment()
+        for dist in distributions()
+        if dist.metadata.get("Name") and getattr(dist, "version", None)
     ]
 
     data = dumps(
