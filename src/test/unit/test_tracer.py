@@ -121,7 +121,7 @@ class TestPythonVersionCheck(TestCase):
 
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.8; only Python 3.9 to 3.13 are supported.",
+            "Unsupported Python version 3.8; only Python 3.9 to 3.14 are supported.",
             cm.output[0],
         )
 
@@ -137,10 +137,10 @@ class TestPythonVersionCheck(TestCase):
         self.assertIsInstance(result, dict)
 
     @patch("sys.version_info", Mock())
-    def test_python_version_313_supported(self):
-        # Mock version_info for Python 3.13
+    def test_python_version_314_supported(self):
+        # Mock version_info for Python 3.14
         sys.version_info.major = 3
-        sys.version_info.minor = 13
+        sys.version_info.minor = 14
 
         with self.assertLogs("lumigo-opentelemetry", level="WARNING"):
             result = init()
@@ -149,16 +149,16 @@ class TestPythonVersionCheck(TestCase):
 
     @patch("sys.version_info", Mock())
     def test_python_version_too_new(self):
-        # Mock version_info for Python 3.14
+        # Mock version_info for Python 3.15
         sys.version_info.major = 3
-        sys.version_info.minor = 14
+        sys.version_info.minor = 15
 
         with self.assertLogs("lumigo-opentelemetry", level="WARNING") as cm:
             result = init()
 
         self.assertEqual(result, {})
         self.assertIn(
-            "Unsupported Python version 3.14; only Python 3.9 to 3.13 are supported.",
+            "Unsupported Python version 3.15; only Python 3.9 to 3.14 are supported.",
             cm.output[0],
         )
 
