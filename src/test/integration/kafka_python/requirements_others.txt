@@ -1,5 +1,5 @@
 fastapi==0.114.0
-pytest==7.1.1
+pytest==8.3.3
 requests==2.27.1
 testcontainers==4.3.2
 uvicorn[standard]==0.18.0

@@ -40,7 +40,7 @@ setup(
         "opentelemetry-instrumentation-logging==0.55b1",
         "opentelemetry-instrumentation-httpx==0.55b1",
         "opentelemetry-instrumentation-langchain==0.46.2",
-        "openinference-instrumentation-agno==0.1.15",
+        "openinference-instrumentation-agno==0.1.23",
         "typing_extensions==4.7.1; python_version<'3.8'",
         "importlib-metadata==6.7.0; python_version<'3.8'",
         "setuptools<=80.9.0",
