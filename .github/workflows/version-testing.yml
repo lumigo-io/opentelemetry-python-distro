@@ -15,7 +15,8 @@ jobs:
         framework:
           - boto3
           - django
-          - fastapi
+          - fastapi_fastapi
+          - fastapi_uvicorn
           - flask
           - grpcio
           - kafka_python
