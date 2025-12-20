@@ -8,21 +8,31 @@ jobs:
   test-untested-versions:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # If this key gets renamed, noxfile.py needs to be updated accordingly
         python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13', '3.14' ]
-    name: test-untested-versions
+    name: test-untested-versions (${{ matrix.python-version }})
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af
+          df -h
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox
+      - run: python3 -m nox 2>&1 | head -100000
         continue-on-error: true
         env:
           TEST_ONLY_UNTESTED_NEW_VERSIONS: true
+          PIP_NO_CACHE_DIR: 1
       - run: git --no-pager diff
       - run: mkdir versions_artifact
       - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
