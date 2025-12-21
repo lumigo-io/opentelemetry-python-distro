@@ -29,14 +29,6 @@ jobs:
           - redis
     name: test-${{ matrix.framework }} (${{ matrix.python-version }})
     steps:
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo docker system prune -af
-          df -h
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
