@@ -83,3 +83,6 @@ class LumigoExecutionTagProcessor(SpanProcessor):
 
         except Exception as e:
             logger.debug(f"Failed to add execution tags to span: {e}")
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
