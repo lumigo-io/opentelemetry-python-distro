@@ -95,7 +95,7 @@ jobs:
           commit-message: ${{ env.new_versions }}
           body: ${{ env.new_versions }}
           base: main
-          labels: version-testing, automerge
+          labels: version-testing, automerge, ready-for-tests
           reviewers: GuyMoses,saartochner,shanishiri
         # WARNING: the create pull request action must be the last action in the job, it changes the current branch
       - run: |  # post update to #microservices slack channel
