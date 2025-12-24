@@ -8,10 +8,26 @@ jobs:
   test-untested-versions:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # If this key gets renamed, noxfile.py needs to be updated accordingly
-        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13', '3.14' ]
-    name: test-untested-versions
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        framework:
+          - boto3
+          - django
+          - fastapi_fastapi
+          - fastapi_uvicorn
+          - flask
+          - grpcio
+          - kafka_python
+          - motor
+          - pika
+          - psycopg
+          - psycopg2
+          - pymongo
+          - pymysql
+          - redis
+    name: test-${{ matrix.framework }} (${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -19,17 +35,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip3 install -r requirements.txt
-      - run: python3 -m nox
+      - run: python3 -m nox -e integration_tests_${{ matrix.framework }}
         continue-on-error: true
         env:
           TEST_ONLY_UNTESTED_NEW_VERSIONS: true
+          PIP_NO_CACHE_DIR: 1
       - run: git --no-pager diff
-      - run: mkdir versions_artifact
-      - run: for path in `git diff --name-only`; do cp "$path" versions_artifact; done
+      - run: mkdir -p versions_artifact
+      - run: |
+          for path in $(git diff --name-only); do
+            cp "$path" versions_artifact/ 2>/dev/null || true
+          done
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.python-version }}
+          name: ${{ matrix.framework }}-${{ matrix.python-version }}
           path: versions_artifact
+          if-no-files-found: ignore
 
   create-pr-for-new-versions:
     runs-on: ubuntu-latest
@@ -41,42 +62,31 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: mkdir versions_artifacts
-      - uses: actions/download-artifact@v4
-        continue-on-error: true
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: 3.9
-          path: versions_artifacts/3.9
-      - uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: '3.10'
-          path: versions_artifacts/3.10
-      - uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: '3.11'
-          path: versions_artifacts/3.11
-      - uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: '3.12'
-          path: versions_artifacts/3.12
-      - uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: '3.13'
-          path: versions_artifacts/3.13
-      - uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: '3.14'
-          path: versions_artifacts/3.14
+          path: versions_artifacts_raw
+      - name: Reorganize artifacts by Python version
+        run: |
+          mkdir -p versions_artifacts
+          for artifact_dir in versions_artifacts_raw/*/; do
+            artifact_name=$(basename "$artifact_dir")
+            # Extract python version from artifact name (format: framework-X.Y)
+            python_version=$(echo "$artifact_name" | grep -oE '[0-9]+\.[0-9]+$')
+            if [ -n "$python_version" ]; then
+              mkdir -p "versions_artifacts/${python_version}"
+              # Copy all files from artifact to the python version directory
+              cp -n "$artifact_dir"/* "versions_artifacts/${python_version}/" 2>/dev/null || true
+            fi
+          done
+          rm -rf versions_artifacts_raw
+          echo "Reorganized artifacts:"
+          find versions_artifacts -type f | head -20
       - run: python3 -m pip install -r requirements.txt
       - run: python3 -m scripts.gather_version_artifacts
       - run: git --no-pager diff
       - run: rm -rf versions_artifacts  # the artifacts shouldn't be committed
-      - run: echo "::set-output name=branch_name::$(date +version-testing-%Y%m%d)"
+      - run: echo "branch_name=$(date +version-testing-%Y%m%d)" >> $GITHUB_OUTPUT
         id: branch_name
       - run: |  # update 'Supported packages' section in README.md
           python3 -m scripts.update_supported_packages_documentation
