@@ -6,7 +6,7 @@ class LumigoLogRecordProcessor(LogRecordProcessor):
         # This class is used by __init__, so moving this to the enclosing scope will result in a circular import
         from lumigo_opentelemetry.libs.json_utils import dump
 
-        log_record.body = dump(log_record.body)
+        log_record.log_record.body = dump(log_record.log_record.body)
 
     def shutdown(self) -> None:
         pass
