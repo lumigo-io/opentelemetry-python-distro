@@ -33,7 +33,7 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(root_attributes["http.status_code"], 200)
             self.assertEqual(root_attributes["http.method"], "GET")
             self.assertEqual(
-                root_attributes["http.url"], f"http://127.0.0.1:{APP_PORT}/"
+                root_attributes["http.url"], f"http://localhost:{APP_PORT}/"
             )
 
             # assert internal spans
@@ -108,7 +108,7 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertIsNotNone(root_attributes["http.request.headers"])
             self.assertEqual(
                 root_attributes["http.url"],
-                f"http://127.0.0.1:{APP_PORT}/invoke-requests",
+                f"http://localhost:{APP_PORT}/invoke-requests",
             )
 
             # assert internal spans
@@ -164,7 +164,7 @@ class TestFastApiSpans(unittest.TestCase):
             self.assertEqual(root_attributes["http.status_code"], 200)
             self.assertEqual(
                 root_attributes["http.url"],
-                f"http://127.0.0.1:{APP_PORT}/invoke-requests-large-response",
+                f"http://localhost:{APP_PORT}/invoke-requests-large-response",
             )
             self.assertEqual(root_attributes["http.method"], "GET")
 
