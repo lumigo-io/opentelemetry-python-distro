@@ -20,7 +20,7 @@ setup(
         "opentelemetry-api==1.39.1",
         "opentelemetry-sdk==1.39.1",
         "opentelemetry-sdk-extension-aws==2.1.0",
-        "opentelemetry-exporter-otlp-proto-http==1.39.1",
+        "opentelemetry-exporter-otlp-proto-http @ file:///Users/mosheshaham/workspace/opentelemetry-python/exporter/opentelemetry-exporter-otlp-proto-http/dist/opentelemetry_exporter_otlp_proto_http-1.39.1-py3-none-any.whl",
         "opentelemetry-semantic-conventions==0.60b1",
         "opentelemetry-instrumentation==0.60b1",
         "opentelemetry-instrumentation-asgi==0.60b1",

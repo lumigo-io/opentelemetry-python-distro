@@ -121,28 +121,16 @@ def init() -> Dict[str, Any]:
     )
 
     from opentelemetry import trace
-
-    logger.info(
-        "[Lumigo Distro] After     from opentelemetry import trace",
-    )
+    from opentelemetry import _logs
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-
-    logger.info(
-        "[Lumigo Distro] After     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter",
-    )
     from opentelemetry.sdk.trace import SpanLimits, TracerProvider
-
-    logger.info(
-        "[Lumigo Distro] After first half import batch!!!",
-    )
-
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+    from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
     from lumigo_opentelemetry.resources.span_processor import (
         LumigoSpanProcessor,
         LumigoExecutionTagProcessor,
-    )
-
-    logger.info(
-        "[Lumigo Distro] After first import batch",
     )
 
     LUMIGO_ENDPOINT_BASE_URL = "https://ga-otlp.lumigo-tracer-edge.golumigo.com/v1"
@@ -164,21 +152,6 @@ def init() -> Dict[str, Any]:
     spandump_file = os.getenv("LUMIGO_DEBUG_SPANDUMP")
     logdump_file = os.getenv("LUMIGO_DEBUG_LOGDUMP")
 
-    logger.info(
-        "[Lumigo Distro] After config",
-    )
-
-    if lumigo_token and logging_enabled:
-        from opentelemetry import _logs
-        from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-        from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
-        from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
-        from opentelemetry.instrumentation.logging import LoggingInstrumentor
-    else:
-        logger.info(
-            'Logging is disabled (the "LUMIGO_ENABLE_LOGS" environment variable is not set to "true"): no logs will be sent to Lumigo.'
-        )
-
     # Activate instrumentations
     from lumigo_opentelemetry.instrumentations import instrumentations  # noqa
     from lumigo_opentelemetry.instrumentations.instrumentations import framework
@@ -191,10 +164,6 @@ def init() -> Dict[str, Any]:
     )
     import re
     from opentelemetry.sdk.trace import IdGenerator, RandomIdGenerator
-
-    logger.info(
-        "[Lumigo Distro] After second import batch",
-    )
 
     class LambdaTraceIdGenerator(IdGenerator):
         random_id_generator = RandomIdGenerator()
@@ -228,11 +197,10 @@ def init() -> Dict[str, Any]:
         id_generator=LambdaTraceIdGenerator(),
     )
 
-    logger.info(
-        "[Lumigo Distro] After crating trace provider",
-    )
-
     tracer_provider.add_span_processor(LumigoExecutionTagProcessor())
+
+    logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(LumigoLogRecordProcessor())
 
     if lumigo_token:
         if tracing_enabled:
@@ -247,6 +215,20 @@ def init() -> Dict[str, Any]:
         else:
             logger.info(
                 'Tracing is disabled (the "LUMIGO_ENABLE_TRACES" environment variable is not set to "true"): no traces will be sent to Lumigo.'
+            )
+
+        if logging_enabled:
+            logger_provider.add_log_record_processor(
+                BatchLogRecordProcessor(
+                    OTLPLogExporter(
+                        endpoint=lumigo_logs_endpoint,
+                        headers={"Authorization": f"LumigoToken {lumigo_token}"},
+                    )
+                )
+            )
+        else:
+            logger.info(
+                'Logging is disabled (the "LUMIGO_ENABLE_LOGS" environment variable is not set to "true"): no logs will be sent to Lumigo.'
             )
 
         if lumigo_report_dependencies:
@@ -291,18 +273,6 @@ def init() -> Dict[str, Any]:
     trace.set_tracer_provider(tracer_provider)
 
     if logging_enabled:
-        logger_provider = LoggerProvider(resource=resource)
-        logger_provider.add_log_record_processor(LumigoLogRecordProcessor())
-
-        logger_provider.add_log_record_processor(
-            BatchLogRecordProcessor(
-                OTLPLogExporter(
-                    endpoint=lumigo_logs_endpoint,
-                    headers={"Authorization": f"LumigoToken {lumigo_token}"},
-                )
-            )
-        )
-
         _logs.set_logger_provider(logger_provider)
 
         # Add the handler to the root logger, hence affecting all loggers created by the app from now on
@@ -337,8 +307,6 @@ def init() -> Dict[str, Any]:
             )
 
             logger.debug("Storing a copy of the log data under: %s", logdump_file)
-    else:
-        logger_provider = None
 
     return {"tracer_provider": tracer_provider, "logger_provider": logger_provider}
 
