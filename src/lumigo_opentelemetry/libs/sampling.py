@@ -161,7 +161,7 @@ def _get_string_list_from_env_var(env_var_name: str) -> List[str]:
         )
         return []
 
-    return parsed_list
+    return parsed_list  # type: ignore[no-any-return]
 
 
 def _extract_endpoint(attributes: Attributes, spanKind: SpanKind) -> Optional[str]:
