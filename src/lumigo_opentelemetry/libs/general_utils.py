@@ -1,11 +1,9 @@
 import functools
 import logging
 
-try:
-    from collections import Iterable
-except ImportError:
-    # collections.Iterables was removed in Python 3.10
-    from collections.abc import Iterable
+# collections.Iterable was deprecated in Python 3.3 and removed in Python 3.10
+# Use collections.abc.Iterable which is available in Python 3.9+
+from collections.abc import Iterable
 
 import os
 from contextlib import contextmanager
