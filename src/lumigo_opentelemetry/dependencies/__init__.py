@@ -23,7 +23,7 @@ def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes) 
     dependencies: List[Dict[str, Any]] = []
     for dist in distributions():
         try:
-            name = dist.metadata.get("Name")
+            name = dist.metadata.get("Name")  # type: ignore[attr-defined]
             version = dist.version
             if name and version:
                 dependencies.append(
@@ -47,7 +47,7 @@ def report(url: str, lumigo_token: str, resource_attributes: BoundedAttributes) 
             "version": dist.version,
         }
         for dist in distributions()
-        if dist.metadata.get("Name") and getattr(dist, "version", None)
+        if dist.metadata.get("Name") and getattr(dist, "version", None)  # type: ignore[attr-defined]
     ]
 
     data = dumps(
