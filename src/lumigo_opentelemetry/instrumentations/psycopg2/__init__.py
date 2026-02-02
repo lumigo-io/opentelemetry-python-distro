@@ -1,7 +1,4 @@
 from lumigo_opentelemetry.instrumentations import AbstractInstrumentor
-from lumigo_opentelemetry.instrumentations.shared.psycopg import (
-    patch_psycopg_for_payload_capture,
-)
 
 
 class Psycopg2Instrumentor(AbstractInstrumentor):
@@ -14,6 +11,9 @@ class Psycopg2Instrumentor(AbstractInstrumentor):
     def install_instrumentation(self) -> None:
 
         from opentelemetry.instrumentation import psycopg2
+        from lumigo_opentelemetry.instrumentations.shared.psycopg import (
+            patch_psycopg_for_payload_capture,
+        )
 
         patch_psycopg_for_payload_capture(package=psycopg2)
 

@@ -145,7 +145,7 @@ def init() -> Dict[str, Any]:
     )
     lumigo_token = os.getenv("LUMIGO_TRACER_TOKEN")
     lumigo_report_dependencies = (
-        os.getenv("LUMIGO_REPORT_DEPENDENCIES", "true").lower() == "true"
+        os.getenv("LUMIGO_REPORT_DEPENDENCIES", "false").lower() == "true"
     )
     logging_enabled = os.getenv("LUMIGO_ENABLE_LOGS", "false").lower() == "true"
     tracing_enabled = os.getenv("LUMIGO_ENABLE_TRACES", "true").lower() == "true"
