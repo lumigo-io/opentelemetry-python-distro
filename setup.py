@@ -26,6 +26,8 @@ setup(
         "opentelemetry-instrumentation-asgi==0.60b1",
         "opentelemetry-instrumentation-aws-lambda==0.60b1",
         "opentelemetry-instrumentation-boto==0.60b1",
+        "opentelemetry-instrumentation-botocore==0.60b1",
+        "opentelemetry-instrumentation-boto3sqs==0.60b1",
         "opentelemetry-instrumentation-fastapi==0.60b1",
         "opentelemetry-instrumentation-flask==0.60b1",
         "opentelemetry-instrumentation-grpc==0.60b1",
