@@ -26,7 +26,7 @@ setup(
         "opentelemetry-instrumentation-asgi==0.60b1",
         "opentelemetry-instrumentation-aws-lambda==0.60b1",
         "opentelemetry-instrumentation-boto==0.60b1",
-        "opentelemetry-instrumentation-botocore==0.60b1",
+        "opentelemetry-instrumentation-botocore @ git+https://github.com/moshe-shaham-lumigo/opentelemetry-python-contrib.git@check-sqs-span-links#subdirectory=instrumentation/opentelemetry-instrumentation-botocore",
         "opentelemetry-instrumentation-boto3sqs==0.60b1",
         "opentelemetry-instrumentation-fastapi==0.60b1",
         "opentelemetry-instrumentation-flask==0.60b1",
